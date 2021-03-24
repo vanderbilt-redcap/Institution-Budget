@@ -1,0 +1,24 @@
+#arm_dropdowns {
+	display: flex;
+}
+#arm_dropdowns div {
+	margin-right: 16px;
+}
+#budget {
+	font-size: 1rem;
+	padding: 16px;
+	border-collapse: separate;
+}
+#budget th, #budget td:nth-child(1) {
+	padding: 8px 16px;
+}
+#budget .visit_total {
+	border: 1px gray solid;
+	padding-left: 8px;
+}
+#budget .procedure_select {
+	margin-left: 43%;
+}
+#budget td:hover {
+	background-color: #007bff20;
+}
