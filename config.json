@@ -30,13 +30,7 @@
 	
 	"system-settings": [],
 	
-	"project-settings": [
-		{
-			"type": "field-list",
-			"key": "procedure_field",
-			"name": "Procedure cost field"
-		}
-	],
+	"project-settings": [],
 
 	"crons": [],
 

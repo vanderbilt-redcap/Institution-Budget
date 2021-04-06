@@ -4,21 +4,24 @@
 #arm_dropdowns div {
 	margin-right: 16px;
 }
-#budget {
+.arm_table {
+	display: none;
 	font-size: 1rem;
 	padding: 16px;
 	border-collapse: separate;
 }
-#budget th, #budget td:nth-child(1) {
+.arm_table th, .arm_table td:nth-child(1) {
 	padding: 8px 16px;
+	min-width: 52px;
+	text-align: center;
 }
-#budget .visit_total {
+.arm_table .visit_total {
 	border: 1px gray solid;
 	padding-left: 8px;
 }
-#budget .procedure_select {
+.arm_table .procedure_select {
 	margin-left: 43%;
 }
-#budget td:hover {
+.arm_table td:hover {
 	background-color: #007bff20;
 }

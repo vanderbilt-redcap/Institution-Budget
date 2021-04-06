@@ -4,87 +4,85 @@ require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
 
 // get procedure costs
 try {
-	$procedure_costs = $module->getProcedureCosts();
+	$arms = $module->getArms();
+	$procedures = $module->getProcedures();
+	$rid = preg_replace("/\D/", '', $_GET['rid']);
 } catch (\Exception $e) {
-	
-}
-
-// // print metadata
-// $project = new \Project($module->getProjectId());
-// echo "<pre>";
-// print_r($project);
-// echo "</pre>";
-
-// make temporary mock data
-$arms = $module->getArms();
-$visits = $module->getVisits();
-$columns = count($visits);
-?>
-
-<!-- show page title -->
-<h3>TIN Budget Tool: Coordinating Center - Enter Data</h3>
-
-<?php
-// show alert if procedures field not configured
-if (!$procedure_costs) {
 	?>
 	<div class="alert alert-warning col-md-6 col-sm-9" style="border-color: #ffcca9 !important;">
-		<p>The TIN Budget module was unable to determine which field contains procedure cost information.</p>
-		<p>Select a procedure cost field in the External Modules page 'Configure' modal.</p>
+		<p>The TIN Budget module was unable to determine which record ID to use when fetching schedule data. Please set a 'rid' query argument for this URL.</p>
+	</div>
+	<?php
+}
+
+if (!empty($rid) and (empty($arms) or empty($procedures))) {
+	?>
+	<div class="alert alert-warning col-md-6 col-sm-9" style="border-color: #ffcca9 !important;">
+		<p>The TIN Budget module was able to retrieve record data, but either the arms or the procedures are undefined. Please complete the "Budget" and "Procedures" forms for record <b><?= $rid ?></b>.</p>
 	</div>
 	<?php
 } else {
+	// show schedule of events for these arms/procedures
+	
 	// add arm dropdown buttons
-	echo "<div id='arm_dropdowns' class='mb-3'>";
-	foreach ($arms as $i => $arm) {
-		echo '<div class="dropdown arm">
-	<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton' . $i . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		Arm ' . ($i + 1) . ': ' . $arm . '
-	</button>
-	<div class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $i . '">
-		<a class="dropdown-item" href="#">Copy Arm ' . ($i + 1) . ' data to Arm ' . ($i + 2) . '</a>
-		<a class="dropdown-item" href="#">Copy Arm ' . ($i + 1) . ' data to all arms</a>
-		<a class="dropdown-item" href="#">Clear all data on this arm</a>
-	</div>
-</div>';
+	?><div id='arm_dropdowns' class='mb-3'><?php
+	foreach ($arms as $i => $arm) { ?>
+		<div class="dropdown arm">
+			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton<?= $i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+				<?= "Arm " . ($i+1) . ": {$arm->name}" ?>
+			</button>
+			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $i . '">
+				<a class="dropdown-item show_arm_table" data-arm="<?= $i+1 ?>" href="#">Show table for Arm <?= $i+1 ?></a>
+				<?php if (($i + 1) != count($arms)) { ?> <a class="dropdown-item" href="#">Copy Arm <?= $i+1 ?> data to Arm <?= $i+2 ?></a> <?php } ?>
+				<a class="dropdown-item" href="#">Copy Arm <?= $i+1 ?> data to all arms</a>
+				<a class="dropdown-item" href="#">Clear all data on this arm</a>
+			</div>
+		</div><?php
 	}
-	echo "</div>";
-	?>
-	<table id='budget' data-arm='1'>
-		<thead>
-			<tr>
-				<th></th>
+	?></div><?php
+	// add arm tables
+	?><div id="arm_tables"><?php
+	foreach ($arms as $i => $arm) {
+		?><table class="arm_table" data-arm="<?= $i + 1 ?>">
+			<thead>
+				<tr>
+					<th></th>
+					<?php
+						// add visit rows
+						foreach ($arm->visits as $visit_i => $visit) {
+							$visit_name = $visit->name;
+							echo "<th class='pr-3 visit'>$visit_name</th>";
+						}
+					?>
+				</tr>
+			</thead>
+			<tbody>
 				<?php
-					// add visit rows
-					foreach ($visits as $visit) {
-						echo "<th class='pr-3 visit'>$visit</th>";
+					// add procedure rows
+					$columns = count($arm->visits);
+					foreach ($procedures as $proc_i => $procedure) {
+						$proc_name = $procedure->name;
+						$proc_cost = $procedure->cost;
+						echo "<tr>";
+						echo "<td class='procedure'>$proc_name</td>";
+						for ($i = 1; $i <= $columns; $i++) {
+							echo "<td><input data-procedure-index='$proc_i' data-cost='$proc_cost' data-visit='" . ($i + 1) . "' type='checkbox' class='procedure_select'></td>";
+						}
+						echo "</tr>";
 					}
-				?>
-			</tr>
-		</thead>
-		<tbody>
-			<?php
-				// add procedure rows
-				foreach ($procedure_costs as $procedure => $cost) {
+					
+					// add totals row
 					echo "<tr>";
-					echo "<td class='procedure'>$procedure</td>";
+					echo "<td>Total $$</td>";
 					for ($i = 1; $i <= $columns; $i++) {
-						echo "<td><input data-procedure='$procedure' data-cost='$cost' data-visit='{$visits[$i - 1]}' type='checkbox' class='procedure_select'></td>";
+						echo "<td class='visit_total' data-visit='" . ($i + 1) . "'>0</td>";
 					}
 					echo "</tr>";
-				}
-				
-				// add totals row
-				echo "<tr>";
-				echo "<td>Total $$</td>";
-				for ($i = 1; $i <= $columns; $i++) {
-					echo "<td class='visit_total' data-visit='{$visits[$i-1]}'></td>";
-				}
-				echo "</tr>";
-			?>
-		</tbody>
-	</table>
-	<?php
+				?>
+			</tbody>
+		</table><?php
+	}
+	?></div><?php
 }
 ?>
 
