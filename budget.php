@@ -27,15 +27,17 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	// add arm dropdown buttons
 	?><div id='arm_dropdowns' class='mb-3'><?php
 	foreach ($arms as $i => $arm) { ?>
-		<div class="dropdown arm">
+		<div class="dropdown arm" data-arm="<?= $i+1 ?>">
 			<button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton<?= $i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				<?= "Arm " . ($i+1) . ": {$arm->name}" ?>
 			</button>
 			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $i . '">
-				<a class="dropdown-item show_arm_table" data-arm="<?= $i+1 ?>" href="#">Show table for Arm <?= $i+1 ?></a>
-				<?php if (($i + 1) != count($arms)) { ?> <a class="dropdown-item" href="#">Copy Arm <?= $i+1 ?> data to Arm <?= $i+2 ?></a> <?php } ?>
-				<a class="dropdown-item" href="#">Copy Arm <?= $i+1 ?> data to all arms</a>
-				<a class="dropdown-item" href="#">Clear all data on this arm</a>
+				<a class="dropdown-item show_arm_table" href="#">Show table for Arm <?= $i+1 ?></a>
+				<?php if (($i + 1) != count($arms)) { ?>
+					<a class="dropdown-item copy_to_next_arm" href="#">Copy Arm <?= $i+1 ?> data to Arm <?= $i+2 ?></a>
+				<?php } ?>
+				<a class="dropdown-item copy_to_all_arms" href="#">Copy Arm <?= $i+1 ?> data to all arms</a>
+				<a class="dropdown-item clear_arm_table" href="#">Clear all data on this arm</a>
 			</div>
 		</div><?php
 	}
@@ -66,7 +68,12 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						echo "<tr>";
 						echo "<td class='procedure'>$proc_name</td>";
 						for ($i = 1; $i <= $columns; $i++) {
-							echo "<td><input data-procedure-index='$proc_i' data-cost='$proc_cost' data-visit='" . ($i + 1) . "' type='checkbox' class='procedure_select'></td>";
+							// echo "<td><input data-procedure-index='$proc_i' data-cost='$proc_cost' data-visit='" . ($i + 1) . "' type='checkbox' class='procedure_select'></td>";
+							echo "<td class='proc_cell' data-visit='" . ($i + 1) . "'>
+							<button class='btn btn-outline-primary proc_decrement'>-</button>
+							<span data-cost='$proc_cost' class='proc_count mx-2'>0</span>
+							<button class='btn btn-outline-primary proc_increment'>+</button>
+							</td>";
 						}
 						echo "</tr>";
 					}

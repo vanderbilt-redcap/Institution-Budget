@@ -1,8 +1,9 @@
 #arm_dropdowns {
 	display: flex;
+	margin-left: 32px;
 }
 #arm_dropdowns div {
-	margin-right: 16px;
+	margin-right: 24px;
 }
 .arm_table {
 	display: none;
@@ -19,9 +20,12 @@
 	border: 1px gray solid;
 	padding-left: 8px;
 }
-.arm_table .procedure_select {
-	margin-left: 43%;
+.arm_table td {
+	padding: 16px 24px;
 }
 .arm_table td:hover {
 	background-color: #007bff20;
+}
+.proc_cell {
+	text-align: center;
 }
