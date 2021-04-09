@@ -29,12 +29,12 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				<?= "Arm " . ($i+1) . ": {$arm->name}" ?>
 			</button>
 			<div class="dropdown-menu" aria-labelledby="dropdownMenuButton' . $i . '">
-				<a class="dropdown-item show_arm_table" href="#">Show table for Arm <?= $i+1 ?></a>
-				<?php if (($i + 1) != count($arms)) { ?>
-					<a class="dropdown-item copy_to_next_arm" href="#">Copy Arm <?= $i+1 ?> data to Arm <?= $i+2 ?></a>
-				<?php } ?>
-				<a class="dropdown-item copy_to_all_arms" href="#">Copy Arm <?= $i+1 ?> data to all arms</a>
-				<a class="dropdown-item clear_arm_table" href="#">Clear all data on this arm</a>
+				<a class="dropdown-item show_arm" href="#">Show this arm's table</a>
+				<a class="dropdown-item copy_arm" href="#">Copy all data to another arm</a>
+				<a class="dropdown-item create_arm" href="#">Create another arm</a>
+				<a class="dropdown-item rename_arm" href="#">Rename this arm</a>
+				<a class="dropdown-item clear_arm" href="#">Clear all data on this arm</a>
+				<a class="dropdown-item delete_arm" href="#">Delete this arm</a>
 			</div>
 		</div><?php
 	}
@@ -66,7 +66,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						echo "<td class='procedure'>$proc_name</td>";
 						for ($i = 1; $i <= $columns; $i++) {
 							// echo "<td><input data-procedure-index='$proc_i' data-cost='$proc_cost' data-visit='" . ($i + 1) . "' type='checkbox' class='procedure_select'></td>";
-							echo "<td class='proc_cell' data-visit='" . ($i + 1) . "'>
+							echo "<td class='proc_cell' data-visit='$i'>
 							<button class='btn btn-outline-primary proc_decrement'>-</button>
 							<span data-cost='$proc_cost' class='proc_count mx-2'>0</span>
 							<button class='btn btn-outline-primary proc_increment'>+</button>
@@ -79,7 +79,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 					echo "<tr>";
 					echo "<td>Total $$</td>";
 					for ($i = 1; $i <= $columns; $i++) {
-						echo "<td class='visit_total' data-visit='" . ($i + 1) . "'>0</td>";
+						echo "<td class='visit_total' data-visit='$i'>0</td>";
 					}
 					echo "</tr>";
 				?>
@@ -90,6 +90,26 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 }
 ?>
 
+<div id="tinbudget_modal" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div id="tinbudget_rename_arm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rename</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Enter a new name for this arm:</p>
+		<input type="text">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary rename_arm" data-dismiss="modal">Rename Arm</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- -->
 <script type='text/javascript'>
