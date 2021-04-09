@@ -5,11 +5,15 @@
 #arm_dropdowns div {
 	margin-right: 24px;
 }
+.arm button.active-arm {
+	background-color: #007bff;
+	border-color: #006bef;
+}
+
 .arm_table {
 	display: none;
 	font-size: 1rem;
 	padding: 16px;
-	border-collapse: separate;
 }
 .arm_table th, .arm_table td:nth-child(1) {
 	padding: 8px 16px;
@@ -17,15 +21,14 @@
 	text-align: center;
 }
 .arm_table .visit_total {
-	border: 1px gray solid;
 	padding-left: 8px;
 }
 .arm_table td {
 	padding: 16px 24px;
 }
-.arm_table td:hover {
-	background-color: #007bff20;
-}
 .proc_cell {
 	text-align: center;
+}
+.procedure, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
+	border: 1px solid gray;
 }

@@ -14,6 +14,11 @@ TINBudget.updateVisitCost = function(arm, visit) {
 TINBudget.showArmTable = function(arm_index) {
 	$('.arm_table').hide();
 	$('.arm_table[data-arm="' + arm_index + '"]').css('display', 'table');
+	
+	// set active_arm_index and highlight active arm dd button
+	TINBudget.active_arm_index = arm_index
+	$('.arm').removeClass('active-arm')
+	$('.arm[data-arm="' + arm_index + '"] button').addClass('active-arm')
 }
 
 TINBudget.clearArmTable = function(arm_index) {
