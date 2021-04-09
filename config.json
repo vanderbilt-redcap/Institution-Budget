@@ -18,13 +18,7 @@
 	"permissions": [],
 	
 	"links": {
-		"project": [
-			{
-				"name": "TIN Budget Tool",
-				"icon": "report",
-				"url": "budget.php"
-			}
-		],
+		"project": [],
 		"control-center": []
 	},
 	

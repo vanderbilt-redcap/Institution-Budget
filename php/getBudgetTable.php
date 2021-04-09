@@ -1,7 +1,4 @@
 <?php
-// include header
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-
 // get procedure costs
 try {
 	$arms = $module->getArms();
@@ -101,5 +98,3 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	}
 </script>
 <script type='text/javascript' src='<?= $module->getUrl('js/budget.js'); ?>'></script>
-<?php
-require_once APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
