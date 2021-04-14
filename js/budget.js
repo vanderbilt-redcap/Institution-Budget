@@ -1,18 +1,105 @@
 TINBudget.refreshSchedule = function() {
-	// highlight active arm
+	// highlight dropdown for active arm
 	$('.arm button').removeClass('active-arm')
 	$('.arm[data-arm="' + TINBudget.active_arm_index + '"] button').addClass('active-arm')
 	
-	// re-order arm dropdowns and arm tables
-	$('.arm').each(function(i, e) {
-		$(e).attr('data-arm', i+1);
+	// TODO re-order arm, visit, and procedure elemetns that need re-ordering
+	$('[data-arm]').each(function(i, e) {
+		var arm_i = Number($(e).index()) + 1;
+		$(e).attr('data-arm', arm_i);
 	});
-	$('.arm_table').each(function(i, e) {
-		$(e).attr('data-arm', i+1);
+	var active_arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
+	active_arm_table.find('.visit').each(function(i, e) {
+		var visit_i = i + 1;
+		$(e).attr('data-visit', visit_i);
+	});
+	active_arm_table.find('.proc_cell').each(function(i, e) {
+		var visit_i = Number($(e).index());
+		$(e).attr('data-visit', visit_i);
 	});
 	
-	// TODO enable/disable arm dropdown options as necessary
+	// TODO enable/disable arm, visit, procedure dropdown options as necessary
 	
+	// refresh procedures, costs, and sums
+	TINBudget.refreshProcedureRows();
+	TINBudget.refreshProcedureOptions();
+	TINBudget.refreshProcedureCosts();
+	TINBudget.updateAllVisitCosts();
+	
+	console.log('schedule table refreshed');
+}
+TINBudget.refreshProceduresTable = function() {
+	// remove all rows
+	$("table#edit_procedures tbody").empty()
+	
+	// add rows to edit_procedures table using TINBudget.procedures data
+	TINBudget.procedures.forEach(function(procedure, i) {
+		$("table#edit_procedures tbody").append("<tr>\
+			<td><input type='text'></td>\
+			<td><input type='number'></td>\
+		</tr>");
+		$("table#edit_procedures tbody tr:last-child td:first-child input").val(procedure.name);
+		$("table#edit_procedures tbody tr:last-child td:last-child input").val(procedure.cost);
+	});
+}
+TINBudget.refreshProcedureOptions = function() {
+	// remove procedure options from all procedure dropdowns, then add them based on current TINBudget.procedures
+	var options = "";
+	TINBudget.procedures.forEach(function(procedure, i) {
+		options += '<a class="dropdown-item procedure_option" data-procedure="' + (i+1) + '" href="#">' + procedure.name + '</a>';
+	});
+	
+	$(".procedure_option").remove();
+	$(".proc_dd_cell .dropdown-menu").each(function(i, menu) {
+		$(menu).prepend(options);
+	});
+}
+TINBudget.refreshProcedureCosts = function() {
+	// update all .proc_cell data-cost attributes based on the procedure selected in the dropdown in the first cell of the row
+	$('.procedure').each(function(i, div) {
+		var proc_name = $(div).find('button.dropdown-toggle').text().trim();
+		var proc_cost;
+		for (var procedure of TINBudget.procedures) {
+			if (procedure.name == proc_name) {
+				proc_cost = procedure.cost;
+				break;
+			}
+		}
+		if (!proc_cost) {
+			alert("The TIN Budget module couldn't find the procedure cost for procedure named '" + proc_name + "'!");
+			return;
+		}
+		
+		$(div).closest('tr').find('.proc_count').each(function(i, span) {
+			$(span).attr('data-cost', proc_cost);
+		});
+	});
+}
+TINBudget.refreshProcedureRows = function() {
+	// to be called when the #edit_procedures table is saved
+	
+	// for all existing procedure rows, if the name has changed, update the name (of dropdown)
+	// if it doesn't exist, remove procedure row
+	// if all rows in parent arm_table are gone, add 1 new procedure row
+	$('.procedure').each(function(i, div) {
+		var dropdown = $(div);
+		var proc_index = Number(dropdown.attr('data-procedure')) - 1;
+		var procedure = TINBudget.procedures[proc_index];
+		
+		if (procedure) {
+			dropdown.find('button.dropdown-toggle').text(procedure.name);
+		} else {
+			// declare arm_table before removing row
+			var arm_table = dropdown.closest('.arm_table');
+			
+			// remove row
+			dropdown.closest('tr').remove();
+			
+			if (arm_table.find('.procedure').length == 0) {
+				TINBudget.createProcedureRow(arm_table.index() + 1);
+			}
+		}
+	});
 }
 
 // arm dropdown button functions
@@ -27,6 +114,26 @@ TINBudget.showArm = function(arm_index) {
 TINBudget.copyArm = function(arm_index) {
 	// show a modal asking which arm(s) to copy to
 	// (and replace all visits or copy to matching vists and procedures
+	TINBudget.copy_source_arm_index = arm_index;
+	
+	// reset visit options based on which visit we're copying from
+	$("#select_arms").empty();
+	var arm_count = $('.arm_table').length;
+	for (var arm_i = 1; arm_i <= arm_count; arm_i++) {
+		var arm_name = $(".arm[data-arm=" + arm_i + "] button.dropdown-toggle").text();
+		arm_name = arm_name.substring(arm_name.search(':')+1).trim();
+		
+		var arm_select_button = "<button data-arm-index='" + arm_i + "' class='btn btn-outline-primary arm_select'>" + arm_name + "</button>";
+		if (arm_i == TINBudget.copy_source_arm_index) {
+			arm_select_button = "<button data-arm-index='" + arm_i + "' class='btn btn-outline-secondary arm_select' disabled'>" + arm_name + "</button>"
+		}
+		$("#select_arms").append(arm_select_button);
+	}
+	
+	// hide other modal content, show copy_visit section
+	$('.modal-content').hide()
+	$('#tinbudget_copy_arm').show()
+	$("#tinbudget_modal").modal('show');
 }
 TINBudget.createArm = function() {
 	if ($('.arm_table').length > 9) {
@@ -75,6 +182,8 @@ TINBudget.createArm = function() {
 }
 TINBudget.renameArm = function(arm_index) {
 	// modal asking for new name
+	$('.modal-content').hide()
+	$('#tinbudget_rename_arm').show()
 	$("#tinbudget_modal").modal('show');
 }
 TINBudget.clearArm = function(arm_index) {
@@ -84,10 +193,96 @@ TINBudget.clearArm = function(arm_index) {
 	});
 }
 TINBudget.deleteArm = function(arm_index) {
-	$('[data-arm="' + arm_index + '"]').remove()
+	if ($('.arm').length > 1) {
+		$('[data-arm="' + arm_index + '"]').remove()
+	}
+	
+	TINBudget.refreshSchedule();
+	TINBudget.showArm(Math.max(1, arm_index - 1));
 }
 
-// visit level functions
+// visit dropdown buttons
+TINBudget.createVisit = function() {
+	var arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
+	var visit_count = arm_table.find('.visit').length;
+	if (visit_count > 9) {
+		alert("Can't create a new visit when more than 9 visits already exist");
+		return;
+	}
+	
+	var visit_j = visit_count + 1;
+	var visit_dd = "<th>\
+	<div class='dropdown visit' data-visit='" + visit_j + "'>\
+		<button class='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownVisit" + visit_j + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+			Visit " + visit_j + ": New Visit\
+		</button>\
+		<div class='dropdown-menu' aria-labelledby='dropdownVisit" + visit_j + "'>\
+			<a class='dropdown-item create_visit' href='#'>Create another visit</a>\
+			<a class='dropdown-item rename_visit' href='#'>Rename this visit</a>\
+			<a class='dropdown-item copy_visit' href='#'>Copy procedure counts to another visit</a>\
+			<a class='dropdown-item clear_visit' href='#'>Clear procedure counts for this visit</a>\
+			<a class='dropdown-item delete_visit' href='#'>Delete this visit</a>\
+		</div>\
+	</div>\
+	</th>";
+	
+	var visit_proc_cell = "<td class='proc_cell' data-visit='" + visit_j + "'>\
+		<button class='btn btn-outline-primary proc_decrement'>-</button>\
+		<span data-cost='' class='proc_count mx-2'>0</span>\
+		<button class='btn btn-outline-primary proc_increment'>+</button>\
+	</td>";
+	
+	var visit_total_cell = "<td class='visit_total' data-visit='" + visit_j + "'>0</td>";
+	
+	// insert visit_dd to DOM via arm_table
+	arm_table.find('thead tr').append(visit_dd);
+	arm_table.find('tbody tr:not(:last-child)').append(visit_proc_cell);
+	arm_table.find('tbody tr:last-child').append(visit_total_cell);
+}
+TINBudget.renameVisit = function(visit_index) {
+	$('.modal-content').hide()
+	$('#tinbudget_rename_visit').show()
+	$("#tinbudget_modal").modal('show');
+}
+TINBudget.copyVisit = function(visit_index) {
+	TINBudget.copy_source_visit_index = visit_index;
+	TINBudget.copy_destination_visits = {};
+	
+	// reset visit options based on which visit we're copying from
+	$("#select_visits").empty();
+	var visit_count = $('.arm_table[data-arm="' + TINBudget.active_arm_index + '"] .visit').length;
+	for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+		var visit_name = $(".arm_table[data-arm=" + TINBudget.active_arm_index + "] .visit[data-visit='" + visit_i + "']").find('button').text();
+		var visit_select_button = "<button class='btn btn-outline-primary visit_select' data-visit-index='" + visit_i + "'>" + visit_name + "</button>";
+		if (visit_i == visit_index) {
+			visit_select_button = "<button class='btn btn-outline-secondary visit_select' disabled data-visit-index='" + visit_i + "'>" + visit_name + "</button>"
+		}
+		visit_name = visit_name.substring(visit_name.search(':') + 1).trim();
+		$("#select_visits").append(visit_select_button);
+	}
+	
+	// hide other modal content, show copy_visit section
+	$('.modal-content').hide()
+	$('#tinbudget_copy_visit').show()
+	$("#tinbudget_modal").modal('show');
+}
+TINBudget.clearVisit = function(visit_index) {
+	var arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
+	arm_table.find('.proc_cell:nth-child(' + (visit_index + 1) + ') span, .visit_total:nth-child(' + (visit_index + 1) + ')').text(0)
+}
+TINBudget.deleteVisit = function(visit_index) {
+	var arm_index = TINBudget.active_arm_index;
+	var arm_table = $(".arm_table[data-arm='" + arm_index + "']");
+	
+	TINBudget.arm_table = arm_table;
+	if (arm_table.find('th').length > 2) {
+		arm_table.find('th:nth-child(' + (visit_index + 1) + '), td:nth-child(' + (visit_index + 1) + ')').remove()
+	}
+	
+	TINBudget.refreshSchedule();
+}
+
+// visit level helper functions
 TINBudget.updateVisitCost = function(arm, visit) {
 	// sum costs
 	var sum = 0
@@ -100,28 +295,78 @@ TINBudget.updateVisitCost = function(arm, visit) {
 	});
 	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text(sum);
 }
+TINBudget.updateAllVisitCosts = function() {
+	for (var arm_i = 1; arm_i <= $('.arm').length; arm_i++) {
+		var visit_count = $('.arm_table[data-arm="' + arm_i + '"] .visit').length;
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			TINBudget.updateVisitCost(arm_i, visit_i);
+		}
+	};
+}
+
+// procedure dropdown button functions
+TINBudget.createProcedureRow = function(arm_index = null) {
+	var arm_table = $(".arm_table[data-arm='" + (arm_index || TINBudget.active_arm_index) + "']");
+	
+	var proc_name = TINBudget.procedures[0].name;
+	var proc_i = Number($('.procedure').length) + 1;
+	var new_row = "<tr>\
+	<td class='proc_dd_cell'>\
+		<div class='dropdown procedure' data-procedure='1'>\
+			<button class='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownProcedure" + proc_i + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+				" + proc_name + "\
+			</button>\
+			<div class='dropdown-menu' aria-labelledby='dropdownProcedure" + proc_i + "'>\
+				<div class='dropdown-divider'></div>\
+				<a class='dropdown-item create_procedure' href='#'>Create another procedure row</a>\
+				<a class='dropdown-item edit_procedures' href='#'>Edit procedures</a>\
+				<a class='dropdown-item delete_procedure' href='#'>Delete this procedure row</a>\
+			</div>\
+		</div>\
+	</td>";
+	
+	// add proc_count cells to new row
+	var visit_count = Number(arm_table.find('.visit').length);
+	for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+		new_row += "<td class='proc_cell' data-visit='" + visit_i + "'>\
+			<button class='btn btn-outline-primary proc_decrement'>-</button>\
+			<span data-cost='' class='proc_count mx-2'>0</span>\
+			<button class='btn btn-outline-primary proc_increment'>+</button>\
+		</td>"
+	}
+	
+	// add closing tr tag
+	new_row += "\
+	</tr>";
+	
+	// append to arm_table
+	arm_table.find('tbody tr:last-child').before(new_row);
+	
+	// refresh options
+	TINBudget.refreshProcedureOptions();
+}
+TINBudget.editProcedures = function() {
+	$('.modal-content').hide()
+	$('#tinbudget_edit_procedures').show()
+	$("#tinbudget_modal").modal('show');
+}
+TINBudget.deleteProcedureRow = function(remove_index) {
+	var arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
+	var proc_count = arm_table.find('.procedure').length;
+	if (proc_count > 1) {
+		arm_table.find('tbody tr:eq(' + remove_index + ')').remove();
+	}
+	
+	TINBudget.updateAllVisitCosts();
+}
 
 // initialization/registration
 $('head').append('<link rel="stylesheet" type="text/css" href="' + TINBudget.budget_css_url + '">');
 $('body').append($('#tinbudget_modal').remove());
 $(document).ready(function() {
-	// update cost sum when user inc/decrements procedure count
-	$('body').on('click', '.proc_cell button', function(event) {
-		var btn = $(event.target);
-		var to_add = btn.hasClass('proc_decrement') ? -1 : 1;
-		var proc_cell = btn.closest('.proc_cell');
-		var count_span = proc_cell.find('span')
-		
-		// update span counter
-		var current_count = Number(count_span.text());
-		var new_count = Math.max(current_count + to_add, 0);
-		count_span.text(new_count);
-		
-		// update sum
-		var arm_index = btn.closest('.arm_table').attr('data-arm');
-		var visit_index = proc_cell.attr('data-visit');
-		TINBudget.updateVisitCost(arm_index, visit_index);
-	});
+	// initialization
+	TINBudget.refreshProceduresTable();
+	TINBudget.showArm(1);
 	
 	// register arm dropdown button click events
 	$('body').on('click', 'a.show_arm', function(event) {
@@ -137,8 +382,8 @@ $(document).ready(function() {
 	});
 	$('body').on('click', '.arm .rename_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
-		TINBudget.renameArm(arm_index);
 		TINBudget.target_arm = arm_index;
+		TINBudget.renameArm(arm_index);
 	});
 	$('body').on('click', 'a.clear_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
@@ -157,7 +402,172 @@ $(document).ready(function() {
 		$('.arm[data-arm="' + TINBudget.target_arm + '"] button').text("Arm " + TINBudget.target_arm + ": " + new_arm_name);
 		TINBudget.target_arm = null;
 	});
+	$('body').on('click', '.modal .arm_select', function(event) {
+		var btn = $(event.target);
+		var arm_index = btn.attr('data-arm-index');
+		if (btn.hasClass('btn-outline-primary')) {
+			btn.removeClass('btn-outline-primary');
+			btn.addClass('btn-primary');
+		} else {
+			btn.removeClass('btn-primary');
+			btn.addClass('btn-outline-primary');
+		}
+	});
+	$('body').on('click', '.modal .overwrite_arms', function(event) {
+		var visible_table_index = $('.arm_table:visible').attr('data-arm');
+		var src_arm_table_clone = $(".arm_table[data-arm='" + TINBudget.copy_source_arm_index + "']").clone()
+		$("#select_arms button").each(function(i, btn) {
+			if ($(btn).hasClass('btn-primary')) {
+				var dest_arm_index = $(btn).attr('data-arm-index');
+				src_arm_table_clone.attr('data-arm', dest_arm_index);
+				$(".arm_table[data-arm='" + dest_arm_index + "']").replaceWith(src_arm_table_clone.prop('outerHTML'));
+			}
+		});
+		TINBudget.copy_source_arm_index = null;
+		TINBudget.showArm(visible_table_index);
+	});
 	
-	TINBudget.showArm(1)
-	TINBudget.refreshSchedule()
+	// register visit dropdown buttons
+	$('body').on('click', 'a.create_visit', function(event) {
+		TINBudget.createVisit();
+	});
+	$('body').on('click', 'a.copy_visit', function(event) {
+		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
+		TINBudget.copyVisit(visit_index);
+	});
+	$('body').on('click', 'a.rename_visit', function(event) {
+		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
+		TINBudget.target_visit = visit_index;
+		TINBudget.renameVisit(visit_index);
+	});
+	$('body').on('click', 'a.clear_visit', function(event) {
+		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
+		TINBudget.clearVisit(visit_index);
+	});
+	$('body').on('click', 'a.delete_visit', function(event) {
+		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
+		TINBudget.deleteVisit(visit_index);
+	});
+	$('body').on('click', '.modal .rename_visit', function(event) {
+		// get new name, clear input element
+		var new_visit_name = $("#tinbudget_rename_visit input").val();
+		var new_visit_text = "Visit " + TINBudget.target_visit + ": " + new_visit_name;
+		$("#tinbudget_rename_visit input").val("");
+		
+		// update target visit and clear target_visit
+		var active_arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
+		active_arm_table.find('.visit[data-visit="' + TINBudget.target_visit + '"] button').text(new_visit_text);
+		TINBudget.target_visit = null;
+	});
+	$('body').on('click', '.modal .visit_select', function(event) {
+		var btn = $(event.target);
+		var visit_index = btn.attr('data-visit-index');
+		if (btn.hasClass('btn-outline-primary')) {
+			btn.removeClass('btn-outline-primary');
+			btn.addClass('btn-primary');
+			TINBudget.copy_destination_visits[visit_index] = true;
+		} else {
+			btn.removeClass('btn-primary');
+			btn.addClass('btn-outline-primary');
+			delete TINBudget.copy_destination_visits[visit_index];
+		}
+	});
+	$('body').on('click', '.modal .copy_visit_counts', function(event) {
+		// didn't select any visits
+		if (jQuery.isEmptyObject(TINBudget.copy_destination_visits)) {
+			return;
+		}
+		
+		// copy counts
+		var active_arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
+		active_arm_table.find('tbody tr:not(:last-child)').each(function(i, tr) {
+			for (var dest_index in TINBudget.copy_destination_visits) {
+				var dest_span = $(tr).find('.proc_cell[data-visit="' + dest_index + '"] span');
+				var src_span = $(tr).find('.proc_cell[data-visit="' + TINBudget.copy_source_visit_index + '"] span');
+				dest_span.text(src_span.text().trim());
+			}
+		});
+		
+		// clean up
+		TINBudget.copy_destination_visits = null;
+		TINBudget.copy_source_visit_index = null;
+		TINBudget.updateAllVisitCosts();
+	});
+	
+	// register procedure dropdown buttons
+	$('body').on('click', 'a.create_procedure', function(event) {
+		TINBudget.createProcedureRow();
+	});
+	$('body').on('click', 'a.edit_procedures', function(event) {
+		TINBudget.editProcedures();
+	});
+	$('body').on('click', 'a.delete_procedure', function(event) {
+		var remove_index = $(event.target).closest('tr').index();
+		TINBudget.deleteProcedureRow(remove_index);
+	});
+	$('body').on('click', 'a.procedure_option', function(event) {
+		var proc_option = $(event.target);
+		var procedure_dropdown = proc_option.closest('.procedure').find('button.dropdown-toggle');
+		
+		// set new procedure name/index
+		procedure_dropdown.text(proc_option.text().trim());
+		procedure_dropdown.parent().attr('data-procedure', proc_option.attr('data-procedure'));
+		
+		// refresh costs and sums
+		TINBudget.refreshProcedureCosts();
+		TINBudget.updateAllVisitCosts();
+	});
+	
+	// edit procedures table's modal events (save, cancel, add row, remove row)
+	$('body').on('click', '.modal .save_proc_changes', function(event) {
+		// update TINBudget.procedures using edit procedures table
+		var proc_table = $('table#edit_procedures');
+		TINBudget.procedures = [];
+		proc_table.find('tbody tr').each(function(i, tr) {
+			var proc_name = $(tr).find('td:first-child input').val();
+			var proc_cost = $(tr).find('td:last-child input').val();
+			if (!proc_name) {
+				proc_name = "Procedure " + (i + 1);
+				$(tr).find('td:first-child input').val(proc_name);
+			}
+			if (!proc_cost) {
+				proc_cost = "0";
+				$(tr).find('td:last-child input').val(proc_cost);
+			}
+			TINBudget.procedures.push({name: proc_name, cost: proc_cost});
+		});
+		
+		TINBudget.refreshSchedule();
+	});
+	$('body').on('click', '.modal .cancel_proc_changes', function(event) {
+		TINBudget.refreshProceduresTable();
+	});
+	$('body').on('click', 'button#add_proc_table_row', function(event) {
+		$("table#edit_procedures tbody").append("<tr>\
+			<td><input type='text'></td>\
+			<td><input type='number'></td>\
+		</tr>");
+	});
+	$('body').on('click', 'button#del_proc_table_row', function(event) {
+		$("table#edit_procedures tbody tr:last-child").remove();
+	});
+	
+	// register click event for when user clicks + or - button for procedure count cell
+	$('body').on('click', '.proc_cell button', function(event) {
+		var btn = $(event.target);
+		var to_add = btn.hasClass('proc_decrement') ? -1 : 1;
+		var proc_cell = btn.closest('.proc_cell');
+		var count_span = proc_cell.find('span')
+		
+		// update span counter
+		var current_count = Number(count_span.text());
+		var new_count = Math.max(current_count + to_add, 0);
+		count_span.text(new_count);
+		
+		// update sum
+		var arm_index = btn.closest('.arm_table').attr('data-arm');
+		var visit_index = proc_cell.attr('data-visit');
+		TINBudget.updateVisitCost(arm_index, visit_index);
+	});
+	
 });

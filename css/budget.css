@@ -8,27 +8,53 @@
 .arm button.active-arm {
 	background-color: #007bff;
 	border-color: #006bef;
+	color: white;
 }
 
 .arm_table {
 	display: none;
 	font-size: 1rem;
-	padding: 16px;
+	/* padding: 16px; */
 }
 .arm_table th, .arm_table td:nth-child(1) {
-	padding: 8px 16px;
-	min-width: 52px;
+	padding: 8px 8px;
 	text-align: center;
 }
 .arm_table .visit_total {
 	padding-left: 8px;
+	text-align: center;
 }
 .arm_table td {
-	padding: 16px 24px;
+	/* padding: 16px 24px; */
 }
 .proc_cell {
 	text-align: center;
 }
-.procedure, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
+td.proc_dd_cell, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
 	border: 1px solid gray;
+}
+
+#tinbudget_edit_procedures .modal-body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+#edit_procedures th, #edit_procedures td {
+	padding: 8px;
+	text-align: center;
+	border: 1px solid black;
+}
+#edit_procedure_buttons {
+	display: flex;
+	width: 100%;
+	justify-content: space-evenly;
+}
+#select_visits, #select_arms {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+}
+.visit_select, .arm_select {
+	max-width: 100%;
+	margin: 8px;
 }
