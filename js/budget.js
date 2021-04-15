@@ -3,7 +3,7 @@ TINBudget.refreshSchedule = function() {
 	$('.arm button').removeClass('active-arm')
 	$('.arm[data-arm="' + TINBudget.active_arm_index + '"] button').addClass('active-arm')
 	
-	// TODO re-order arm, visit, and procedure elemetns that need re-ordering
+	// update data-arm and data-visit attributes for elements that have them
 	$('[data-arm]').each(function(i, e) {
 		var arm_i = Number($(e).index()) + 1;
 		$(e).attr('data-arm', arm_i);
@@ -13,9 +13,21 @@ TINBudget.refreshSchedule = function() {
 		var visit_i = i + 1;
 		$(e).attr('data-visit', visit_i);
 	});
-	active_arm_table.find('.proc_cell').each(function(i, e) {
+	active_arm_table.find('.proc_cell, .visit_total').each(function(i, e) {
 		var visit_i = Number($(e).index());
 		$(e).attr('data-visit', visit_i);
+	});
+	
+	// update arm and visit name labels
+	$('.arm').each(function(i, arm) {
+		var i = $(arm).attr('data-arm');
+		var arm_dd = $(arm).find('button.dropdown-toggle');
+		arm_dd.text(arm_dd.text().replace(/\d+/, i));
+	});
+	$('.visit').each(function(i, visit) {
+		var i = $(visit).attr('data-visit');
+		var visit_dd = $(visit).find('button.dropdown-toggle');
+		visit_dd.text(visit_dd.text().replace(/\d+/, i));
 	});
 	
 	// TODO enable/disable arm, visit, procedure dropdown options as necessary
@@ -284,6 +296,7 @@ TINBudget.deleteVisit = function(visit_index) {
 
 // visit level helper functions
 TINBudget.updateVisitCost = function(arm, visit) {
+	console.log('udpate visit cost arm, visit:', arm + ' ' + visit);
 	// sum costs
 	var sum = 0
 	$(".arm_table[data-arm='" + arm + "'] .proc_cell[data-visit='" + visit +"'] .proc_count").each(function(i, e) {
