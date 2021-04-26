@@ -296,7 +296,6 @@ TINBudget.deleteVisit = function(visit_index) {
 
 // visit level helper functions
 TINBudget.updateVisitCost = function(arm, visit) {
-	console.log('udpate visit cost arm, visit:', arm + ' ' + visit);
 	// sum costs
 	var sum = 0
 	$(".arm_table[data-arm='" + arm + "'] .proc_cell[data-visit='" + visit +"'] .proc_count").each(function(i, e) {
@@ -565,6 +564,11 @@ $(document).ready(function() {
 		$("table#edit_procedures tbody tr:last-child").remove();
 	});
 	
+	// change view/edit mode for table
+	$("body").on("change", "#viewEditToggle", function() {
+		$('.proc_cell button').toggle()
+	});
+	
 	// register click event for when user clicks + or - button for procedure count cell
 	$('body').on('click', '.proc_cell button', function(event) {
 		var btn = $(event.target);
@@ -577,10 +581,89 @@ $(document).ready(function() {
 		var new_count = Math.max(current_count + to_add, 0);
 		count_span.text(new_count);
 		
+		// update td class to highlight nonzero procedure counts
+		if (new_count == 0) {
+			proc_cell.removeClass('nonzero')
+		} else {
+			proc_cell.removeClass('nonzero')
+			proc_cell.addClass('nonzero')
+		}
+		
 		// update sum
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = proc_cell.attr('data-visit');
 		TINBudget.updateVisitCost(arm_index, visit_index);
 	});
 	
+	// hide/show buttons automatically
+	$('body').on('mouseenter', '.proc_cell', function(event) {
+		$('.proc_cell button').hide();
+		$(event.target).find('button').show();
+	});
+	$('body').on('mouseleave', '.proc_cell', function(event) {
+		$('.proc_cell button').hide();
+	});
+	
 });
+
+// saving/loading
+TINBudget.serialize = function() {
+	var schedule = {
+		arms: [],
+		procedures: TINBudget.procedures
+	};
+	var arm_count = $('.arm_table').length;
+	for (var arm_i = 1; arm_i <= arm_count; arm_i++) {
+		// make arm object
+		var arm_name = $(".arm[data-arm=" + arm_i + "] button.dropdown-toggle").text();
+		arm_name = arm_name.substring(arm_name.search(':')+1).trim();
+		var arm = {
+			name: arm_name,
+			visits: [],
+			procedureRows: []
+		};
+		
+		// add procedure rows
+		$(".arm_table[data-arm=" + arm_i + "] .procedure").each(function(i, div) {
+			var proc_index = $(div).attr('data-procedure');
+			var proc_name = $(div).find('button.dropdown-toggle').text().trim()
+			arm.procedureRows.push({
+				name: proc_name,
+				index: proc_index
+			});
+		});
+		
+		var visit_count = $('.arm_table[data-arm="' + arm_i + '"] .visit').length;
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			var visit_name = $(".arm_table[data-arm=" + arm_i + "] .visit[data-visit='" + visit_i + "']").find('button').text();
+			visit_name = visit_name.substring(visit_name.search(':') + 1).trim();
+			
+			// collect procedure counts for this visit
+			var procedure_counts = [];
+			var visit_sum = 0;
+			$('.arm_table[data-arm="' + arm_i + '"] .proc_cell[data-visit="' + visit_i + '"]').each(function(i, td) {
+				var proc_index = $(td).closest('tr').find('.procedure').attr('data-procedure');
+				var proc_count = Number($(td).find('span').text());
+				var proc_cost = $(td).find('span').attr('data-cost');
+				procedure_counts.push({
+					procedure_index: proc_index,
+					count: proc_count,
+					cost: proc_cost
+				});
+				visit_sum += proc_count * proc_cost;
+			});
+			
+			// add visit obj to arm.visits
+			arm.visits[visit_i] = {
+				name: visit_name,
+				procedure_counts: procedure_counts,
+				total: visit_sum
+			}
+		}
+		// add arm obj to schedule.arms
+		schedule.arms.push(arm);
+	}
+	TINBudget.schedule = schedule;
+	return schedule;
+	// return JSON.stringify(schedule);
+}

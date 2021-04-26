@@ -1,3 +1,5 @@
+/* zebra stripe colors: https://coolors.co/f5faff-edf6ff-dbedff-cce6ff */
+/* zebra stripe colors: https://coolors.co/f5faff-#e0f0ff-ADFFE7-D6FFF3 */
 #arm_dropdowns {
 	display: flex;
 	margin-left: 32px;
@@ -14,7 +16,6 @@
 .arm_table {
 	display: none;
 	font-size: 1rem;
-	/* padding: 16px; */
 }
 .arm_table th, .arm_table td:nth-child(1) {
 	padding: 8px 8px;
@@ -24,8 +25,20 @@
 	padding-left: 8px;
 	text-align: center;
 }
-.arm_table td {
-	/* padding: 16px 24px; */
+.arm_table tbody tr:nth-child(odd) td {
+	background-color: #f5faff;
+}
+.arm_table tbody tr:nth-child(even) td {
+	background-color: ##e0f0ff;
+}
+.arm_table tbody tr:nth-child(odd) td.nonzero {
+	background-color: #ADFFE7;
+}
+.arm_table tbody tr:nth-child(even) td.nonzero {
+	background-color: #D6FFF3;
+}
+.arm_table tbody tr:last-child td:first-child {
+	background-color: #FFFFFF;
 }
 .proc_cell {
 	text-align: center;
