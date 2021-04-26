@@ -687,6 +687,51 @@ TINBudget.serialize = function() {
 		schedule.arms.push(arm);
 	}
 	TINBudget.schedule = schedule;
-	return schedule;
-	// return JSON.stringify(schedule);
+	return JSON.stringify(schedule);
+}
+
+TINBudget.load = function(schedule_json) {
+	$('#arm_dropdowns').empty();
+	$('#arm_tables').empty();
+	
+	var schedule = JSON.parse(schedule_json);
+	TINBudget.procedures = schedule.procedures;
+	for (var arm_i in schedule.arms) {
+		var arm = schedule.arms[arm_i];
+		TINBudget.createArm();
+		
+		// set arm name
+		var arm_label_index = Number(arm_i) + 1;
+		TINBudget.active_arm_index = arm_label_index;
+		$('.active-arm').text("Arm " + arm_label_index + ": " + arm.name);
+		var this_arm_table = $('.arm_table[data-arm="' + arm_label_index + '"]');
+		
+		// add procedure rows
+		for (var procedure_row_i in arm.procedureRows) {
+			if (procedure_row_i > 0) {
+				TINBudget.createProcedureRow(arm_label_index);
+			}
+			var row_obj = arm.procedureRows[procedure_row_i];
+			
+			// set name and procedure-index attribute after creating row
+			this_arm_table.find('.procedure').last().find('button').text(row_obj.name);
+			this_arm_table.find('.procedure').last().attr('data-procedure', row_obj.index);
+		}
+		
+		// add visits
+		this_arm_table.find('th:last-child, td:last-child').remove()
+		arm.visits.forEach(function(visit, visit_i) {
+			if (!visit) {
+				return;
+			}
+			
+			// make, rename, set counts
+			TINBudget.createVisit();
+			this_arm_table.find('.visit').last().find('button').text("Visit " + visit_i + ": " + visit.name);
+			visit.procedure_counts.forEach(function(count_obj, count_i) {
+				this_arm_table.find('tbody tr:eq(' + count_i + ') td:last-child span.proc_count').text(count_obj.count);
+			});
+		});
+	}
+	TINBudget.showArm(1);
 }

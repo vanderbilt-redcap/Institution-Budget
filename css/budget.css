@@ -42,6 +42,9 @@
 .proc_cell {
 	text-align: center;
 }
+.proc_cell button {
+	display: none;
+}
 .proc_count, .visit_total {
 	font-size: 1.25rem;
 }
