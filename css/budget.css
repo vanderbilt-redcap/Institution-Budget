@@ -1,5 +1,4 @@
-/* zebra stripe colors: https://coolors.co/f5faff-edf6ff-dbedff-cce6ff */
-/* zebra stripe colors: https://coolors.co/f5faff-#e0f0ff-ADFFE7-D6FFF3 */
+/* zebra stripe colors: https://coolors.co/FFFFFF-F2FBFF-c2edff-A6E0FF */
 #arm_dropdowns {
 	display: flex;
 	margin-left: 32px;
@@ -26,16 +25,16 @@
 	text-align: center;
 }
 .arm_table tbody tr:nth-child(odd) td {
-	background-color: #f5faff;
+	background-color: #FFFFFF;
 }
 .arm_table tbody tr:nth-child(even) td {
-	background-color: ##e0f0ff;
+	background-color: #F2FBFF;
 }
 .arm_table tbody tr:nth-child(odd) td.nonzero {
-	background-color: #ADFFE7;
+	background-color: #c2edff;
 }
 .arm_table tbody tr:nth-child(even) td.nonzero {
-	background-color: #D6FFF3;
+	background-color: #A6E0FF;
 }
 .arm_table tbody tr:last-child td:first-child {
 	background-color: #FFFFFF;
