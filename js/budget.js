@@ -402,8 +402,16 @@ $(document).ready(function() {
 		TINBudget.clearArm(arm_index);
 	});
 	$('body').on('click', 'a.delete_arm', function(event) {
+		// hide other modal content, show copy_visit section
+		$('.modal-content').hide()
+		$('#tinbudget_confirm_delete').show()
+		$('#tinbudget_confirm_delete').find('p').text("Are you sure you want to delete this arm?")
+		$("#tinbudget_modal").modal('show');
+		
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
-		TINBudget.deleteArm(arm_index);
+		TINBudget.confirmDelete = function() {
+			TINBudget.deleteArm(arm_index);
+		}
 	});
 	$('body').on('click', '.modal .rename_arm', function(event) {
 		// get new name, clear input element
@@ -457,8 +465,16 @@ $(document).ready(function() {
 		TINBudget.clearVisit(visit_index);
 	});
 	$('body').on('click', 'a.delete_visit', function(event) {
+		// hide other modal content, show copy_visit section
+		$('.modal-content').hide()
+		$('#tinbudget_confirm_delete').show()
+		$('#tinbudget_confirm_delete').find('p').text("Are you sure you want to delete this visit?")
+		$("#tinbudget_modal").modal('show');
+		
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
-		TINBudget.deleteVisit(visit_index);
+		TINBudget.confirmDelete = function() {
+			TINBudget.deleteVisit(visit_index);
+		}
 	});
 	$('body').on('click', '.modal .rename_visit', function(event) {
 		// get new name, clear input element
@@ -562,6 +578,13 @@ $(document).ready(function() {
 	});
 	$('body').on('click', 'button#del_proc_table_row', function(event) {
 		$("table#edit_procedures tbody tr:last-child").remove();
+	});
+	
+	// confirm/cancel delete via modal for arms/visits/procedures
+	$('body').on('click', '#tinbudget_confirm_delete .confirm_delete', function(event) {
+		if (TINBudget.confirmDelete) {
+			TINBudget.confirmDelete();
+		}
 	});
 	
 	// change view/edit mode for table
