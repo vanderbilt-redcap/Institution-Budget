@@ -77,4 +77,32 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		return $procedures;
 	}
 	
+	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
+		$_GET['rid'] = $record;
+		$schedule_fields = json_encode($this->getProjectSetting('sched_field_name'));
+		ob_start();
+		include('php/getBudgetTable.php');
+		// escape quotation marks
+		$budget_table = addslashes(ob_get_contents());
+		ob_end_clean();
+		// escape newlines to make this a multi-line string in js
+		$budget_table = str_replace(array("\r\n", "\n", "\r"), '\\n', $budget_table);
+		carl_log('hi');
+		?>
+		<script type="text/javascript">
+			TINBudgetSurvey = {
+				schedule_fields: JSON.parse('<?= $schedule_fields; ?>'),
+				budget_table: "<?=$budget_table;?>"
+			}
+		</script>
+		<script type="text/javascript" src="<?= $this->getUrl('js/survey_page.js'); ?>"></script>
+		<script type='text/javascript'>
+			TINBudget = {
+				budget_css_url: '<?= $module->getUrl('css/budget.css'); ?>'
+			}
+			TINBudget.procedures = JSON.parse('<?= json_encode($procedures) ?>')
+		</script>
+		<script type='text/javascript' src='<?= $module->getUrl('js/budget.js'); ?>'></script>
+		<?php
+	}
 }

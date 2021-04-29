@@ -1,3 +1,6 @@
+
+TINBudget.MAX_STATES = 100;
+
 TINBudget.refreshSchedule = function() {
 	// highlight dropdown for active arm
 	$('.arm button').removeClass('active-arm')
@@ -135,9 +138,9 @@ TINBudget.copyArm = function(arm_index) {
 		var arm_name = $(".arm[data-arm=" + arm_i + "] button.dropdown-toggle").text();
 		arm_name = arm_name.substring(arm_name.search(':')+1).trim();
 		
-		var arm_select_button = "<button data-arm-index='" + arm_i + "' class='btn btn-outline-primary arm_select'>" + arm_name + "</button>";
+		var arm_select_button = "<button type='button' data-arm-index='" + arm_i + "' class='btn btn-outline-primary arm_select'>" + arm_name + "</button>";
 		if (arm_i == TINBudget.copy_source_arm_index) {
-			arm_select_button = "<button data-arm-index='" + arm_i + "' class='btn btn-outline-secondary arm_select' disabled'>" + arm_name + "</button>"
+			arm_select_button = "<button type='button' data-arm-index='" + arm_i + "' class='btn btn-outline-secondary arm_select' disabled'>" + arm_name + "</button>"
 		}
 		$("#select_arms").append(arm_select_button);
 	}
@@ -162,9 +165,9 @@ TINBudget.createArm = function() {
 		<tr>\
 			<td class='procedure'>Procedure 1</td>\
 			<td class='proc_cell'>\
-				<button class='btn btn-outline-primary proc_decrement'>-</button>\
+				<button type='button' class='btn btn-outline-primary proc_decrement'>-</button>\
 				<span data-cost='120' class='proc_count mx-2'>0</span>\
-				<button class='btn btn-outline-primary proc_increment'>+</button>\
+				<button type='button' class='btn btn-outline-primary proc_increment'>+</button>\
 			</td>\
 		</tr>\
 		<tr>\
@@ -174,7 +177,7 @@ TINBudget.createArm = function() {
 		</tbody>\
 	</table>";
 	var new_arm_dropdown = "<div class='dropdown arm' data-arm='" + new_arm_i + "'>\
-		<button class='btn btn-secondary dropdown-toggle' type='button' id='dropdownMenuButton" + new_arm_i + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownMenuButton" + new_arm_i + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
 			Arm " + new_arm_i + ": New Arm\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownMenuButton" + new_arm_i + "'>\
@@ -225,7 +228,7 @@ TINBudget.createVisit = function() {
 	var visit_j = visit_count + 1;
 	var visit_dd = "<th>\
 	<div class='dropdown visit' data-visit='" + visit_j + "'>\
-		<button class='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownVisit" + visit_j + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit" + visit_j + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
 			Visit " + visit_j + ": New Visit\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit" + visit_j + "'>\
@@ -239,9 +242,9 @@ TINBudget.createVisit = function() {
 	</th>";
 	
 	var visit_proc_cell = "<td class='proc_cell' data-visit='" + visit_j + "'>\
-		<button class='btn btn-outline-primary proc_decrement'>-</button>\
+		<button type='button' class='btn btn-outline-primary proc_decrement'>-</button>\
 		<span data-cost='' class='proc_count mx-2'>0</span>\
-		<button class='btn btn-outline-primary proc_increment'>+</button>\
+		<button type='button' class='btn btn-outline-primary proc_increment'>+</button>\
 	</td>";
 	
 	var visit_total_cell = "<td class='visit_total' data-visit='" + visit_j + "'>0</td>";
@@ -265,9 +268,9 @@ TINBudget.copyVisit = function(visit_index) {
 	var visit_count = $('.arm_table[data-arm="' + TINBudget.active_arm_index + '"] .visit').length;
 	for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 		var visit_name = $(".arm_table[data-arm=" + TINBudget.active_arm_index + "] .visit[data-visit='" + visit_i + "']").find('button').text();
-		var visit_select_button = "<button class='btn btn-outline-primary visit_select' data-visit-index='" + visit_i + "'>" + visit_name + "</button>";
+		var visit_select_button = "<button type='button' class='btn btn-outline-primary visit_select' data-visit-index='" + visit_i + "'>" + visit_name + "</button>";
 		if (visit_i == visit_index) {
-			visit_select_button = "<button class='btn btn-outline-secondary visit_select' disabled data-visit-index='" + visit_i + "'>" + visit_name + "</button>"
+			visit_select_button = "<button type='button' class='btn btn-outline-secondary visit_select' disabled data-visit-index='" + visit_i + "'>" + visit_name + "</button>"
 		}
 		visit_name = visit_name.substring(visit_name.search(':') + 1).trim();
 		$("#select_visits").append(visit_select_button);
@@ -325,7 +328,7 @@ TINBudget.createProcedureRow = function(arm_index = null) {
 	var new_row = "<tr>\
 	<td class='proc_dd_cell'>\
 		<div class='dropdown procedure' data-procedure='1'>\
-			<button class='btn btn-outline-secondary dropdown-toggle' type='button' id='dropdownProcedure" + proc_i + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+			<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownProcedure" + proc_i + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
 				" + proc_name + "\
 			</button>\
 			<div class='dropdown-menu' aria-labelledby='dropdownProcedure" + proc_i + "'>\
@@ -341,9 +344,9 @@ TINBudget.createProcedureRow = function(arm_index = null) {
 	var visit_count = Number(arm_table.find('.visit').length);
 	for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 		new_row += "<td class='proc_cell' data-visit='" + visit_i + "'>\
-			<button class='btn btn-outline-primary proc_decrement'>-</button>\
+			<button type='button' class='btn btn-outline-primary proc_decrement'>-</button>\
 			<span data-cost='' class='proc_count mx-2'>0</span>\
-			<button class='btn btn-outline-primary proc_increment'>+</button>\
+			<button type='button' class='btn btn-outline-primary proc_increment'>+</button>\
 		</td>"
 	}
 	
@@ -384,6 +387,7 @@ $(document).ready(function() {
 	$('body').on('click', 'a.show_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		TINBudget.showArm(arm_index);
+		return false;
 	});
 	$('body').on('click', 'a.copy_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
@@ -391,6 +395,7 @@ $(document).ready(function() {
 	});
 	$('body').on('click', 'a.create_arm', function(event) {
 		TINBudget.createArm();
+		TINBudget.pushState();
 	});
 	$('body').on('click', '.arm .rename_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
@@ -400,6 +405,7 @@ $(document).ready(function() {
 	$('body').on('click', 'a.clear_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		TINBudget.clearArm(arm_index);
+		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.delete_arm', function(event) {
 		// hide other modal content, show copy_visit section
@@ -411,6 +417,7 @@ $(document).ready(function() {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		TINBudget.confirmDelete = function() {
 			TINBudget.deleteArm(arm_index);
+			TINBudget.pushState();
 		}
 	});
 	$('body').on('click', '.modal .rename_arm', function(event) {
@@ -421,6 +428,7 @@ $(document).ready(function() {
 		// update target arm and clear target_arm
 		$('.arm[data-arm="' + TINBudget.target_arm + '"] button').text("Arm " + TINBudget.target_arm + ": " + new_arm_name);
 		TINBudget.target_arm = null;
+		TINBudget.pushState();
 	});
 	$('body').on('click', '.modal .arm_select', function(event) {
 		var btn = $(event.target);
@@ -445,24 +453,29 @@ $(document).ready(function() {
 		});
 		TINBudget.copy_source_arm_index = null;
 		TINBudget.showArm(visible_table_index);
+		TINBudget.pushState();
 	});
 	
 	// register visit dropdown buttons
 	$('body').on('click', 'a.create_visit', function(event) {
 		TINBudget.createVisit();
+		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.copy_visit', function(event) {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
+		// open modal
 		TINBudget.copyVisit(visit_index);
 	});
 	$('body').on('click', 'a.rename_visit', function(event) {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
 		TINBudget.target_visit = visit_index;
+		// open modal
 		TINBudget.renameVisit(visit_index);
 	});
 	$('body').on('click', 'a.clear_visit', function(event) {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
 		TINBudget.clearVisit(visit_index);
+		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.delete_visit', function(event) {
 		// hide other modal content, show copy_visit section
@@ -474,6 +487,7 @@ $(document).ready(function() {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
 		TINBudget.confirmDelete = function() {
 			TINBudget.deleteVisit(visit_index);
+			TINBudget.pushState();
 		}
 	});
 	$('body').on('click', '.modal .rename_visit', function(event) {
@@ -486,6 +500,7 @@ $(document).ready(function() {
 		var active_arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
 		active_arm_table.find('.visit[data-visit="' + TINBudget.target_visit + '"] button').text(new_visit_text);
 		TINBudget.target_visit = null;
+		TINBudget.pushState();
 	});
 	$('body').on('click', '.modal .visit_select', function(event) {
 		var btn = $(event.target);
@@ -520,11 +535,13 @@ $(document).ready(function() {
 		TINBudget.copy_destination_visits = null;
 		TINBudget.copy_source_visit_index = null;
 		TINBudget.updateAllVisitCosts();
+		TINBudget.pushState();
 	});
 	
 	// register procedure dropdown buttons
 	$('body').on('click', 'a.create_procedure', function(event) {
 		TINBudget.createProcedureRow();
+		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.edit_procedures', function(event) {
 		TINBudget.editProcedures();
@@ -532,6 +549,7 @@ $(document).ready(function() {
 	$('body').on('click', 'a.delete_procedure', function(event) {
 		var remove_index = $(event.target).closest('tr').index();
 		TINBudget.deleteProcedureRow(remove_index);
+		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.procedure_option', function(event) {
 		var proc_option = $(event.target);
@@ -544,6 +562,7 @@ $(document).ready(function() {
 		// refresh costs and sums
 		TINBudget.refreshProcedureCosts();
 		TINBudget.updateAllVisitCosts();
+		TINBudget.pushState();
 	});
 	
 	// edit procedures table's modal events (save, cancel, add row, remove row)
@@ -566,6 +585,7 @@ $(document).ready(function() {
 		});
 		
 		TINBudget.refreshSchedule();
+		TINBudget.pushState();
 	});
 	$('body').on('click', '.modal .cancel_proc_changes', function(event) {
 		TINBudget.refreshProceduresTable();
@@ -587,10 +607,10 @@ $(document).ready(function() {
 		}
 	});
 	
-	// change view/edit mode for table
-	$("body").on("change", "#viewEditToggle", function() {
-		$('.proc_cell button').toggle()
-	});
+	// // change view/edit mode for table
+	// $("body").on("change", "#viewEditToggle", function() {
+		// $('.proc_cell button').toggle()
+	// });
 	
 	// register click event for when user clicks + or - button for procedure count cell
 	$('body').on('click', '.proc_cell button', function(event) {
@@ -616,6 +636,7 @@ $(document).ready(function() {
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = proc_cell.attr('data-visit');
 		TINBudget.updateVisitCost(arm_index, visit_index);
+		TINBudget.pushState();
 	});
 	
 	// hide/show buttons automatically
@@ -627,10 +648,23 @@ $(document).ready(function() {
 		$('.proc_cell button').hide();
 	});
 	
+	// allow undo/redo
+	$('body').on('keydown', function(event) {
+		if (event.ctrlKey && event.key === 'z') {
+			TINBudget.undo();
+		} else if (event.ctrlKey && event.key === 'y') {
+			TINBudget.redo();
+		}
+	});
+	
+	TINBudget.states = [];
+	TINBudget.stateIndex = 0;
+	TINBudget.pushState();
+	
 });
 
 // saving/loading
-TINBudget.serialize = function() {
+TINBudget.getState = function() {
 	var schedule = {
 		arms: [],
 		procedures: TINBudget.procedures
@@ -686,15 +720,25 @@ TINBudget.serialize = function() {
 		// add arm obj to schedule.arms
 		schedule.arms.push(arm);
 	}
-	TINBudget.schedule = schedule;
-	return JSON.stringify(schedule);
+	return schedule
 }
 
-TINBudget.load = function(schedule_json) {
+TINBudget.pushState = function() {
+	// prune invalid future states
+	TINBudget.states = TINBudget.states.slice(0, TINBudget.stateIndex + 1);
+	// push new state on top
+	TINBudget.states.push(TINBudget.getState());
+	TINBudget.stateIndex = TINBudget.states.length - 1;
+	// enforce size
+	TINBudget.states = TINBudget.states.slice(-TINBudget.MAX_STATES);
+	
+	console.log("pushed state, states:", TINBudget.states);
+}
+
+TINBudget.loadState = function(schedule) {
 	$('#arm_dropdowns').empty();
 	$('#arm_tables').empty();
 	
-	var schedule = JSON.parse(schedule_json);
 	TINBudget.procedures = schedule.procedures;
 	for (var arm_i in schedule.arms) {
 		var arm = schedule.arms[arm_i];
@@ -733,5 +777,25 @@ TINBudget.load = function(schedule_json) {
 			});
 		});
 	}
+	TINBudget.refreshProceduresTable();
 	TINBudget.showArm(1);
+}
+
+TINBudget.undo = function() {
+	if (TINBudget.stateIndex > 0) {
+		TINBudget.stateIndex--;
+		TINBudget.loadState(TINBudget.states[TINBudget.stateIndex]);
+	}
+	
+	console.log("did undo -- stateIndex: " + TINBudget.stateIndex);
+}
+
+TINBudget.redo = function() {
+	var lastIndex = TINBudget.states.length - 1;
+	if (TINBudget.stateIndex < lastIndex) {
+		TINBudget.stateIndex++;
+		TINBudget.loadState(TINBudget.states[TINBudget.stateIndex]);
+	}
+	
+	console.log("did redo -- stateIndex: ", TINBudget.stateIndex);
 }

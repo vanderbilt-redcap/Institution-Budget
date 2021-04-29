@@ -1,6 +1,12 @@
 <?php
 // get procedure costs
+ob_start();
+echo "<div id='budget_table'>";
 try {
+	if (get_class($this) == 'Vanderbilt\TINBudget\TINBudget') {
+		// survey page shim, may eventually want to convert $module to $this everywhere in this file (although that will break including this php script into stand-alone module pages)
+		$module = $this;
+	}
 	$arms = $module->getArms();
 	$procedures = $module->getProcedures();
 	$rid = preg_replace("/\D/", '', $_GET['rid']);
@@ -37,7 +43,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	?><div id='arm_dropdowns' class='mb-3'><?php
 	foreach ($arms as $i => $arm) { ?>
 		<div class="dropdown arm" data-arm="<?= $i+1 ?>">
-			<button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownArm<?= $i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownArm<?= $i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				<?= "Arm " . ($i+1) . ": {$arm->name}" ?>
 			</button>
 			<div class="dropdown-menu" aria-labelledby="dropdownArm<?= $i+1 ?>">
@@ -65,7 +71,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 							?>
 							<th>
 							<div class="dropdown visit" data-visit="<?= $visit_i+1 ?>">
-								<button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownVisit<?= $visit_i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownVisit<?= $visit_i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 									<?= "Visit " . ($visit_i+1) . ": $visit_name" ?>
 								</button>
 								<div class="dropdown-menu" aria-labelledby="dropdownVisit<?= $visit_i+1 ?>">
@@ -95,7 +101,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						?>
 						<td class='proc_dd_cell'>
 						<div class="dropdown procedure" data-procedure="<?= $proc_i+1 ?>">
-							<button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownProcedure<?= $proc_i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							<button type='button' class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownProcedure<?= $proc_i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 								<?= "$proc_name" ?>
 							</button>
 							<div class="dropdown-menu" aria-labelledby="dropdownProcedure<?= $proc_i+1 ?>">
@@ -111,9 +117,9 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						// add procedure count cells
 						for ($i = 1; $i <= $columns; $i++) {
 							echo "<td class='proc_cell' data-visit='$i'>
-							<button class='btn btn-outline-primary proc_decrement'>-</button>
+							<button type='button' class='btn btn-outline-primary proc_decrement'>-</button>
 							<span data-cost='$proc_cost' class='proc_count mx-2'>0</span>
-							<button class='btn btn-outline-primary proc_increment'>+</button>
+							<button type='button' class='btn btn-outline-primary proc_increment'>+</button>
 							</td>";
 						}
 						echo "</tr>";
@@ -234,8 +240,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 					</tbody>
 				</table>
 				<div class="mt-3" id="edit_procedure_buttons">
-					<button class="btn btn-outline-primary" id="add_proc_table_row">Add Row</button>
-					<button class="btn btn-outline-danger" id="del_proc_table_row">Remove Last Row</button>
+					<button type='button' class="btn btn-outline-primary" id="add_proc_table_row">Add Row</button>
+					<button type='button' class="btn btn-outline-danger" id="del_proc_table_row">Remove Last Row</button>
 				</div>
 			</div>
 			<div class="modal-footer">
@@ -262,12 +268,4 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 	</div>
 </div>
-
-<!-- -->
-<script type='text/javascript'>
-	TINBudget = {
-		budget_css_url: '<?= $module->getUrl('css/budget.css'); ?>'
-	}
-	TINBudget.procedures = JSON.parse('<?= json_encode($procedures) ?>')
-</script>
-<script type='text/javascript' src='<?= $module->getUrl('js/budget.js'); ?>'></script>
+</div>
