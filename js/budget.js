@@ -155,11 +155,28 @@ TINBudget.createArm = function() {
 		alert("Can't create a new arm when more than 9 arms already exist");
 		return;
 	}
+	
 	var new_arm_i = $('.arm_table').length + 1;
+	
+	var visit_1_th = "<th>\
+	<div class='dropdown visit' data-visit='1'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit1' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+			Visit 1: New Visit\
+		</button>\
+		<div class='dropdown-menu' aria-labelledby='dropdownVisit1'>\
+			<a class='dropdown-item create_visit' href='#'>Create another visit</a>\
+			<a class='dropdown-item rename_visit' href='#'>Rename this visit</a>\
+			<a class='dropdown-item copy_visit' href='#'>Copy procedure counts to another visit</a>\
+			<a class='dropdown-item clear_visit' href='#'>Clear procedure counts for this visit</a>\
+			<a class='dropdown-item delete_visit' href='#'>Delete this visit</a>\
+		</div>\
+	</div>\
+	</th>";
+	
 	var new_arm_table = "<table class='arm_table' data-arm='" + new_arm_i + "'>\
 		<thead>\
 			<th></th>\
-			<th class='pr-3 visit'>Visit 1</th>\
+			" + visit_1_th + "\
 		</thead>\
 		<tbody>\
 		<tr>\
