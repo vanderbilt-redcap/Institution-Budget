@@ -327,7 +327,6 @@ TINBudget.updateVisitCost = function(arm, visit) {
 		
 		// update highlight
 		var cell = $(e).parent();
-		console.log('proc_cell td: ', cell);
 		cell.removeClass('nonzero')
 		if (count > 0) {
 			cell.addClass('nonzero')
@@ -750,6 +749,10 @@ TINBudget.pushState = function() {
 	TINBudget.states = TINBudget.states.slice(-TINBudget.MAX_STATES);
 	
 	console.log("pushed state, states:", TINBudget.states);
+	
+	if (TINBudgetSurvey) {
+		TINBudgetSurvey.updateScheduleFields(JSON.stringify(TINBudget.states[TINBudget.states.length-1]));
+	}
 }
 
 TINBudget.loadState = function(schedule) {
@@ -796,6 +799,10 @@ TINBudget.loadState = function(schedule) {
 	}
 	TINBudget.refreshProceduresTable();
 	TINBudget.showArm(1);
+	
+	if (TINBudgetSurvey) {
+		TINBudgetSurvey.updateScheduleFields(JSON.stringify(schedule));
+	}
 }
 
 TINBudget.undo = function() {

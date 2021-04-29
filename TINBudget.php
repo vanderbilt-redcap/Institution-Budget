@@ -92,7 +92,14 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<script type="text/javascript">
 			TINBudgetSurvey = {
 				schedule_fields: JSON.parse('<?= $schedule_fields; ?>'),
-				budget_table: "<?=$budget_table;?>"
+				budget_table: "<?=$budget_table;?>",
+				updateScheduleFields: function(scheduleString) {
+					for (var field_i in TINBudgetSurvey.schedule_fields) {
+						var field_name = TINBudgetSurvey.schedule_fields[field_i];
+						// console.log("inputs: ", $("input[name='" + field_name + "']"));
+						$("input[name='" + field_name + "']").val(scheduleString);
+					}
+				}
 			}
 		</script>
 		<script type="text/javascript" src="<?= $this->getUrl('js/survey_page.js'); ?>"></script>
