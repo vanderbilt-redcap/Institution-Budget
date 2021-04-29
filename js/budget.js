@@ -324,6 +324,14 @@ TINBudget.updateVisitCost = function(arm, visit) {
 		if (cost && count) {
 			sum = sum + cost * count;
 		}
+		
+		// update highlight
+		var cell = $(e).parent();
+		console.log('proc_cell td: ', cell);
+		cell.removeClass('nonzero')
+		if (count > 0) {
+			cell.addClass('nonzero')
+		}
 	});
 	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text(sum);
 }
@@ -640,14 +648,6 @@ $(document).ready(function() {
 		var current_count = Number(count_span.text());
 		var new_count = Math.max(current_count + to_add, 0);
 		count_span.text(new_count);
-		
-		// update td class to highlight nonzero procedure counts
-		if (new_count == 0) {
-			proc_cell.removeClass('nonzero')
-		} else {
-			proc_cell.removeClass('nonzero')
-			proc_cell.addClass('nonzero')
-		}
 		
 		// update sum
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
