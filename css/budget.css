@@ -2,16 +2,17 @@
 #budget_table {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-	justify-content: center;
+	/* align-items: center; */
+	/* justify-content: center; */
 	padding: 16px;
+	overflow: scroll;
 }
 #pagecontainer {
 	max-width: 1200px;
 }
 #arm_dropdowns {
 	display: flex;
-	margin-left: 32px;
+	margin: auto;
 }
 #arm_dropdowns div {
 	margin-right: 24px;
@@ -22,9 +23,13 @@
 	color: white;
 }
 
+div#arm_tables {
+	margin: auto;
+}
 .arm_table {
 	display: none;
 	font-size: 1rem;
+	margin: auto;
 }
 .arm_table th, .arm_table td:nth-child(1) {
 	padding: 8px 8px;
@@ -35,10 +40,10 @@
 	text-align: center;
 }
 .arm_table tbody tr:nth-child(odd) td {
-	background-color: #FFFFFF;
+	background-color: #F2F6FB;
 }
 .arm_table tbody tr:nth-child(even) td {
-	background-color: #F2FBFF;
+	background-color: #E9ECF6;
 }
 .arm_table tbody tr:nth-child(odd) td.nonzero {
 	background-color: #c2edff;
