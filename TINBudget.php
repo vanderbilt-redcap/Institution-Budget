@@ -87,7 +87,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		ob_end_clean();
 		// escape newlines to make this a multi-line string in js
 		$budget_table = str_replace(array("\r\n", "\n", "\r"), '\\n', $budget_table);
-		carl_log('hi');
 		?>
 		<script type="text/javascript">
 			TINBudgetSurvey = {
@@ -96,13 +95,18 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				updateScheduleFields: function(scheduleString) {
 					for (var field_i in TINBudgetSurvey.schedule_fields) {
 						var field_name = TINBudgetSurvey.schedule_fields[field_i];
-						// console.log("inputs: ", $("input[name='" + field_name + "']"));
 						$("input[name='" + field_name + "']").val(scheduleString);
 					}
 				}
 			}
+			
+			$(document).ready(function() {
+				$("#surveyinstructions").after("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
+				TINBudgetSurvey.schedule_fields.forEach(function(fieldname) {
+					$('#' + fieldname + '-tr').hide();
+				});
+			});
 		</script>
-		<script type="text/javascript" src="<?= $this->getUrl('js/survey_page.js'); ?>"></script>
 		<script type='text/javascript'>
 			TINBudget = {
 				budget_css_url: '<?= $module->getUrl('css/budget.css'); ?>'

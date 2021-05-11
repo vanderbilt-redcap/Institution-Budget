@@ -672,6 +672,9 @@ $(document).ready(function() {
 			TINBudget.redo();
 		}
 	});
+	// register undo/redo button click events
+	$('body').on('click', '#tin_budget_undo', TINBudget.undo);
+	$('body').on('click', '#tin_budget_redo', TINBudget.redo);
 	
 	TINBudget.states = [];
 	TINBudget.stateIndex = 0;
@@ -748,6 +751,8 @@ TINBudget.pushState = function() {
 	// enforce size
 	TINBudget.states = TINBudget.states.slice(-TINBudget.MAX_STATES);
 	
+	TINBudget.refreshStateButtons()
+	
 	console.log("pushed state, states:", TINBudget.states);
 	
 	if (TINBudgetSurvey) {
@@ -800,6 +805,8 @@ TINBudget.loadState = function(schedule) {
 	TINBudget.refreshProceduresTable();
 	TINBudget.showArm(1);
 	
+	TINBudget.refreshStateButtons()
+	
 	if (TINBudgetSurvey) {
 		TINBudgetSurvey.updateScheduleFields(JSON.stringify(schedule));
 	}
@@ -810,8 +817,6 @@ TINBudget.undo = function() {
 		TINBudget.stateIndex--;
 		TINBudget.loadState(TINBudget.states[TINBudget.stateIndex]);
 	}
-	
-	console.log("did undo -- stateIndex: " + TINBudget.stateIndex);
 }
 
 TINBudget.redo = function() {
@@ -820,6 +825,20 @@ TINBudget.redo = function() {
 		TINBudget.stateIndex++;
 		TINBudget.loadState(TINBudget.states[TINBudget.stateIndex]);
 	}
-	
-	console.log("did redo -- stateIndex: ", TINBudget.stateIndex);
+}
+
+TINBudget.refreshStateButtons = function() {
+	// disable/enable undo/redo buttons based on state stack
+	var undo = $("#tin_budget_undo");
+	var redo = $("#tin_budget_redo");
+	if ((TINBudget.states.length - 1) > TINBudget.stateIndex) {	// is there a state to go forward to?
+		redo.removeAttr('disabled');
+	} else {
+		redo.attr('disabled', 'disabled');
+	}
+	if (TINBudget.stateIndex > 0) {	// is there a state to go back to?
+		undo.removeAttr('disabled');
+	} else {
+		undo.attr('disabled', 'disabled');
+	}
 }

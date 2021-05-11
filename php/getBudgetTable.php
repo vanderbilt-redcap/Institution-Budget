@@ -134,9 +134,16 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 					echo "</tr>";
 				?>
 			</tbody>
-		</table><?php
+		</table>
+	<?php
 	}
-	?></div><?php
+	?>
+	</div>
+	<div style="margin-left: 32px; margin-top: 8px;">
+		<button id="tin_budget_undo" type="button" class="btn btn-outline-primary" disabled>Undo</button>
+		<button id="tin_budget_redo" type="button" class="btn btn-outline-primary" disabled>Redo</button>
+	</div>
+	<?php
 }
 ?>
 
