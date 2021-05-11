@@ -71,6 +71,7 @@ TINBudget.refreshProcedureOptions = function() {
 }
 TINBudget.refreshProcedureCosts = function() {
 	// update all .proc_cell data-cost attributes based on the procedure selected in the dropdown in the first cell of the row
+	
 	$('.procedure').each(function(i, div) {
 		var proc_name = $(div).find('button.dropdown-toggle').text().trim();
 		var proc_cost;
@@ -210,7 +211,9 @@ TINBudget.createArm = function() {
 	// create elements and insert into DOM
 	$("#arm_dropdowns").append(new_arm_dropdown);
 	$("#arm_tables").append(new_arm_table);
-	TINBudget.showArm(new_arm_i);
+	TINBudget.refreshSchedule();
+	
+	return new_arm_i;
 }
 TINBudget.renameArm = function(arm_index) {
 	// modal asking for new name
@@ -411,14 +414,15 @@ $(document).ready(function() {
 	$('body').on('click', 'a.show_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		TINBudget.showArm(arm_index);
-		return false;
+		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.copy_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		TINBudget.copyArm(arm_index);
 	});
 	$('body').on('click', 'a.create_arm', function(event) {
-		TINBudget.createArm();
+		var new_arm_index = TINBudget.createArm();
+		TINBudget.showArm(new_arm_index);
 		TINBudget.pushState();
 	});
 	$('body').on('click', '.arm .rename_arm', function(event) {
@@ -685,6 +689,7 @@ $(document).ready(function() {
 // saving/loading
 TINBudget.getState = function() {
 	var schedule = {
+		active_arm_index: Number(TINBudget.active_arm_index),
 		arms: [],
 		procedures: TINBudget.procedures
 	};
@@ -803,7 +808,7 @@ TINBudget.loadState = function(schedule) {
 		});
 	}
 	TINBudget.refreshProceduresTable();
-	TINBudget.showArm(1);
+	TINBudget.showArm(schedule.active_arm_index);
 	
 	TINBudget.refreshStateButtons()
 	
