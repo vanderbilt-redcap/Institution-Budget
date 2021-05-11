@@ -50,11 +50,12 @@ TINBudget.refreshProceduresTable = function() {
 	// add rows to edit_procedures table using TINBudget.procedures data
 	TINBudget.procedures.forEach(function(procedure, i) {
 		$("table#edit_procedures tbody").append("<tr>\
-			<td><input type='text'></td>\
-			<td><input type='number'></td>\
+			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
+			<td class='name'><input type='text'></td>\
+			<td class='cost'><input type='number'></td>\
 		</tr>");
-		$("table#edit_procedures tbody tr:last-child td:first-child input").val(procedure.name);
-		$("table#edit_procedures tbody tr:last-child td:last-child input").val(procedure.cost);
+		$("table#edit_procedures tbody tr:last-child td.name input").val(procedure.name);
+		$("table#edit_procedures tbody tr:last-child td.cost input").val(procedure.cost);
 	});
 }
 TINBudget.refreshProcedureOptions = function() {
@@ -599,15 +600,15 @@ $(document).ready(function() {
 		var proc_table = $('table#edit_procedures');
 		TINBudget.procedures = [];
 		proc_table.find('tbody tr').each(function(i, tr) {
-			var proc_name = $(tr).find('td:first-child input').val();
-			var proc_cost = $(tr).find('td:last-child input').val();
+			var proc_name = $(tr).find('td.name input').val();
+			var proc_cost = $(tr).find('td.cost input').val();
 			if (!proc_name) {
 				proc_name = "Procedure " + (i + 1);
-				$(tr).find('td:first-child input').val(proc_name);
+				$(tr).find('td.name input').val(proc_name);
 			}
 			if (!proc_cost) {
 				proc_cost = "0";
-				$(tr).find('td:last-child input').val(proc_cost);
+				$(tr).find('td.cost input').val(proc_cost);
 			}
 			TINBudget.procedures.push({name: proc_name, cost: proc_cost});
 		});
@@ -620,12 +621,13 @@ $(document).ready(function() {
 	});
 	$('body').on('click', 'button#add_proc_table_row', function(event) {
 		$("table#edit_procedures tbody").append("<tr>\
-			<td><input type='text'></td>\
-			<td><input type='number'></td>\
+			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
+			<td class='name'><input type='text'></td>\
+			<td class='cost'><input type='number'></td>\
 		</tr>");
 	});
-	$('body').on('click', 'button#del_proc_table_row', function(event) {
-		$("table#edit_procedures tbody tr:last-child").remove();
+	$('body').on('click', '.delete_this_row', function(event) {
+		$(event.target).closest('tr').remove();
 	});
 	
 	// confirm/cancel delete via modal for arms/visits/procedures

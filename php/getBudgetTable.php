@@ -239,6 +239,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				<table id="edit_procedures">
 					<thead>
 						<tr>
+							<th>Delete</th>
 							<th>Procedure Name</th>
 							<th>Cost</th>
 						</tr>
@@ -248,7 +249,6 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				</table>
 				<div class="mt-3" id="edit_procedure_buttons">
 					<button type='button' class="btn btn-outline-primary" id="add_proc_table_row">Add Row</button>
-					<button type='button' class="btn btn-outline-danger" id="del_proc_table_row">Remove Last Row</button>
 				</div>
 			</div>
 			<div class="modal-footer">
