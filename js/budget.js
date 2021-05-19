@@ -83,7 +83,7 @@ TINBudget.refreshProcedureCosts = function() {
 			}
 		}
 		if (!proc_cost) {
-			alert("The TIN Budget module couldn't find the procedure cost for procedure named '" + proc_name + "'!");
+			console.log("The TIN Budget module couldn't find the procedure cost for procedure named '" + proc_name + "'!");
 			return;
 		}
 		
@@ -636,11 +636,6 @@ $(document).ready(function() {
 			TINBudget.confirmDelete();
 		}
 	});
-	
-	// // change view/edit mode for table
-	// $("body").on("change", "#viewEditToggle", function() {
-		// $('.proc_cell button').toggle()
-	// });
 	
 	// register click event for when user clicks + or - button for procedure count cell
 	$('body').on('click', '.proc_cell button', function(event) {

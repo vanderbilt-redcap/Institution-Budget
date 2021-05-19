@@ -9,6 +9,7 @@ try {
 	}
 	$arms = $module->getArms();
 	$procedures = $module->getProcedures();
+	
 	$rid = preg_replace("/\D/", '', $_GET['rid']);
 } catch (\Exception $e) {
 	?>
@@ -26,18 +27,6 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	<?php
 } else {
 	// show schedule of events for these arms/procedures
-	
-	/*
-	// add table view/edit mode toggle switch
-	?>
-	<div>
-		<div class="custom-control custom-switch">
-			<input type="checkbox" class="custom-control-input" id="viewEditToggle">
-			<label class="custom-control-label" for="viewEditToggle">Hide Counter Buttons</label>
-		</div>
-	</div>
-	<?php
-	*/
 	
 	// add arm dropdown buttons
 	?><div id='arm_dropdowns' class='mb-3'><?php

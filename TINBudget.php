@@ -39,7 +39,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 	public function getArms() {
 		$data = $this->getScheduleRecordData();
 		$arms = [];
-		
 		if ($arm_count = $data->arms) {
 			for ($arm_i = 1; $arm_i <= $arm_count; $arm_i++) {
 				$arm = (object) [
@@ -66,9 +65,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$procedures = [];
 		if ($proc_count = $data->proc) {
 			for ($proc_i = 1; $proc_i <= $proc_count; $proc_i++) {
-				$proc_names = $this->getChoiceLabels("procedure$proc_i");
+				$proc_field_name = "procedure$proc_i";
+				$proc_name = $data->$proc_field_name;
 				$procedures[] = (object) [
-					"name" => $proc_names[$data->{"procedure$proc_i"}],
+					"name" => $proc_name,
 					"cost" => $data->{"cost$proc_i"}
 				];
 			}
@@ -101,8 +101,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			}
 			
 			$(document).ready(function() {
-				$("#surveyinstructions").after("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
 				TINBudgetSurvey.schedule_fields.forEach(function(fieldname) {
+					$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
 					$('#' + fieldname + '-tr').hide();
 				});
 			});
