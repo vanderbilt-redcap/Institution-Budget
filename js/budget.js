@@ -53,9 +53,11 @@ TINBudget.refreshProceduresTable = function() {
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
 			<td class='name'><input type='text'></td>\
 			<td class='cost'><input type='number'></td>\
+			<td class='cpt'><input type='text'></td>\
 		</tr>");
 		$("table#edit_procedures tbody tr:last-child td.name input").val(procedure.name);
 		$("table#edit_procedures tbody tr:last-child td.cost input").val(procedure.cost);
+		$("table#edit_procedures tbody tr:last-child td.cpt input").val(procedure.cpt);
 	});
 }
 TINBudget.refreshProcedureOptions = function() {

@@ -17,6 +17,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			for ($proc = 1; $proc <= 25; $proc++) {
 				$fields[] = "procedure$proc";
 				$fields[] = "cost$proc";
+				$fields[] = "cpt$proc";
 			}
 			$this->scheduleDataFields = $fields;
 		}
@@ -69,7 +70,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				$proc_name = $data->$proc_field_name;
 				$procedures[] = (object) [
 					"name" => $proc_name,
-					"cost" => $data->{"cost$proc_i"}
+					"cost" => $data->{"cost$proc_i"},
+					"cpt" => $data->{"cpt$proc_i"}
 				];
 			}
 		}

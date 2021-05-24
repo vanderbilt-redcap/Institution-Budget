@@ -231,6 +231,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 							<th>Delete</th>
 							<th>Procedure Name</th>
 							<th>Cost</th>
+							<th>CPT Code</th>
 						</tr>
 					</thead>
 					<tbody>
