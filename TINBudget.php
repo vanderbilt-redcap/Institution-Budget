@@ -173,10 +173,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 	}
 	
-	public function getSummaryReviewData($record, $instance = 1) {
-		// TODO -- make sure correct instance data is referenced
+	public function getSummaryReviewData($record, $instance) {
+		if (empty($instance))
+			$instance = 1;
 		$data = new \stdClass();
-		$field_list = [];
+		$field_list = ['institution'];
 		for ($i = 1; $i <= 5; $i++) {
 			$field_list[] = "fixedcost$i";
 			$field_list[] = "fixedcost$i" . "_detail";
@@ -187,7 +188,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 		
 		$rc_data = \REDCap::getData('array', $record, $field_list);
-		// carl_log("rc_data for summary review page: " . print_r($rc_data, true));
 		
 		// collate field data, prioritizing target instance data set
 		$event_id = array_key_first($rc_data[$record]);
@@ -196,8 +196,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$instance_data = reset($instance_data);
 		$instance_data = reset($instance_data);
 		$instance_data = $instance_data[$instance];
-		// carl_log("base_data for summary review page: " . print_r($base_data, true));
-		// carl_log("instance_data for summary review page: " . print_r($instance_data, true));
 		foreach ($field_list as $i => $field_name) {
 			if (!empty($base_data[$field_name])) {
 				$data->$field_name = $base_data[$field_name];
@@ -206,7 +204,14 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				$data->$field_name = $instance_data[$field_name];
 			}
 		}
-		// carl_log("result data for summary review page: " . print_r($data, true));
+		
+		// convert raw->label for ..._decision fields
+		foreach ($data as $name => $value) {
+			if (strpos($name, '_decision') !== false) {
+				$labels = $this->getChoiceLabels($name);
+				$data->$name = $labels[$value];
+			}
+		}
 		
 		return $data;
 	}
@@ -280,8 +285,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 	}
 	
 	public function replaceSummaryReviewField($record, $instance) {
-		carl_log("replaceSummaryReviewField " . date("Y-m-d H:i:s"), true);
-		
 		// get budget table data
 		$budget_table = $this->getBudgetTableData($record);
 		
@@ -289,7 +292,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record));
 		
 		$summary_review_field = $this->getProjectSetting('summary_review_field');
-		$summary_review_data = $this->getSummaryReviewData($record);
+		$summary_review_data = json_encode($this->getSummaryReviewData($record, $instance));
 		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
 		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
 		?>
@@ -298,6 +301,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				record_id: '<?= $record; ?>',
 				instance: '<?= $instance; ?>',
 				summary_review_field: '<?= $summary_review_field; ?>',
+				summary_data: JSON.parse('<?= $summary_review_data; ?>'),
 				schedule: JSON.parse('<?= $budget_table; ?>'),
 				gng_data: JSON.parse('<?= $gonogo_table_data; ?>'),
 				css_url: "<?= $this->getUrl('css/summary.css'); ?>"
