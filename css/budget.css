@@ -77,6 +77,16 @@ td.proc_dd_cell, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
 	text-align: center;
 	border: 1px solid black;
 }
+/* #edit_procedures td.name input { */
+	/* width: 250px; */
+/* } */
+/* #edit_procedures td.cost input { */
+	/* width: 75px; */
+/* } */
+/* #edit_procedures td.cpt input { */
+	/* width: 650px; */
+/* } */
+.ui-autocomplete { z-index:2147483647; }	/* prevent autocomplete from being hidden behind modal */
 #edit_procedure_buttons {
 	display: flex;
 	width: 100%;

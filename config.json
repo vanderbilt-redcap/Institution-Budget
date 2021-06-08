@@ -28,18 +28,21 @@
 	
 	"project-settings": [
 		{
-			"key": "schedule_fields",
-			"name": "Schedule fields",
-			"type": "sub_settings",
-			"repeatable":true,
-			"sub_settings":[
-				{
-					"key": "sched_field_name",
-					"name": "Field to contain schedule of event data",
-					"required": true,
-					"type": "field-list"
-				}
-			]
+			"key": "budget_table_field",
+			"name": "Field to contain schedule of event table data",
+			"required": true,
+			"type": "field-list"
+		},
+		{
+			"key": "gonogo_table_field",
+			"name": "Field to contain interested site Go/No-Go table data",
+			"required": true,
+			"type": "field-list"
+		},
+		{
+			"key": "cpt_endpoint_url",
+			"name": "CPT Selector module code lookup endpoint",
+			"type": "text"
 		}
 	],
 

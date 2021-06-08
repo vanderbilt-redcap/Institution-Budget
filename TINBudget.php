@@ -3,6 +3,30 @@ namespace Vanderbilt\TINBudget;
 
 class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
+	public function __construct() {
+		parent::__construct();
+		
+		$pid = $this->getProjectId();
+		if (empty($pid)) {
+			return;
+		}
+		$budget_field = $this->getProjectSetting('budget_table_field');
+		$gng_field = $this->getProjectSetting('gonogo_table_field');
+		
+		global $Proj;
+		if (gettype($Proj) == 'object') {
+			// collect instruments that hold schedule or gng fields
+			foreach ($Proj->metadata as $field) {
+				if ($field['field_name'] === $budget_field) {
+					$this->budget_table_instrument = $field['form_name'];
+				}
+				if ($field['field_name'] === $gng_field) {
+					$this->gonogo_table_instrument = $field['form_name'];
+				}
+			}
+		}
+	}
+	
 	public function getScheduleDataFields() {
 		if (!$this->scheduleDataFields) {
 			$fields = ['arms', 'proc'];
@@ -79,9 +103,79 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		return $procedures;
 	}
 	
-	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
+	public function getBudgetTableData($record) {
+		// get Schedule of Event (CC Budget table) data
+		$budget_table_field = $this->getProjectSetting('budget_table_field');
+		$params = [
+			"records" => $record,
+			"fields" => $budget_table_field,
+			"return_format" => 'json'
+		];
+		$data = json_decode(\REDCap::getData($params));
+		if (empty($data)) {
+			throw new \Exception("The TIN Budget module was unable to retrieve $budget_table_field (configured budget_table_field) data.");
+		}
+		$budget_table = $data[0]->$budget_table_field;
+		return $budget_table;
+	}
+	
+	public function getGoNoGoTableData($record) {
+		// get event ID
+		$event_ids = \REDCap::getEventNames();
+		$event_id = array_search('Event 1', $event_ids);
+		if (empty($event_id)) {
+			throw new \Exception("The TIN Budget module couldn't retrieve Go/No-Go data (empty event_id -- is there an 'Event 1' event for this project?)");
+		}
+		
+		$fields = [];
+		for ($i = 1; $i <= 25; $i++) {
+			$fields[] = "procedure" . $i . "_sc";
+			$fields[] = "cost" . $i . "_sc";
+		}
+		for ($i = 1; $i <= 5; $i++) {
+			$fields[] = "arm" . $i . "_decision";
+			$fields[] = "arm" . $i . "_comments";
+		}
+		if (!empty($record)) {
+			$get_data_params = [
+				"return_format" => 'array',
+				"records" => $record,
+				"fields" => $fields
+			];
+			$data = \REDCap::getData($get_data_params);
+			if (empty($data[$record]['repeat_instances'])) {
+				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (repeat_instances empty)");
+			}
+			
+			$data = $data[$record]['repeat_instances'];
+			if (empty($data[$event_id])) {
+				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (repeat_instances[event_id] empty)");
+			}
+			$data = $data[$event_id][""];
+			if (empty($data)) {
+				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data ([event_id][\"\"] missing)");
+			}
+			
+			$current_event_instance = max(array_keys($data));
+			$data = $data[$current_event_instance];
+			
+			if (empty($data)) {
+				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (no instance data found)");
+			}
+			
+			return $data;
+		} else {
+			throw new \Exception("The TIN Budget module couldn't determine the record ID to fetch Go/No-Go table data with");
+		}
+	}
+	
+	public function replaceScheduleFields($record) {
 		$_GET['rid'] = $record;
-		$schedule_fields = json_encode($this->getProjectSetting('sched_field_name'));
+		
+		// retrieve name of configured budget table field
+		$schedule_field = json_encode($this->getProjectSetting('budget_table_field'));
+		
+		// start buffering to catch getBudgetTable output (html)
 		ob_start();
 		include('php/getBudgetTable.php');
 		// escape quotation marks
@@ -89,33 +183,70 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		ob_end_clean();
 		// escape newlines to make this a multi-line string in js
 		$budget_table = str_replace(array("\r\n", "\n", "\r"), '\\n', $budget_table);
+		
+		// we didn't use json_encode above because getBudgetTable.php outputs HTML, not JSON
+		$cpt_endpoint_url = $this->getProjectSetting('cpt_endpoint_url');
 		?>
 		<script type="text/javascript">
+			TINBudget = {
+				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
+				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>'
+			}
+			TINBudget.procedures = JSON.parse('<?= json_encode($procedures) ?>')
+			
 			TINBudgetSurvey = {
-				schedule_fields: JSON.parse('<?= $schedule_fields; ?>'),
+				schedule_field: JSON.parse('<?= $schedule_field; ?>'),
 				budget_table: "<?=$budget_table;?>",
-				updateScheduleFields: function(scheduleString) {
-					for (var field_i in TINBudgetSurvey.schedule_fields) {
-						var field_name = TINBudgetSurvey.schedule_fields[field_i];
-						$("input[name='" + field_name + "']").val(scheduleString);
-					}
+				updateScheduleField: function(scheduleString) {
+					var field_name = TINBudgetSurvey.schedule_field;
+					$("textarea[name='" + field_name + "']").val(scheduleString);
 				}
 			}
 			
 			$(document).ready(function() {
-				TINBudgetSurvey.schedule_fields.forEach(function(fieldname) {
-					$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
-					$('#' + fieldname + '-tr').hide();
-				});
+				var fieldname = TINBudgetSurvey.schedule_field;
+				$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
+				$('#' + fieldname + '-tr').hide();
 			});
 		</script>
-		<script type='text/javascript'>
-			TINBudget = {
-				budget_css_url: '<?= $module->getUrl('css/budget.css'); ?>'
-			}
-			TINBudget.procedures = JSON.parse('<?= json_encode($procedures) ?>')
-		</script>
-		<script type='text/javascript' src='<?= $module->getUrl('js/budget.js'); ?>'></script>
+		<script type='text/javascript' src='<?= $this->getUrl('js/budget.js'); ?>'></script>
 		<?php
 	}
+	
+	public function replaceGoNoGoFields($record, $instance) {
+		// get budget table data
+		$budget_table = $this->getBudgetTableData($record);
+		
+		// get Go/No-Go table data and field name
+		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record));
+		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
+		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
+		?>
+		<script type="text/javascript">
+			TINGoNoGo = {
+				css_url: "<?= $this->getUrl('css/gonogo.css'); ?>",
+				schedule: JSON.parse('<?= $budget_table; ?>'),
+				gng_field: JSON.parse('<?= $gonogo_table_field; ?>'),
+				gng_data: JSON.parse('<?= $gonogo_table_data; ?>'),
+				save_arm_fields_url: '<?= $save_arm_fields_url; ?>',
+				record_id: '<?= $record; ?>',
+				instance: '<?= $instance; ?>'
+			}
+		</script>
+		<script type='text/javascript' src='<?= $this->getUrl('js/gonogo.js'); ?>'></script>
+		<?php
+	}
+	
+	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
+		// replace schedule of event field in survey page with generated table
+		if ($instrument == $this->budget_table_instrument) {
+			$this->replaceScheduleFields($record);
+		}
+		
+		// replace Go/No-Go field in survey page with generated table
+		if ($instrument == $this->gonogo_table_instrument) {
+			$this->replaceGoNoGoFields($record, $instance);
+		}
+	}
+
 }

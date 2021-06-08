@@ -40,24 +40,35 @@ TINBudget.refreshSchedule = function() {
 	TINBudget.refreshProcedureOptions();
 	TINBudget.refreshProcedureCosts();
 	TINBudget.updateAllVisitCosts();
-	
-	console.log('schedule table refreshed');
 }
 TINBudget.refreshProceduresTable = function() {
 	// remove all rows
 	$("table#edit_procedures tbody").empty()
-	
 	// add rows to edit_procedures table using TINBudget.procedures data
 	TINBudget.procedures.forEach(function(procedure, i) {
 		$("table#edit_procedures tbody").append("<tr>\
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
 			<td class='name'><input type='text'></td>\
 			<td class='cost'><input type='number'></td>\
-			<td class='cpt'><input type='text'></td>\
+			<td class='cpt'><input class='cptSelect' type='text'></td>\
 		</tr>");
 		$("table#edit_procedures tbody tr:last-child td.name input").val(procedure.name);
 		$("table#edit_procedures tbody tr:last-child td.cost input").val(procedure.cost);
 		$("table#edit_procedures tbody tr:last-child td.cpt input").val(procedure.cpt);
+		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete({
+			source: function(request, response) {
+				$.ajax(TINBudget.cpt_endpoint_url, {
+					data: {"query":request.term},
+					method: "POST",
+					dataType: "json"
+				}).done( function(data) {
+					response(data); 
+				});
+			},
+			minLength:0
+		}).focus(function(){
+			$(this).data("uiAutocomplete").search($(this).val());
+		});
 	});
 }
 TINBudget.refreshProcedureOptions = function() {
@@ -575,6 +586,7 @@ $(document).ready(function() {
 		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.edit_procedures', function(event) {
+		// $("#tinbudget_modal .modal-dialog").addClass('modal-xl');
 		TINBudget.editProcedures();
 	});
 	$('body').on('click', 'a.delete_procedure', function(event) {
@@ -626,10 +638,30 @@ $(document).ready(function() {
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
 			<td class='name'><input type='text'></td>\
 			<td class='cost'><input type='number'></td>\
+			<td class='cpt'><input class='cptSelect' type='text'></td>\
 		</tr>");
+		
+		// add autocomplete for CPT code lookup
+		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete({
+			source: function(request, response) {
+				$.ajax(TINBudget.cpt_endpoint_url, {
+					data: {"query":request.term},
+					method: "POST",
+					dataType: "json"
+				}).done( function(data) {
+					response(data); 
+				});
+			},
+			minLength:0
+		}).focus(function(){
+			$(this).data("uiAutocomplete").search($(this).val());
+		});
 	});
 	$('body').on('click', '.delete_this_row', function(event) {
 		$(event.target).closest('tr').remove();
+	});
+	$('body').on('hidden.bs.modal', function(e) {
+		// $('#tinbudget_modal .modal-dialog').removeClass('modal-xl');
 	});
 	
 	// confirm/cancel delete via modal for arms/visits/procedures
@@ -757,10 +789,8 @@ TINBudget.pushState = function() {
 	
 	TINBudget.refreshStateButtons()
 	
-	console.log("pushed state, states:", TINBudget.states);
-	
 	if (TINBudgetSurvey) {
-		TINBudgetSurvey.updateScheduleFields(JSON.stringify(TINBudget.states[TINBudget.states.length-1]));
+		TINBudgetSurvey.updateScheduleField(JSON.stringify(TINBudget.states[TINBudget.states.length-1]));
 	}
 }
 
@@ -812,7 +842,7 @@ TINBudget.loadState = function(schedule) {
 	TINBudget.refreshStateButtons()
 	
 	if (TINBudgetSurvey) {
-		TINBudgetSurvey.updateScheduleFields(JSON.stringify(schedule));
+		TINBudgetSurvey.updateScheduleField(JSON.stringify(schedule));
 	}
 }
 

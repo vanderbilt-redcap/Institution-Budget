@@ -1,4 +1,5 @@
 <?php
+
 // get procedure costs
 ob_start();
 echo "<div id='budget_table'>";
@@ -230,7 +231,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						<tr>
 							<th>Delete</th>
 							<th>Procedure Name</th>
-							<th>Cost</th>
+							<th>Cost ($)</th>
 							<th>CPT Code</th>
 						</tr>
 					</thead>
