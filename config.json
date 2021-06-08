@@ -40,6 +40,12 @@
 			"type": "field-list"
 		},
 		{
+			"key": "summary_review_field",
+			"name": "Field to be replaced with Summary Review report",
+			"required": true,
+			"type": "field-list"
+		},
+		{
 			"key": "cpt_endpoint_url",
 			"name": "CPT Selector module code lookup endpoint",
 			"type": "text"

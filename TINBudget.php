@@ -12,16 +12,20 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 		$budget_field = $this->getProjectSetting('budget_table_field');
 		$gng_field = $this->getProjectSetting('gonogo_table_field');
+		$summary_field = $this->getProjectSetting('summary_review_field');
 		
 		global $Proj;
 		if (gettype($Proj) == 'object') {
-			// collect instruments that hold schedule or gng fields
+			// collect instruments that hold schedule, gng, summary fields
 			foreach ($Proj->metadata as $field) {
 				if ($field['field_name'] === $budget_field) {
 					$this->budget_table_instrument = $field['form_name'];
 				}
 				if ($field['field_name'] === $gng_field) {
 					$this->gonogo_table_instrument = $field['form_name'];
+				}
+				if ($field['field_name'] === $summary_field) {
+					$this->summary_review_instrument = $field['form_name'];
 				}
 			}
 		}
@@ -169,6 +173,44 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 	}
 	
+	public function getSummaryReviewData($record, $instance = 1) {
+		// TODO -- make sure correct instance data is referenced
+		$data = new \stdClass();
+		$field_list = [];
+		for ($i = 1; $i <= 5; $i++) {
+			$field_list[] = "fixedcost$i";
+			$field_list[] = "fixedcost$i" . "_detail";
+			$field_list[] = "fixedcost$i" . "_decision";
+			$field_list[] = "fixedcost$i" . "_comments";
+			$field_list[] = "arm$i" . "_decision";
+			$field_list[] = "arm$i" . "_comments";
+		}
+		
+		$rc_data = \REDCap::getData('array', $record, $field_list);
+		// carl_log("rc_data for summary review page: " . print_r($rc_data, true));
+		
+		// collate field data, prioritizing target instance data set
+		$event_id = array_key_first($rc_data[$record]);
+		$base_data = $rc_data[$record][$event_id];
+		$instance_data = $rc_data[$record]['repeat_instances'];
+		$instance_data = reset($instance_data);
+		$instance_data = reset($instance_data);
+		$instance_data = $instance_data[$instance];
+		// carl_log("base_data for summary review page: " . print_r($base_data, true));
+		// carl_log("instance_data for summary review page: " . print_r($instance_data, true));
+		foreach ($field_list as $i => $field_name) {
+			if (!empty($base_data[$field_name])) {
+				$data->$field_name = $base_data[$field_name];
+			}
+			if (!empty($instance_data[$field_name])) {
+				$data->$field_name = $instance_data[$field_name];
+			}
+		}
+		// carl_log("result data for summary review page: " . print_r($data, true));
+		
+		return $data;
+	}
+	
 	public function replaceScheduleFields($record) {
 		$_GET['rid'] = $record;
 		
@@ -219,21 +261,49 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		
 		// get Go/No-Go table data and field name
 		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record));
-		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
+		$gonogo_table_field = $this->getProjectSetting('gonogo_table_field');
 		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
 		?>
 		<script type="text/javascript">
 			TINGoNoGo = {
-				css_url: "<?= $this->getUrl('css/gonogo.css'); ?>",
-				schedule: JSON.parse('<?= $budget_table; ?>'),
-				gng_field: JSON.parse('<?= $gonogo_table_field; ?>'),
-				gng_data: JSON.parse('<?= $gonogo_table_data; ?>'),
-				save_arm_fields_url: '<?= $save_arm_fields_url; ?>',
 				record_id: '<?= $record; ?>',
-				instance: '<?= $instance; ?>'
+				instance: '<?= $instance; ?>',
+				gng_field: '<?= $gonogo_table_field; ?>',
+				schedule: JSON.parse('<?= $budget_table; ?>'),
+				gng_data: JSON.parse('<?= $gonogo_table_data; ?>'),
+				css_url: "<?= $this->getUrl('css/gonogo.css'); ?>",
+				save_arm_fields_url: '<?= $save_arm_fields_url; ?>'
 			}
 		</script>
 		<script type='text/javascript' src='<?= $this->getUrl('js/gonogo.js'); ?>'></script>
+		<?php
+	}
+	
+	public function replaceSummaryReviewField($record, $instance) {
+		carl_log("replaceSummaryReviewField " . date("Y-m-d H:i:s"), true);
+		
+		// get budget table data
+		$budget_table = $this->getBudgetTableData($record);
+		
+		// get Go/No-Go table data and field name
+		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record));
+		
+		$summary_review_field = $this->getProjectSetting('summary_review_field');
+		$summary_review_data = $this->getSummaryReviewData($record);
+		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
+		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
+		?>
+		<script type="text/javascript">
+			TINSummary = {
+				record_id: '<?= $record; ?>',
+				instance: '<?= $instance; ?>',
+				summary_review_field: '<?= $summary_review_field; ?>',
+				schedule: JSON.parse('<?= $budget_table; ?>'),
+				gng_data: JSON.parse('<?= $gonogo_table_data; ?>'),
+				css_url: "<?= $this->getUrl('css/summary.css'); ?>"
+			}
+		</script>
+		<script type='text/javascript' src='<?= $this->getUrl('js/summary.js'); ?>'></script>
 		<?php
 	}
 	
@@ -246,6 +316,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		// replace Go/No-Go field in survey page with generated table
 		if ($instrument == $this->gonogo_table_instrument) {
 			$this->replaceGoNoGoFields($record, $instance);
+		} 
+		
+		// replace Summary Review field in survey page with interface
+		if ($instrument == $this->summary_review_instrument) {
+			$this->replaceSummaryReviewField($record, $instance);
 		}
 	}
 
