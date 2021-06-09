@@ -1,0 +1,40 @@
+#summary_review {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+#summary_review h3 {
+}
+
+#summary_review table {
+	text-align: center;
+	margin-bottom: 32px;
+}
+
+/* padding */
+#summary_review td, #summary_review th {
+	padding: 8px;
+}
+
+/* borders */
+#summary_review table, #summary_review td, #summary_review th {
+	border: 1px solid black;
+}
+
+/* table column header colors */
+table.fixed-costs th {
+	color: white;
+	background-color: #323e4f;
+}
+table.procedure-costs th {
+	color: white;
+	background-color: #1d9a78;
+}
+
+.summary-table-header {
+	text-decoration: underline;
+	align-self: start;
+	padding-left: 32px;
+}

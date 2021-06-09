@@ -1,27 +1,35 @@
 TINSummary.initialize = function() {
 	if (typeof TINSummary.summary_review_field == 'string') {
-		$('#' + TINSummary.summary_review_field + '-tr').before("<div class='col-12' id='summary_review_container'></div>")
 		$('#' + TINSummary.summary_review_field + '-tr').hide();
+		$('#' + TINSummary.summary_review_field + '-tr').before("\
+		<tr id='summary_review_tr'><td colspan='3' id='summary_review_td'></td></tr>");
+		$("#summary_review_td").append("<div id='summary_review'></div>");
+	} else {
+		return;
 	}
+	
+	var parent = $("#summary_review");
 	
 	// add review headers
 	var site_name = TINSummary.summary_data.institution || "[SITE NAME]";
-	$("#summary_review_container").append("\
+	parent.append("\
 		<h3>BUDGET FEASIBILITY SUMMARY PAGE</h3>\
-		<h3>MY SITE: " + site_name + "</h3>");
+		<h3>MY SITE: " + site_name + "</h3><br>");
 	
-	TINSummary.addFixedCostsTable();
-	TINSummary.addProcedureCostsTable();
+	TINSummary.addFixedCostsTable(parent);
+	TINSummary.addProcedureCostsTable(parent);
 }
 
-TINSummary.addFixedCostsTable = function() {
+TINSummary.addFixedCostsTable = function(parent) {
+	if (!(parent instanceof jQuery))
+		return;
 	var table_html = "";
 	var data = TINSummary.summary_data;
 	var arms = TINSummary.schedule.arms;
 	
 	table_html += "<h4 class='summary-table-header'>FIXED COSTS SUMMARY REVIEW</h4>";
 	table_html += "\
-	<table>\
+	<table class='fixed-costs'>\
 		<thead>\
 			<tr>\
 				<th>FIXED COST</th>\
@@ -47,22 +55,24 @@ TINSummary.addFixedCostsTable = function() {
 		</tbody>\
 	</table>";
 	
-	$("#summary_review_container").append(table_html);
+	parent.append(table_html);
 }
 
-TINSummary.addProcedureCostsTable = function() {
+TINSummary.addProcedureCostsTable = function(parent) {
+	if (!(parent instanceof jQuery))
+		return;
 	var table_html = "";
 	var data = TINSummary.summary_data;
 	var arms = TINSummary.schedule.arms;
 	
-	table_html += "<h4 class='summary-table-header'>FIXED COSTS SUMMARY REVIEW</h4>";
+	table_html += "<h4 class='summary-table-header'>PROCEDURE COSTS SUMMARY REVIEW</h4>";
 	table_html += "\
-	<table>\
+	<table class='procedure-costs'>\
 		<thead>\
 			<tr>\
 				<th>ARM #</th>\
-				<th>COORDINATING CENTER REIMBURSEMENT $$</th>\
-				<th>MY INSTITUTION'S PROCEDURE $$</th>\
+				<th>COORDINATING CENTER<br>REIMBURSEMENT $$</th>\
+				<th>MY INSTITUTION'S<br>PROCEDURE $$</th>\
 				<th>DECISION:</th>\
 				<th>SITE COMMENTS:</th>\
 			</tr>\
@@ -89,7 +99,7 @@ TINSummary.addProcedureCostsTable = function() {
 		</tbody>\
 	</table>";
 	
-	$("#summary_review_container").append(table_html);
+	parent.append(table_html);
 }
 
 TINSummary.getCoordCenterCost = function(arm_index) {
