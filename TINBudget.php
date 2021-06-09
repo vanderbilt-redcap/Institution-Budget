@@ -292,7 +292,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record));
 		
 		$summary_review_field = $this->getProjectSetting('summary_review_field');
-		$summary_review_data = json_encode($this->getSummaryReviewData($record, $instance), JSON_HEX_APOS);
+		
+		$summary_review_data = $this->getSummaryReviewData($record, $instance);
+		$summary_review_data = json_encode($summary_review_data, JSON_HEX_APOS);
+		$summary_review_data = addslashes($summary_review_data);
+		
 		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
 		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
 		?>
