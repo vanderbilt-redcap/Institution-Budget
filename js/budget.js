@@ -85,7 +85,6 @@ TINBudget.refreshProcedureOptions = function() {
 }
 TINBudget.refreshProcedureCosts = function() {
 	// update all .proc_cell data-cost attributes based on the procedure selected in the dropdown in the first cell of the row
-	
 	$('.procedure').each(function(i, div) {
 		var proc_name = $(div).find('button.dropdown-toggle').text().trim();
 		var proc_cost;
@@ -226,7 +225,6 @@ TINBudget.createArm = function() {
 	$("#arm_dropdowns").append(new_arm_dropdown);
 	$("#arm_tables").append(new_arm_table);
 	TINBudget.refreshSchedule();
-	
 	return new_arm_i;
 }
 TINBudget.renameArm = function(arm_index) {
@@ -287,6 +285,7 @@ TINBudget.createVisit = function() {
 	arm_table.find('thead tr').append(visit_dd);
 	arm_table.find('tbody tr:not(:last-child)').append(visit_proc_cell);
 	arm_table.find('tbody tr:last-child').append(visit_total_cell);
+	TINBudget.refreshProcedureCosts();
 }
 TINBudget.renameVisit = function(visit_index) {
 	$('.modal-content').hide()
@@ -334,6 +333,7 @@ TINBudget.deleteVisit = function(visit_index) {
 // visit level helper functions
 TINBudget.updateVisitCost = function(arm, visit) {
 	// sum costs
+	
 	var sum = 0
 	$(".arm_table[data-arm='" + arm + "'] .proc_cell[data-visit='" + visit +"'] .proc_count").each(function(i, e) {
 		var cost = Number($(e).attr('data-cost'));
@@ -659,9 +659,6 @@ $(document).ready(function() {
 	});
 	$('body').on('click', '.delete_this_row', function(event) {
 		$(event.target).closest('tr').remove();
-	});
-	$('body').on('hidden.bs.modal', function(e) {
-		// $('#tinbudget_modal .modal-dialog').removeClass('modal-xl');
 	});
 	
 	// confirm/cancel delete via modal for arms/visits/procedures
