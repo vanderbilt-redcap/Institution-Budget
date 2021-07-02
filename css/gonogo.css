@@ -79,3 +79,6 @@ div#gng_arm_tables {
 .gng_sidebar textarea {
 	width: 100%;
 }
+.modal {
+	text-align: center;
+}

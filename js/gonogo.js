@@ -39,6 +39,27 @@ TINGoNoGo.initialize = function() {
 	}
 	
 	TINGoNoGo.showArmTable(0);
+	
+	// this modal is used to show submission errors to user when required arm decisions haven't been completed
+	$('body').append('\
+	<div class="modal" tabindex="-1" role="dialog">\
+		<div class="modal-dialog" role="document">\
+			<div class="modal-content">\
+				<div class="modal-header">\
+					<h5 class="modal-title">Cannot Submit Survey</h5>\
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">\
+						<span aria-hidden="true">&times;</span>\
+					</button>\
+				</div>\
+				<div class="modal-body">\
+				</div>\
+				<div class="modal-footer">\
+					<button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>\
+				</div>\
+			</div>\
+		</div>\
+	</div>'
+	);
 }
 
 TINGoNoGo.makeArmTable = function(arm, arm_i) {
@@ -199,6 +220,50 @@ TINGoNoGo.getArmFieldsData = function() {
 	return arms;
 }
 
+TINGoNoGo.replacementSubmit = function(click_event) {
+	// check arm decision/comments to see if ready to submit
+	var bad_arms = [];
+	TINGoNoGo.schedule.arms.forEach(function(arm, arm_i) {
+		var sidebar = $(".gng_sidebar[data-arm='" + arm_i + "']");
+		var accept_box = sidebar.find('.arm_cbox:eq(0)').prop('checked');
+		var decline_box = sidebar.find('.arm_cbox:eq(1)').prop('checked');
+		var request_box = sidebar.find('.arm_cbox:eq(2)').prop('checked');
+		var comments_box = sidebar.find('textarea').val();
+		if (!accept_box && !decline_box && !(request_box && comments_box !== '')) {
+			ready_to_submit = false;
+			bad_arms.push("<b>Arm " + (arm_i + 1) + ": " + arm.name + "</b>")
+		}
+	});
+	
+	var submit_btn = $('button[name="submit-btn-saverecord"]');
+	if (bad_arms.length !== 0) {
+		// prevent survey submission
+		submit_btn.blur();
+		click_event.preventDefault();
+		
+		// update and show modal with error message
+		var submission_error = "<p>In order to advance to the next page, you must make a decision for each arm. If you're requesting additional information, please explain in the \"Enter Comments\" text area.</p>\
+		\
+		<p>Please navigate to the arm(s) listed below and provide a response. You have not entered a decision for</p>" + bad_arms.join('<br>');
+		$('.modal-body').html(submission_error);
+		$('.modal').modal('show')
+	} else {
+		// save arm decision/comment data
+		var arm_field_data = TINGoNoGo.getArmFieldsData();
+		if (typeof arm_field_data == 'object') {
+			$.ajax(TINGoNoGo.save_arm_fields_url, {
+				data: arm_field_data,
+				method: "POST",
+				dataType: "json"
+			});
+		}
+		
+		// submit survey
+		submit_btn.button("disable");
+		dataEntrySubmit(submit_btn);
+	}
+}
+
 $('head').append('<link rel="stylesheet" type="text/css" href="' + TINGoNoGo.css_url + '">');
 $(document).ready(function() {
 	TINGoNoGo.initialize();
@@ -222,18 +287,8 @@ $(document).ready(function() {
 		});
 	});
 	
-	$('button[name="submit-btn-saverecord"]').click(function() {
-		var arm_field_data = TINGoNoGo.getArmFieldsData();
-		if (typeof arm_field_data == 'object') {
-			$.ajax(TINGoNoGo.save_arm_fields_url, {
-				data: arm_field_data,
-				method: "POST",
-				dataType: "json"
-			});
-		}
-		
-		$(this).button("disable");
-		dataEntrySubmit(this);
-		return false;
+	// replace submit-btn-saverecord onclick event
+	$('button[name="submit-btn-saverecord"]').each(function(i, submit_btn) {
+		$(submit_btn).attr('onclick', 'TINGoNoGo.replacementSubmit(event); return false;');
 	});
 });
