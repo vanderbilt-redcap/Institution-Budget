@@ -20,7 +20,14 @@
 	],
 	
 	"links": {
-		"project": [],
+		"project": [
+			{
+				"name": "Coordinating Center Reconciliation",
+				"icon": "fas fa-table",
+				"url": "reconciliation",
+				"show-header-and-footer": true
+			}
+		],
 		"control-center": []
 	},
 	

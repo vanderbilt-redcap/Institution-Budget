@@ -1,0 +1,13 @@
+table#reconciliation, table#reconciliation tr, table#reconciliation th, table#reconciliation td {
+	border: 1px solid black;
+	text-align: center;
+}
+
+h3 {
+	margin-left: 120px;
+}
+.site-action-dd {
+	padding: 3px 12px;
+	margin: 4px;
+	background-color: #2e75b6;
+}

@@ -216,6 +216,75 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		return $data;
 	}
 	
+	public function getReconciliationData() {
+		// get event ID
+		$event_ids = \REDCap::getEventNames();
+		$event_id = array_search('Event 1', $event_ids);
+		$fields = [
+			"institution",
+			"institution_ctsa_name",
+			"institution_non_ctsa_name",
+			"affiliate_ctsa_institution",
+			"budget_request_date",
+			"consideration",
+			"final_gonogo",
+			"final_gonogo_comments",
+		];
+		
+		$params = [
+			"fields" => $fields,
+			"events" => $event_id,
+			"exportAsLabels" => true
+		];
+		$records = \REDCap::getData('array', null, $fields, $event_id);
+		if (!$records) {
+			return "REDCap couldn't get institution data at this time.";
+		}
+		
+		// tabulate
+		$table_data = [];
+		
+		foreach ($records as $record) {
+			$site_array = $record['repeat_instances'][$event_id][''];
+			foreach($site_array as $site) {
+				$row = [];
+				
+				// determine site name
+				if ($site['institution'] == 500) {
+					$row['name'] = $site['affiliate_ctsa_institution'] . " Affiliate: " . $site['institution_ctsa_name'];
+				} elseif ($site['institution'] == 999) {
+					$row['name'] = "Non-CTSA Site: " . $site['institution_non_ctsa_name'];
+				} else {
+					$row['name'] = "N/A";
+				}
+				
+				$row['date_of_request'] = $site['budget_request_date'];
+				
+				if ($site['consideration'] == '0') {
+					$row['date_of_response'] = 'Talk to Clint';
+				} elseif ($site['consideration'] == '1') {
+					$row['date_of_response'] = 'Talk to Clint or use Go/No-Go pending field';
+				} else {
+					$row['date_of_response'] = "N/A";
+				}
+				
+				$row['decision'] = 'N/A';
+				if ($site['final_gonogo'] == '1') {
+					$row['decision'] = 'Go';
+				} elseif ($site['final_gonogo'] == '2') {
+					$row['decision'] = 'No-Go';
+				} elseif ($site['final_gonogo'] == '3') {
+					$row['decision'] = 'Need More Info';
+				}
+				$row['decision_comments'] = $site['final_gonogo_comments'];
+				
+				$table_data[] = $row;
+			}
+		}
+		
+		return $table_data;
+	}
+	
 	public function replaceScheduleFields($record) {
 		$_GET['rid'] = $record;
 		
