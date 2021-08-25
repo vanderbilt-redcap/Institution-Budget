@@ -2,6 +2,13 @@
 	border: 1px solid lightgray !important;
 }
 
+#pagecontainer {
+	max-width: 1200px;
+}
+#gonogocontainer {
+	max-width: 1200px;
+	overflow: auto;
+}
 #gonogo {
 	display: flex;
 	flex-direction: column;

@@ -1,7 +1,7 @@
 
 TINGoNoGo.initialize = function() {
 	if (typeof TINGoNoGo.gng_field == 'string') {
-		$('#' + TINGoNoGo.gng_field + '-tr').before("<div id='gonogo'><h3>Interested Site Review: GO/NO-GO Decision</h3></div>")
+		$('#' + TINGoNoGo.gng_field + '-tr').before("<div id='gonogocontainer'><div id='gonogo'><h3>Interested Site Review: GO/NO-GO Decision</h3></div></div>")
 		$('#' + TINGoNoGo.gng_field + '-tr').hide();
 	}
 	
