@@ -407,6 +407,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
 	public function downloadProcedures($record) {
 		carl_log("calling downloadProcedures");
+		
+		// get procedure info for given record
 		$procedure_fields = [];
 		for ($i = 1; $i <= 25; $i++) {
 			$procedure_fields[] = "procedure$i" . "_sc";
@@ -415,35 +417,35 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 		$params = [
 			"project_id" => $this->getProjectId(),
-			"return_format" => "array",
+			"return_format" => "json",
 			"records" => $record,
 			"fields" => $procedure_fields
 		];
 		$data = json_decode(\REDCap::getData($params));
-		$record = $data[0];
+		$record = (array) $data[0];
 		
-		$xlsx_cells = [];
-		$xlsx_cells[] = "All Procedures for Study X";
-		$xlsx_cells[] = ["Procedure Number", "Procedure Name", "Associated CPT Code", "Cost to Run at Your Site"];
-		
+		// create workbook from template in module directory
+		$module_path = $this->getModulePath();
+		require "$module_path" . "vendor/autoload.php";
+		$reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader("Xlsx");
+		$workbook = $reader->load($module_path . "templates/procedures.xlsx");
+		$sheet = $workbook->getActiveSheet();
+		// update workbook cells
 		for ($i = 1; $i <= 25; $i++) {
 			$name = $record["procedure$i" . "_sc"];
 			$cpt = $record["cpt$i"];
 			$cost = $record["cost$i" . "_sc"];
-			if (!empty($name) || !empty($cpt) || !empty($cost)) {
-				$xlsx_cells[] = [$i, $name, $cpt, $cost];
-			}
+			
+			$sheet->setCellValue("B" . ($i + 2), $name);
+			$sheet->setCellValue("C" . ($i + 2), $cpt);
+			$sheet->setCellValue("D" . ($i + 2), $cost);
 		}
 		
-		carl_log("about to require " . $this->getModulePath() . '/vendor/autoload.php');
-		require $this->getModulePath() . '/vendor/autoload.php';
-		carl_log("required it");
-		$xlsx = new \SimpleXLSXGen();
-		carl_log("instanciated");
-		$xlsx->addSheet($xlsx_cells, "Procedures");
-		carl_log("added sheet");
-		$xlsx->downloadAs('abc.xlsx');
-		exit();
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		header('Content-Disposition: attachment;filename="Procedures.xlsx"');
+		header('Cache-Control: max-age=0');
+		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($workbook, 'Xlsx');
+		$writer->save('php://output');
 	}
 	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
