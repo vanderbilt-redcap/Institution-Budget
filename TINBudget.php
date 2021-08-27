@@ -3,6 +3,17 @@ namespace Vanderbilt\TINBudget;
 
 class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
+	public $formsToConvertSubmitToNext = [
+		"contact_and_fixed_costs_info",
+		"procedure",
+		"budget_review_and_feasibility",
+		"budget_review_and_feasibility_two",
+		"go_no_go_2",
+		"gonogo_table",
+		"gng_decision",
+		"fixed_costs"
+	];
+	
 	public function __construct() {
 		parent::__construct();
 		
@@ -384,6 +395,16 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
+	private function renameSubmitForSurvey() {
+		?>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$("button[name='submit-btn-saverecord']").html("Next")
+			});
+		</script>
+		<?php
+	}
+	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
 		// replace schedule of event field in survey page with generated table
 		if ($instrument == $this->budget_table_instrument) {
@@ -398,6 +419,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		// replace Summary Review field in survey page with interface
 		if ($instrument == $this->summary_review_instrument) {
 			$this->replaceSummaryReviewField($record, $instance);
+		}
+		
+		if (in_array($instrument, $this->formsToConvertSubmitToNext)) {
+			$this->renameSubmitForSurvey();
 		}
 	}
 
