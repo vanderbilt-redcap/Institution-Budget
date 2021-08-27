@@ -3,10 +3,10 @@
 }
 
 #pagecontainer {
-	max-width: 1200px;
+	max-width: 1300px;
 }
 #gonogocontainer {
-	max-width: 1200px;
+	max-width: 1300px;
 	overflow: auto;
 }
 #gonogo {
@@ -72,7 +72,7 @@ div#gng_arm_tables {
 
 .gng_sidebar {
 	padding: 24px;
-	font-size: 1.15rem;
+	font-size: 0.9rem;
 	margin: 16px;
 	max-width: 300px;
 }

@@ -405,6 +405,47 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
+	public function downloadProcedures($record) {
+		carl_log("calling downloadProcedures");
+		$procedure_fields = [];
+		for ($i = 1; $i <= 25; $i++) {
+			$procedure_fields[] = "procedure$i" . "_sc";
+			$procedure_fields[] = "cpt$i";
+			$procedure_fields[] = "cost$i" . "_sc";
+		}
+		$params = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => "array",
+			"records" => $record,
+			"fields" => $procedure_fields
+		];
+		$data = json_decode(\REDCap::getData($params));
+		$record = $data[0];
+		
+		$xlsx_cells = [];
+		$xlsx_cells[] = "All Procedures for Study X";
+		$xlsx_cells[] = ["Procedure Number", "Procedure Name", "Associated CPT Code", "Cost to Run at Your Site"];
+		
+		for ($i = 1; $i <= 25; $i++) {
+			$name = $record["procedure$i" . "_sc"];
+			$cpt = $record["cpt$i"];
+			$cost = $record["cost$i" . "_sc"];
+			if (!empty($name) || !empty($cpt) || !empty($cost)) {
+				$xlsx_cells[] = [$i, $name, $cpt, $cost];
+			}
+		}
+		
+		carl_log("about to require " . $this->getModulePath() . '/vendor/autoload.php');
+		require $this->getModulePath() . '/vendor/autoload.php';
+		carl_log("required it");
+		$xlsx = new \SimpleXLSXGen();
+		carl_log("instanciated");
+		$xlsx->addSheet($xlsx_cells, "Procedures");
+		carl_log("added sheet");
+		$xlsx->downloadAs('abc.xlsx');
+		exit();
+	}
+	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
 		// replace schedule of event field in survey page with generated table
 		if ($instrument == $this->budget_table_instrument) {
