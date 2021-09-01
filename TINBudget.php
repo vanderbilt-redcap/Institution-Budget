@@ -401,9 +401,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 	}
 	
 	private function addDownloadProcedureResourceButton($record, $event_id, $repeat_instance) {
-		carl_log("called addDownloadProcedureResourceButton with args ($record, $event_id, $repeat_instance)", true);
 		$dl_proc_wb_url = $this->getUrl("php/downloadProceduresWorkbook.php") . "&record=$record&event_id=$event_id&instance=$repeat_instance";
-		carl_log("dl_proc_wb_url: $dl_proc_wb_url");
 		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
@@ -415,8 +413,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 	}
 	
 	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
-		carl_log("calling downloadProcedures");
-		
 		// get procedure info for given record_id
 		$procedure_fields = [];
 		for ($i = 1; $i <= 25; $i++) {
