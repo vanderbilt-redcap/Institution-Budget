@@ -3,15 +3,10 @@ namespace Vanderbilt\TINBudget;
 
 class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
-	public $formsToConvertSubmitToNext = [
-		"contact_and_fixed_costs_info",
-		"procedure",
-		"budget_review_and_feasibility",
-		"budget_review_and_feasibility_two",
-		"go_no_go_2",
-		"gonogo_table",
-		"gng_decision",
-		"fixed_costs"
+	public $noSubmitConversionFormNames = [
+		"identify_sites",
+		"final_decision",
+		"piped_data"
 	];
 	
 	public function __construct() {
@@ -464,7 +459,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			$this->replaceSummaryReviewField($record, $instance);
 		}
 		
-		if (in_array($instrument, $this->formsToConvertSubmitToNext)) {
+		if (!in_array($instrument, $this->noSubmitConversionFormNames)) {
 			$this->renameSubmitForSurvey();
 		}
 	}
