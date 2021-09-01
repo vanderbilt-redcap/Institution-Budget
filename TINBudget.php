@@ -400,24 +400,49 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
-	public function downloadProcedures($record) {
+	private function addDownloadProcedureResourceButton($record, $event_id, $repeat_instance) {
+		carl_log("called addDownloadProcedureResourceButton with args ($record, $event_id, $repeat_instance)", true);
+		$dl_proc_wb_url = $this->getUrl("php/downloadProceduresWorkbook.php") . "&record=$record&event_id=$event_id&instance=$repeat_instance";
+		carl_log("dl_proc_wb_url: $dl_proc_wb_url");
+		?>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				var link = "<a href='<?= $dl_proc_wb_url ?>'>Download Study Procedure List <i class='fas fa-download'></i></a>";
+				$("#future_procedure_file-tr span").replaceWith(link)
+			});
+		</script>
+		<?php
+	}
+	
+	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
 		carl_log("calling downloadProcedures");
 		
-		// get procedure info for given record
+		// get procedure info for given record_id
 		$procedure_fields = [];
 		for ($i = 1; $i <= 25; $i++) {
-			$procedure_fields[] = "procedure$i" . "_sc";
+			$procedure_fields[] = "procedure$i";
 			$procedure_fields[] = "cpt$i";
 			$procedure_fields[] = "cost$i" . "_sc";
 		}
 		$params = [
 			"project_id" => $this->getProjectId(),
-			"return_format" => "json",
-			"records" => $record,
+			"return_format" => "array",
+			"records" => $record_id,
+			// "events" => $event_id,
 			"fields" => $procedure_fields
 		];
-		$data = json_decode(\REDCap::getData($params));
-		$record = (array) $data[0];
+		$data = \REDCap::getData($params);
+		global $Proj;
+		$record = $data[$record_id][$Proj->firstEventId];
+		$ri = $data[$record_id]["repeat_instances"];
+		$ri = reset($ri);
+		$ri = reset($ri);
+		$ri = $ri[$instance];
+		foreach ($ri as $field=>$value) {
+			if (empty($record[$field])) {
+				$record[$field] = $value;
+			}
+		}
 		
 		// create workbook from template in module directory
 		$module_path = $this->getModulePath();
@@ -427,7 +452,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$sheet = $workbook->getActiveSheet();
 		// update workbook cells
 		for ($i = 1; $i <= 25; $i++) {
-			$name = $record["procedure$i" . "_sc"];
+			$name = $record["procedure$i"];
 			$cpt = $record["cpt$i"];
 			$cost = $record["cost$i" . "_sc"];
 			
@@ -436,6 +461,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			$sheet->setCellValue("D" . ($i + 2), $cost);
 		}
 		
+		// download workbook to user
 		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 		header('Content-Disposition: attachment;filename="Procedures.xlsx"');
 		header('Cache-Control: max-age=0');
@@ -461,6 +487,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		
 		if (!in_array($instrument, $this->noSubmitConversionFormNames)) {
 			$this->renameSubmitForSurvey();
+		}
+		
+		if ($instrument == 'enter_cost_to_run_procedure') {
+			$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
 		}
 	}
 
