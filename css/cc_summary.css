@@ -1,0 +1,39 @@
+
+#cc_summary {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+/* borders */
+table.cc_rev_table, .cc_rev_table td, .cc_rev_table th {
+	border: 1px solid black;
+	font-size: 1rem;
+	padding: 8px;
+	text-align: center;
+}
+
+table.cc_rev_table {
+	max-width: 85%;
+	min-width: 50%;
+}
+
+.cc_rev_table th {
+	color: white;
+	padding: 6px 18px 24px 18px;
+}
+
+.table_title {
+	font-weight: 200;
+	font-size: 1.5rem;
+	align-self: start;
+	margin-left: 12%;
+}
+
+.blue_table_headers th {
+	background-color: #32344F;
+}
+.green_table_headers th {
+	background-color: #1d9a78;
+}

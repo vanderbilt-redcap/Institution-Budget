@@ -291,6 +291,176 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		return $table_data;
 	}
 	
+	public function getCCSummaryData() {
+		$data = [];
+		$record = '1';
+		
+		// get STUDY INTAKE FORM data
+		$fields_needed = [
+			"cc_contact_person_fn",
+			"cc_contact_person_ln",
+			"cc_email",
+			"cc_phone_number",
+			"protocol_synopsis",
+			"brief_stud_description",
+			"prop_summary_describe2_5f5",
+			"number_subjects",
+			"study_population",
+			"number_sites",
+			"funding_source",
+			"funding_mechanism",
+			"funding_other",
+			"institute_center",
+			"grant_app_no",
+			"funding_opp_announcement",
+			"anticipated_budget",
+			"funding_duration",
+			"reci_date",
+			"site_active_date",
+			"support_date",
+		];
+		
+		for ($i = 1; $i <= 5; $i++) {
+			$fields_needed[] = "fixedcost$i";
+			$fields_needed[] = "fixedcost$i" . "_detail";
+		}
+		
+		$getDataParams = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => "array",
+			"records" => $record,
+			"fields" => $fields_needed
+		];
+		$study_intake_data = \REDCap::getData($getDataParams);
+		
+		$data = reset($study_intake_data[$record]);
+		
+		return $data;
+	}
+	
+	public function getCCSummaryHTML($cc_data) {
+		if (empty($cc_data)) {
+			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
+		}
+		
+		$record = '1';
+		$budget_data = $this->getBudgetTableData($record);
+		if (empty($budget_data)) {
+			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
+		} else {
+			$budget_data = json_decode($budget_data);
+			// carl_log("budget_data: " .print_r($budget_data, true));
+		}
+		
+		?>
+		<div id="cc_summary">
+		<h3>BUDGET FEASIBILITY SUMMARY PAGEFOR COORDINATING CENTER</h3>
+		
+		<!--STUDY INTAKE FORM-->
+		<h5 class="table_title"><u>STUDY INTAKE FORM</u></h5>
+		<table class="cc_rev_table blue_table_headers">
+			<thead>
+				<tr>
+					<th>COORDINATING CENTER/STUDY INFORMATION</th>
+					<th>INFORMATION PROVIDED</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Coordinating Center Contact Information</td>
+					<td><?= $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'] ?></td>
+				</tr>
+				<tr>
+					<td>Short study name Protocol/protocol synopsis for this study</td>
+					<td></td><!-- TODO: make link to download edoc or say no file attached -->
+				</tr>
+				<tr>
+					<td>Brief Study Description</td>
+					<td><?= $cc_data['brief_stud_description'] ?></td>
+				</tr>
+				<tr>
+					<td>Description of Study Intervention</td>
+					<td><?= $cc_data['prop_summary_describe2_5f5'] ?></td>
+				</tr>
+				<tr>
+					<td>Enrollment Goals</td>
+					<td>
+						Estimated number of subjects: <?= $cc_data['number_subjects'] ?><br>
+						Study Population: <?= $cc_data['study_population'] ?><br>
+						Estimated number of sites: <?= $cc_data['number_sites'] ?>
+					</td>
+				</tr>
+				<tr>
+					<td>Funding/Support for the Proposal</td>
+					<td>Current funding source: <?= $cc_data['funding_source'] ?><br>
+						Funding mechanism: <?= $cc_data['funding_mechanism'] ?? $cc_data['funding_other'] ?><br>
+						Identified I/C: <?= $cc_data['institute_center'] ?><br>
+						Grant/application number: <?= $cc_data['grant_app_no'] ?><br>
+						FOA (if applicable): <?= $cc_data['funding_opp_announcement'] ?><br>
+						Anticipated total budget (direct and indirect): <?= $cc_data['anticipated_budget'] ?><br>
+						Total duration of funding period: <?= $cc_data['funding_duration'] ?><br>
+						Anticipated funding start date for application: <?= $cc_data['reci_date'] ?>
+					</td>
+				</tr>
+				<tr>
+					<td>Timelines</td>
+					<td>Date planned for first site activated: <?= $cc_data['site_active_date'] ?><br>
+						Anticipated start date for initiation of funding: <?= $cc_data['support_date'] ?>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		<br>
+		
+		<!--FIXED COSTS SUMMARY REVIEW-->
+		<h5 class="table_title"><u>FIXED COSTS SUMMARY REVIEW</u></h5>
+		<table class="cc_rev_table blue_table_headers">
+			<thead>
+				<tr>
+					<th>FIXED COST</th>
+					<th>FIXED COST DETAIL</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+			for ($i = 1; $i <= 5; $i++) {
+				echo "<tr><td>" . $cc_data["fixedcost$i"] . "</td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
+			}
+			?>
+			</tbody>
+		</table>
+		
+		<!--PROCEDURE COSTS SUMMARY REVIEW-->
+		<h5 class="table_title"><u>PROCEDURE COSTS SUMMARY REVIEW</u></h5>
+		<table class="cc_rev_table green_table_headers">
+			<thead>
+				<tr>
+					<th>Procedure Name</th>
+					<th>Associated CPT Code</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+			foreach($budget_data->procedures as $i => $info) {
+				echo "<tr><td>" . $info->name . "</td><td>" . $info->cpt . "</td></tr>";
+			}
+			?>
+			</tbody>
+		</table>
+		
+		<!--SCHEDULE OF EVENTS REVIEW-->
+		
+		<!--IDENTIFIED SITES REVIEW-->
+		
+		</div>
+		<script type="text/javascript">
+			$().ready(function() {
+				$('head').append('<link rel="stylesheet" href="<?= $this->getUrl("css/cc_summary.css"); ?>">');
+			});
+		</script>
+		<?php
+	}
+	
 	public function replaceScheduleFields($record) {
 		$_GET['rid'] = $record;
 		
