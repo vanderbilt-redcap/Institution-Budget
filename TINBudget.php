@@ -129,7 +129,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		return $budget_table;
 	}
 	
-	public function getGoNoGoTableData($record) {
+	public function getGoNoGoTableData($record, $instance) {
 		// get event ID
 		$event_ids = \REDCap::getEventNames();
 		$event_id = array_search('Event 1', $event_ids);
@@ -153,6 +153,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				"fields" => $fields
 			];
 			$data = \REDCap::getData($get_data_params);
+			
 			if (empty($data[$record]['repeat_instances'])) {
 				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (repeat_instances empty)");
 			}
@@ -166,8 +167,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data ([event_id][\"\"] missing)");
 			}
 			
-			$current_event_instance = max(array_keys($data));
-			$data = $data[$current_event_instance];
+			$data = $data[$instance];
 			
 			if (empty($data)) {
 				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (no instance data found)");
@@ -340,7 +340,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$budget_table = $this->getBudgetTableData($record);
 		
 		// get Go/No-Go table data and field name
-		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record));
+		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record, $instance));
 		$gonogo_table_field = $this->getProjectSetting('gonogo_table_field');
 		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
 		?>
@@ -364,7 +364,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$budget_table = $this->getBudgetTableData($record);
 		
 		// get Go/No-Go table data and field name
-		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record));
+		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record, $instance));
 		
 		$summary_review_field = $this->getProjectSetting('summary_review_field');
 		
@@ -473,12 +473,12 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		
 		// replace Go/No-Go field in survey page with generated table
 		if ($instrument == $this->gonogo_table_instrument) {
-			$this->replaceGoNoGoFields($record, $instance);
+			$this->replaceGoNoGoFields($record, $repeat_instance);
 		} 
 		
 		// replace Summary Review field in survey page with interface
 		if ($instrument == $this->summary_review_instrument) {
-			$this->replaceSummaryReviewField($record, $instance);
+			$this->replaceSummaryReviewField($record, $repeat_instance);
 		}
 		
 		if (!in_array($instrument, $this->noSubmitConversionFormNames)) {
