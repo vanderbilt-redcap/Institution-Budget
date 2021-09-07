@@ -712,6 +712,10 @@ $(document).ready(function() {
 	TINBudget.stateIndex = 0;
 	TINBudget.pushState();
 	
+	if (TINBudgetSurvey.soe_data) {
+		TINBudget.loadState(TINBudgetSurvey.soe_data);
+	}
+	
 });
 
 // saving/loading

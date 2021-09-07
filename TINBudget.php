@@ -295,7 +295,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$_GET['rid'] = $record;
 		
 		// retrieve name of configured budget table field
-		$schedule_field = json_encode($this->getProjectSetting('budget_table_field'));
+		$schedule_field = $this->getProjectSetting('budget_table_field');
 		
 		// start buffering to catch getBudgetTable output (html)
 		ob_start();
@@ -303,10 +303,25 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		// escape quotation marks
 		$budget_table = addslashes(ob_get_contents());
 		ob_end_clean();
-		// escape newlines to make this a multi-line string in js
-		$budget_table = str_replace(array("\r\n", "\n", "\r"), '\\n', $budget_table);
-		
+		// remove newlines and tabs
+		$budget_table = str_replace(array("\n", "\r", "\t"), '', $budget_table);
 		// we didn't use json_encode above because getBudgetTable.php outputs HTML, not JSON
+		
+		// get existing schedule_of_events_json (contains procedure counts)
+		$data_params = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => "array",
+			"records" => "$record",
+			"fields" => $schedule_field
+		];
+		$soe_data = \REDCap::getData($data_params)[$record];
+		$soe_data = reset($soe_data);
+		if (!empty($soe_data[$schedule_field])) {
+			$soe_data = $soe_data[$schedule_field];
+		} else {
+			unset($soe_data);
+		}
+		
 		$cpt_endpoint_url = $this->getProjectSetting('cpt_endpoint_url');
 		?>
 		<script type="text/javascript">
@@ -317,8 +332,9 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			TINBudget.procedures = JSON.parse('<?= json_encode($procedures) ?>')
 			
 			TINBudgetSurvey = {
-				schedule_field: JSON.parse('<?= $schedule_field; ?>'),
+				schedule_field: "<?= $schedule_field; ?>",
 				budget_table: "<?=$budget_table;?>",
+				soe_data: JSON.parse('<?=$soe_data;?>'),
 				updateScheduleField: function(scheduleString) {
 					var field_name = TINBudgetSurvey.schedule_field;
 					$("textarea[name='" + field_name + "']").val(scheduleString);
