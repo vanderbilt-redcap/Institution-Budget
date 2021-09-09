@@ -338,6 +338,68 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		return $data;
 	}
 	
+	public function showStaticScheduleArms($budget_data) {
+		foreach($budget_data->arms as $arm_i => $arm) {
+		?>
+		<div class="budget_container">
+		<h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm->name ?? "") ?></h6>
+		<table>
+			<thead>
+				<tr>
+				<?php
+				foreach ($arm->visits as $visit_i => $visit) {
+					if (empty($visit)) {
+						echo "<th></th>";
+					} else {
+						echo "<th>Visit " . ($visit_i + 1) . ": " . $visit->name . "</th>";
+					}
+				}
+				?>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+			$visit1 = $arm->visits[1];
+			$row_count = count($visit1->procedure_counts);
+			for ($row_i = 1; $row_i <= $row_count; $row_i++) {
+				$row_i_0 = $row_i - 1;
+				?>
+				<tr>
+					<td><?php
+					foreach($arm->procedureRows as $procedure) {
+						if ($procedure->index == $visit1->procedure_counts[$row_i_0]->procedure_index) {
+							echo $procedure->name;
+							break;
+						}
+					}
+					?></td>
+					<?php
+					foreach ($arm->visits as $visit_i => $visit) {
+						if (!empty($visit)) {
+							echo "<td>" . $visit->procedure_counts[$row_i_0]->count . "</td>";
+						}
+					}
+					?>
+				</tr>
+				<?php
+			}
+			
+			// add Total $$ row
+			echo "<tr><td class='no-border'>Total $$</td>";
+			foreach ($arm->visits as $visit_i => $visit) {
+				if (!empty($visit)) {
+					echo "<td>" . $visit->total . "</td>";
+				}
+			}
+			echo "</tr>";
+			?>
+			</tbody>
+		</table>
+		</div>
+		<?php
+		}
+	}
+	
 	public function getCCSummaryHTML($cc_data) {
 		if (empty($cc_data)) {
 			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
@@ -349,12 +411,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
 		} else {
 			$budget_data = json_decode($budget_data);
-			// carl_log("budget_data: " .print_r($budget_data, true));
 		}
 		
 		?>
 		<div id="cc_summary">
-		<h3>BUDGET FEASIBILITY SUMMARY PAGEFOR COORDINATING CENTER</h3>
+		<h3>BUDGET FEASIBILITY SUMMARY PAGE FOR COORDINATING CENTER</h3>
 		
 		<!--STUDY INTAKE FORM-->
 		<h5 class="table_title"><u>STUDY INTAKE FORM</u></h5>
@@ -410,7 +471,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				</tr>
 			</tbody>
 		</table>
-		<br>
 		
 		<!--FIXED COSTS SUMMARY REVIEW-->
 		<h5 class="table_title"><u>FIXED COSTS SUMMARY REVIEW</u></h5>
@@ -449,9 +509,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		</table>
 		
 		<!--SCHEDULE OF EVENTS REVIEW-->
+		<h5 class="table_title"><u>SCHEDULE OF EVENTS REVIEW</u></h5>
+		<?php $this->showStaticScheduleArms($budget_data); ?>
 		
 		<!--IDENTIFIED SITES REVIEW-->
-		
+		<h5 class="table_title"><u>IDENTIFIED SITES REVIEW</u></h5>
 		</div>
 		<script type="text/javascript">
 			$().ready(function() {

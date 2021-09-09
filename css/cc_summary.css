@@ -29,6 +29,7 @@ table.cc_rev_table {
 	font-size: 1.5rem;
 	align-self: start;
 	margin-left: 12%;
+	margin-top: 24px;
 }
 
 .blue_table_headers th {
@@ -36,4 +37,20 @@ table.cc_rev_table {
 }
 .green_table_headers th {
 	background-color: #1d9a78;
+}
+
+.budget_container h6 {
+	margin-left: 15%;
+}
+.budget_container table {
+	margin-bottom : 24px;
+	font-size: 1rem;
+	padding: 8px;
+	text-align: center;
+}
+.budget_container th:not(:first-child), .budget_container td:not(.no-border) {
+	border: 1px solid black;
+}
+.budget_container th, .budget_container td {
+	padding: 8px;
 }
