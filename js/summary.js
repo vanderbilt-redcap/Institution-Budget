@@ -18,6 +18,9 @@ TINSummary.initialize = function() {
 	
 	TINSummary.addFixedCostsTable(parent);
 	TINSummary.addProcedureCostsTable(parent);
+	
+	TINSummary.replaceHereWithLinkToPrint();
+	TINSummary.addDownloadSummaryReviewButton();
 }
 
 TINSummary.addFixedCostsTable = function(parent) {
@@ -170,6 +173,20 @@ TINSummary.convertDecision = function(decision) {
 		decision: decision,
 		row_class: row_class
 	};
+}
+
+TINSummary.replaceHereWithLinkToPrint = function() {
+	var text = $("#surveyinstructions").find(":contains('here')").first();
+	var link = "<a class='open_print'>here</a>";
+	text.html(text.html().replace("here", link));
+	$("body").on("click", ".open_print", function() {
+		window.print();
+	});
+}
+
+TINSummary.addDownloadSummaryReviewButton = function() {
+	var new_button_row = "<tr><td colspan='2' style='text-align:center;padding:15px 0;'><button type='button' class='jqbutton nowrap ui-button ui-corner-all ui-widget' style='color:#000000; margin-top: -10px;' onclick='window.print();return false;'>Download Summary Review</button></td></tr>";
+	$(".formtbody tr.surveysubmit table tbody").append(new_button_row);
 }
 
 $('head').append('<link rel="stylesheet" type="text/css" href="' + TINSummary.css_url + '">');
