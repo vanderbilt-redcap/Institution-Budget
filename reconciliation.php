@@ -7,7 +7,8 @@ if (gettype($table_data) == 'string') {
 	exit();
 }
 
-echo "
+?>
+
 <h3>Coordinating Center Reconciliation Table</h3>
 <table id='reconciliation' class='w-75'>
 	<thead>
@@ -20,7 +21,9 @@ echo "
 			<th>Action</th>
 		</tr>
 	</thead>
-	<tbody>";
+	<tbody>
+
+<?php
 
 // tabulate site data
 $action_dropdown = "<div class='dropdown'>
@@ -60,11 +63,9 @@ foreach ($table_data as $site_index => $row) {
 		</tr>";
 }
 
-echo "
-	</tbody>
-</table>";
-
 ?>
+	</tbody>
+</table>
 <script type='text/javascript'>
 	TIN_Budget = {
 		css_url: "<?php echo($module->getUrl('css/reconciliation.css')); ?>"
