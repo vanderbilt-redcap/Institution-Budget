@@ -376,7 +376,12 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 					<?php
 					foreach ($arm->visits as $visit_i => $visit) {
 						if (!empty($visit)) {
-							echo "<td>" . $visit->procedure_counts[$row_i_0]->count . "</td>";
+							if ($visit->procedure_counts[$row_i_0]->count != 0) {
+								$class = " class='nonzero'";
+							} else {
+								$class = "";
+							}
+							echo "<td$class>" . $visit->procedure_counts[$row_i_0]->count . "</td>";
 						}
 					}
 					?>
@@ -398,6 +403,59 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		</div>
 		<?php
 		}
+	}
+	
+	public function showSummarySiteTable($record) {
+		$fields = [];
+		for ($i = 1; $i <= 50; $i++) {
+			$fields[] = "name$i";
+			$fields[] = "institution$i";
+			$fields[] = "email$i";
+			$fields[] = "zip$i";
+		}
+		$pid = $this->getProjectId();
+		$proj = new \Project($pid);
+		$eid = $proj->firstEventId;
+		$params = [
+			"project_id" => $pid,
+			"return_format" => "array",
+			"records" => $record,
+			"fields" => $fields,
+			"events" => $eid
+		];
+		
+		$site_data = \REDCap::getData($params);
+		$site_data = $site_data[$record][$eid];
+		?>
+		<div>
+			<table class='sites_contact_info'>
+				<thead>
+					<tr>
+						<th></th>
+						<th>Name of Contact</th>
+						<th>Institution Name</th>
+						<th>Email Address</th>
+						<th>Zip Code</th>
+					</tr>
+				</thead>
+				<tbody>
+				<?php
+				for ($i = 1; $i <= 50; $i++) {
+					?>
+					<tr>
+						<td><?= "Site $i" ?></td>
+						<td><?= $site_data["name$i"] ?></td>
+						<td><?= $site_data["institution$i"] ?></td>
+						<td><?= $site_data["email$i"] ?></td>
+						<td><?= $site_data["zip$i"] ?></td>
+					</tr>
+					<?php
+				}
+				?>
+				</tbody>
+			</table>
+		</div>
+		<?php
 	}
 	
 	public function getCCSummaryHTML($cc_data) {
@@ -497,12 +555,13 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				<tr>
 					<th>Procedure Name</th>
 					<th>Associated CPT Code</th>
+					<th>Reimbursement Amount</th>
 				</tr>
 			</thead>
 			<tbody>
 			<?php
 			foreach($budget_data->procedures as $i => $info) {
-				echo "<tr><td>" . $info->name . "</td><td>" . $info->cpt . "</td></tr>";
+				echo "<tr><td>" . $info->name . "</td><td>" . $info->cpt . "</td>><td>" . $info->cost . "</td></tr>";
 			}
 			?>
 			</tbody>
@@ -514,6 +573,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		
 		<!--IDENTIFIED SITES REVIEW-->
 		<h5 class="table_title"><u>IDENTIFIED SITES REVIEW</u></h5>
+		<?php $this->showSummarySiteTable($record); ?>
+		
 		</div>
 		<script type="text/javascript">
 			$().ready(function() {

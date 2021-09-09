@@ -7,14 +7,14 @@
 }
 
 /* borders */
-table.cc_rev_table, .cc_rev_table td, .cc_rev_table th {
+table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, tabl.sites_contact_info, .sites_contact_info td, .sites_contact_info th {
 	border: 1px solid black;
 	font-size: 1rem;
 	padding: 8px;
 	text-align: center;
 }
 
-table.cc_rev_table {
+table.cc_rev_table, table.sites_contact_info {
 	max-width: 85%;
 	min-width: 50%;
 }
@@ -48,9 +48,33 @@ table.cc_rev_table {
 	padding: 8px;
 	text-align: center;
 }
+.budget_container table tbody tr:nth-child(odd) td {
+	background-color: #F2F6FB;
+}
+.budget_container table tbody tr:nth-child(even) td {
+	background-color: #E9ECF6;
+}
+.budget_container table tbody tr:nth-child(odd) td.nonzero {
+	background-color: #c2edff;
+}
+.budget_container table tbody tr:nth-child(even) td.nonzero {
+	background-color: #A6E0FF;
+}
+.budget_container table tbody tr:last-child td:first-child {
+	background-color: #FFFFFF;
+}
+
 .budget_container th:not(:first-child), .budget_container td:not(.no-border) {
 	border: 1px solid black;
 }
 .budget_container th, .budget_container td {
 	padding: 8px;
+}
+
+.sites_contact_info td:first-child , .sites_contact_info th {
+	font-weight: bold;
+}
+
+.sites_contact_info td, .sites_contact_info th {
+	background-color: #EEEEEE;
 }
