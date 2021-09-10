@@ -616,6 +616,12 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 		
 		$cpt_endpoint_url = $this->getProjectSetting('cpt_endpoint_url');
+		$cred_path = "/credentials/rdws/credentials.json";
+		if (file_exists($cred_path)) {
+			$creds = json_decode(file_get_contents($cred_path));
+			$cpt_endpoint_url = str_replace("://", "://" . $creds->username . ":" . $creds->password . "@", $cpt_endpoint_url);
+		}
+		
 		?>
 		<script type="text/javascript">
 			TINBudget = {
