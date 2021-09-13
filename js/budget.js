@@ -1,5 +1,25 @@
 
 TINBudget.MAX_STATES = 100;
+TINBudget.autocompSettings = {
+	source: function(request, response) {
+		$.ajax(TINBudget.cpt_endpoint_url, {
+			data: {"query": request.term},
+			method: "POST",
+			dataType: "json"
+		}).done(function(data) {
+			// convert array of cpt code rows to autocomplete options
+			var options = [];
+			data.forEach(function(codeRow) {
+				options.push({
+					value: codeRow.code,
+					label: codeRow.code + ": " + codeRow.code_desc
+				});
+			});
+			response(options);
+		});
+	},
+	minLength: 3
+}
 
 TINBudget.refreshSchedule = function() {
 	// highlight dropdown for active arm
@@ -55,18 +75,8 @@ TINBudget.refreshProceduresTable = function() {
 		$("table#edit_procedures tbody tr:last-child td.name input").val(procedure.name);
 		$("table#edit_procedures tbody tr:last-child td.cost input").val(procedure.cost);
 		$("table#edit_procedures tbody tr:last-child td.cpt input").val(procedure.cpt);
-		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete({
-			source: function(request, response) {
-				$.ajax(TINBudget.cpt_endpoint_url, {
-					data: {"query":request.term},
-					method: "POST",
-					dataType: "json"
-				}).done( function(data) {
-					response(data); 
-				});
-			},
-			minLength:0
-		}).focus(function(){
+		
+		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(TINBudget.autocompSettings).focus(function(){
 			$(this).data("uiAutocomplete").search($(this).val());
 		});
 	});
@@ -642,18 +652,7 @@ $(document).ready(function() {
 		</tr>");
 		
 		// add autocomplete for CPT code lookup
-		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete({
-			source: function(request, response) {
-				$.ajax(TINBudget.cpt_endpoint_url, {
-					data: {"query":request.term},
-					method: "POST",
-					dataType: "json"
-				}).done( function(data) {
-					response(data); 
-				});
-			},
-			minLength:0
-		}).focus(function(){
+		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(TINBudget.autocompSettings).focus(function(){
 			$(this).data("uiAutocomplete").search($(this).val());
 		});
 	});
