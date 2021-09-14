@@ -7,15 +7,7 @@ TINBudget.autocompSettings = {
 			method: "POST",
 			dataType: "json"
 		}).done(function(data) {
-			// convert array of cpt code rows to autocomplete options
-			var options = [];
-			data.forEach(function(codeRow) {
-				options.push({
-					value: codeRow.code,
-					label: codeRow.code + ": " + codeRow.code_desc
-				});
-			});
-			response(options);
+			response(data);
 		});
 	},
 	minLength: 3
