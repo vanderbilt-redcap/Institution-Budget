@@ -730,6 +730,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			$procedure_fields[] = "cpt$i";
 			$procedure_fields[] = "cost$i" . "_sc";
 		}
+		$procedure_fields[] = "short_study_name";
+		
 		$params = [
 			"project_id" => $this->getProjectId(),
 			"return_format" => "array",
@@ -756,6 +758,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader("Xlsx");
 		$workbook = $reader->load($module_path . "templates/procedures.xlsx");
 		$sheet = $workbook->getActiveSheet();
+		
+		// update study name in wb first cell
+		$study_name = $record['short_study_name'] ?? "<study name>";
+		$sheet->setCellValue("A1", "All Procedures for $study_name");
+		
 		// update workbook cells
 		for ($i = 1; $i <= 25; $i++) {
 			$name = $record["procedure$i"];
