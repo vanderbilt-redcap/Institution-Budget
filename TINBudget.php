@@ -472,6 +472,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 		
 		?>
+		<button type="button" class="btn btn-primary" style="margin: 8px;" onclick="window.print()">Print</button>
 		<div id="cc_summary">
 		<h3>BUDGET FEASIBILITY SUMMARY PAGE FOR COORDINATING CENTER</h3>
 		
