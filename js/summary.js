@@ -177,7 +177,7 @@ TINSummary.convertDecision = function(decision) {
 
 TINSummary.replaceHereWithLinkToPrint = function() {
 	var text = $("#surveyinstructions").find(":contains('here')").first();
-	var link = "<a class='open_print'>here</a>";
+	var link = "<h5 class='open_print'>here</h5>";
 	text.html(text.html().replace("here", link));
 	$("body").on("click", ".open_print", function() {
 		window.print();

@@ -60,3 +60,8 @@ table.procedure-costs th {
 	background-color: #1d9a78;
 }
 
+.open_print {
+	display: inline;
+	color: blue;
+	text-decoration: underline;
+}
