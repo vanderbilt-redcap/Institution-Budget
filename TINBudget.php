@@ -700,6 +700,36 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
+	public function replaceCCSummaryReviewField($record, $instance) {
+		$cc_html_url = $this->getUrl("cc_summary.php");
+		$cc_replace_field = "summary_review_upload";
+		?>
+		<script type="text/javascript">
+			TINSummary = {
+				record_id: '<?= $record; ?>',
+				instance: '<?= $instance; ?>',
+				cc_summary_review_field: '<?= $cc_replace_field; ?>',
+				cc_html_url: '<?= $cc_html_url; ?>'
+			}
+			$(document).ready(function() {
+				if (typeof TINSummary.cc_summary_review_field == 'string') {
+					$('#' + TINSummary.cc_summary_review_field + '-tr').hide();
+					$('#' + TINSummary.cc_summary_review_field + '-tr').before("<tr id='cc_summary_review_tr'><td colspan='3' id='cc_summary_review_td'></td></tr>");
+					$("#cc_summary_review_td").append("<div id='cc_summary_review'></div>");
+					$.ajax(TINSummary.cc_html_url).done(function(data) {
+						var div = $("div#cc_summary_review");
+						div.html(data);
+						
+						// for some reason, 15 '>' symbols appear in the html -- this removes them
+						var gt = "&gt;";
+						div.html(div.html().replace(gt.repeat(15), ''));
+					});
+				}
+			});
+		</script>
+		<?php
+	}
+	
 	private function renameSubmitForSurvey() {
 		?>
 		<script type="text/javascript">
@@ -804,6 +834,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		
 		if ($instrument == 'enter_cost_to_run_procedure') {
 			$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
+		}
+		
+		if ($instrument == 'summary_review_page') {
+			$this->replaceCCSummaryReviewField($record, $repeat_instance);
 		}
 	}
 

@@ -26,12 +26,6 @@
 				"icon": "fas fa-table",
 				"url": "reconciliation",
 				"show-header-and-footer": true
-			},
-			{
-				"name": "BUDGET FEASIBILITY SUMMARY PAGE FOR COORDINATING CENTER",
-				"icon": "fas fa-table",
-				"url": "cc_summary",
-				"show-header-and-footer": true
 			}
 		],
 		"control-center": []
