@@ -6,6 +6,10 @@
 	justify-content: center;
 }
 
+#cc_summary table {
+	width: 700px;
+}
+
 /* borders */
 table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, tabl.sites_contact_info, .sites_contact_info td, .sites_contact_info th {
 	border: 1px solid black;
@@ -14,10 +18,10 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, tabl.sites_contact_info,
 	text-align: center;
 }
 
-table.cc_rev_table, table.sites_contact_info {
-	max-width: 85%;
-	min-width: 50%;
-}
+/* table.cc_rev_table, table.sites_contact_info { */
+	/* max-width: 85%; */
+	/* min-width: 50%; */
+/* } */
 
 .cc_rev_table th {
 	color: white;
@@ -77,4 +81,16 @@ table.cc_rev_table, table.sites_contact_info {
 
 .sites_contact_info td, .sites_contact_info th {
 	background-color: #EEEEEE;
+}
+
+@ media print {
+	/* div { float: none !important; position: static !important; display: inline;  */
+          /* box-sizing: content-box !important; */
+    /* } */
+	/* .pba { */
+		/* page-break-after: always; */
+	/* } */
+	/* .pbb { */
+		/* page-break-before: always; */
+	/* } */
 }

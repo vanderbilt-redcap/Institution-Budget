@@ -562,7 +562,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			<tbody>
 			<?php
 			foreach($budget_data->procedures as $i => $info) {
-				echo "<tr><td>" . $info->name . "</td><td>" . $info->cpt . "</td>><td>" . $info->cost . "</td></tr>";
+				echo "<tr><td>" . $info->name . "</td><td>" . $info->cpt . "</td><td>" . $info->cost . "</td></tr>";
 			}
 			?>
 			</tbody>
@@ -715,15 +715,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			$(document).ready(function() {
 				if (typeof TINSummary.cc_summary_review_field == 'string') {
 					$('#' + TINSummary.cc_summary_review_field + '-tr').hide();
-					$('#' + TINSummary.cc_summary_review_field + '-tr').before("<tr id='cc_summary_review_tr'><td colspan='3' id='cc_summary_review_td'></td></tr>");
-					$("#cc_summary_review_td").append("<div id='cc_summary_review'></div>");
+					$('#surveyinstructions').after("<div id='cc_summary_review'></div>");
+					// $("#cc_summary_review_td").append("<div id='cc_summary_review'></div>");
 					$.ajax(TINSummary.cc_html_url).done(function(data) {
 						var div = $("div#cc_summary_review");
 						div.html(data);
-						
-						// for some reason, 15 '>' symbols appear in the html -- this removes them
-						var gt = "&gt;";
-						div.html(div.html().replace(gt.repeat(15), ''));
 					});
 				}
 			});
@@ -759,9 +755,9 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		for ($i = 1; $i <= 25; $i++) {
 			$procedure_fields[] = "procedure$i";
 			$procedure_fields[] = "cpt$i";
-			$procedure_fields[] = "cost$i" . "_sc";
 		}
-		$procedure_fields[] = "short_study_name";
+		$study_short_name_field = "short_name";
+		$procedure_fields[] = $study_short_name_field;
 		
 		$params = [
 			"project_id" => $this->getProjectId(),
@@ -791,18 +787,16 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$sheet = $workbook->getActiveSheet();
 		
 		// update study name in wb first cell
-		$study_name = $record['short_study_name'] ?? "<study name>";
+		$study_name = $record[$study_short_name_field] ?? "<study name>";
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
 		
 		// update workbook cells
 		for ($i = 1; $i <= 25; $i++) {
 			$name = $record["procedure$i"];
 			$cpt = $record["cpt$i"];
-			$cost = $record["cost$i" . "_sc"];
 			
 			$sheet->setCellValue("B" . ($i + 2), $name);
 			$sheet->setCellValue("C" . ($i + 2), $cpt);
-			$sheet->setCellValue("D" . ($i + 2), $cost);
 		}
 		
 		// download workbook to user
