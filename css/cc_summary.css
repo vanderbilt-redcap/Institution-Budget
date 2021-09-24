@@ -78,12 +78,11 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, tabl.sites_contact_info,
 .sites_contact_info td:first-child , .sites_contact_info th {
 	font-weight: bold;
 }
-
 .sites_contact_info td, .sites_contact_info th {
 	background-color: #EEEEEE;
 }
 
-@ media print {
+@media print {
 	/* div { float: none !important; position: static !important; display: inline;  */
           /* box-sizing: content-box !important; */
     /* } */
@@ -93,4 +92,7 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, tabl.sites_contact_info,
 	/* .pbb { */
 		/* page-break-before: always; */
 	/* } */
+	.extra-top-space {
+		margin-top: 20px;
+	}
 }

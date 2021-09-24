@@ -477,6 +477,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<h3>BUDGET FEASIBILITY SUMMARY PAGE FOR COORDINATING CENTER</h3>
 		
 		<!--STUDY INTAKE FORM-->
+		<div>
 		<h5 class="table_title"><u>STUDY INTAKE FORM</u></h5>
 		<table class="cc_rev_table blue_table_headers">
 			<thead>
@@ -530,8 +531,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				</tr>
 			</tbody>
 		</table>
+		</div>
 		
 		<!--FIXED COSTS SUMMARY REVIEW-->
+		<div class='pba'>
 		<h5 class="table_title"><u>FIXED COSTS SUMMARY REVIEW</u></h5>
 		<table class="cc_rev_table blue_table_headers">
 			<thead>
@@ -548,8 +551,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			?>
 			</tbody>
 		</table>
+		</div>
 		
 		<!--PROCEDURE COSTS SUMMARY REVIEW-->
+		<div class='pbb pba'>
 		<h5 class="table_title"><u>PROCEDURE COSTS SUMMARY REVIEW</u></h5>
 		<table class="cc_rev_table green_table_headers">
 			<thead>
@@ -567,14 +572,19 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			?>
 			</tbody>
 		</table>
+		</div>
 		
 		<!--SCHEDULE OF EVENTS REVIEW-->
+		<div class='pbb pba'>
 		<h5 class="table_title"><u>SCHEDULE OF EVENTS REVIEW</u></h5>
 		<?php $this->showStaticScheduleArms($budget_data); ?>
+		</div>
 		
 		<!--IDENTIFIED SITES REVIEW-->
+		<div class='pbb pba extra-top-space'>
 		<h5 class="table_title"><u>IDENTIFIED SITES REVIEW</u></h5>
 		<?php $this->showSummarySiteTable($record); ?>
+		</div>
 		
 		</div>
 		<script type="text/javascript">
