@@ -60,8 +60,11 @@ div#gng_arm_tables {
 	border: none;
 	/* border-top: 2px solid #0062cc; */
 }
-.gng_arm_table tbody td.zero_cost {
+.gng_arm_table tbody td.low_cost {
 	background-color: #DEDEDE;
+}
+.gng_arm_table tbody td.high_cost {
+	background-color: #FFE1E1;
 }
 .gng_arm_table tfoot td.red {
 	background-color: #DE3535;

@@ -100,6 +100,8 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 			if (visit != null) {
 				var proc_count = visit.procedure_counts[procedure_row].count;
 				var cell_value = Number(site_cost) * Number(proc_count);
+				
+				// update totals
 				if (TINGoNoGo.col_totals[visit_i]) {
 					TINGoNoGo.col_totals[visit_i] += cell_value;
 				} else {
@@ -107,7 +109,7 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 				}
 				
 				// choose cell color/class
-				var cell_class = cell_value == 0 ? "class='zero_cost' " : "";
+				var cell_class = (cell_value > (center_cost * Number(proc_count))) ? "class='high_cost' " : "class='low_cost' ";
 				
 				gng_table += "\
 				<td " + cell_class + "data-center-cost='" + center_cost + "' data-site-cost='" + site_cost + "'>$" + cell_value + "</td>";
