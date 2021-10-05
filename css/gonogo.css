@@ -58,7 +58,7 @@ div#gng_arm_tables {
 }
 .gng_arm_table tfoot th {
 	border: none;
-	border-top: 2px solid #0062cc;
+	/* border-top: 2px solid #0062cc; */
 }
 .gng_arm_table tbody td.zero_cost {
 	background-color: #DEDEDE;

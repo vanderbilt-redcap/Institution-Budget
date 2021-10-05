@@ -118,31 +118,69 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 			</tr>";
 	});
 	
-	// add totals row
 	gng_table += "\
 			<tfoot>\
-				<tr style='height: 12px;'></tr>\
+				<tr style='height: 12px; border-bottom: 2px solid #0062cc;'></tr>";
+	
+	// add My Cost $$ row
+	gng_table += "\
 				<tr>\
 					<th>Total $$</th>";
-	
 	col_totals.forEach(function(total, visit_i) {
-		
 		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
-		
 		var cell_class = " class='green' ";
-		
-		if (cc_visit_cost > total) {
+		if (cc_visit_cost <= total) {
 			cell_class = " class='red' ";
 			sidebar_color = "red";
 		}
-		
 		gng_table += "\
 					<th" + cell_class + ">$" + total + "</th>";
 	});
-	
+	gng_table += "\
+				</tr>"
+				
+	// add CC Reimbursement $$ row
+	gng_table += "\
+				<tr>\
+					<th>CC Reimbursement $$</th>";
+	col_totals.forEach(function(total, visit_i) {
+		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
+		var cell_class = " class='green' ";
+		if (cc_visit_cost <= total) {
+			cell_class = " class='red' ";
+			sidebar_color = "red";
+		}
+		gng_table += "\
+					<th" + cell_class + ">$" + cc_visit_cost + "</th>";
+	});
+	gng_table += "\
+				</tr>"
+				
+	// add delta (&#x394;) row
+	gng_table += "\
+				<tr>\
+					<th>&#x394; $$</th>";
+	col_totals.forEach(function(total, visit_i) {
+		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
+		var cell_class = " class='green' ";
+		if (cc_visit_cost <= total) {
+			cell_class = " class='red' ";
+			sidebar_color = "red";
+		}
+		var delta_amount = cc_visit_cost - total;
+		if (delta_amount < 0) {
+			delta_amount = "-$" + String(-delta_amount);
+		} else {
+			delta_amount = "$" + String(delta_amount);
+		}
+		gng_table += "\
+					<th" + cell_class + ">" + delta_amount + "</th>";
+	});
 	gng_table += "\
 				</tr>"
 	
+	
+	// finish table
 	gng_table += "\
 			</tfoot>\
 		</tbody>\
