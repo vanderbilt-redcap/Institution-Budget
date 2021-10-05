@@ -706,7 +706,6 @@ $(document).ready(function() {
 	if (TINBudgetSurvey.soe_data) {
 		TINBudget.loadState(TINBudgetSurvey.soe_data);
 	}
-	
 });
 
 // saving/loading

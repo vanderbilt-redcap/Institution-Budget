@@ -632,14 +632,14 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<script type="text/javascript">
 			TINBudget = {
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
-				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>'
+				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
+				procedures_json: '<?= json_encode($procedures) ?>'
 			}
-			TINBudget.procedures = JSON.parse('<?= json_encode($procedures) ?>')
 			
 			TINBudgetSurvey = {
 				schedule_field: "<?= $schedule_field; ?>",
 				budget_table: "<?=$budget_table;?>",
-				soe_data: JSON.parse('<?=$soe_data;?>'),
+				soe_json: '<?=$soe_data;?>',
 				updateScheduleField: function(scheduleString) {
 					var field_name = TINBudgetSurvey.schedule_field;
 					$("textarea[name='" + field_name + "']").val(scheduleString);
@@ -647,6 +647,12 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			}
 			
 			$(document).ready(function() {
+				if (TINBudget.procedures_json.length > 0) {
+					TINBudget.procedures = JSON.parse(TINBudget.procedures_json);
+				}
+				if (TINBudgetSurvey.soe_json.length > 0) {
+					TINBudgetSurvey.soe_data = JSON.parse(TINBudgetSurvey.soe_json);
+				}
 				var fieldname = TINBudgetSurvey.schedule_field;
 				$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
 				$('#' + fieldname + '-tr').hide();
