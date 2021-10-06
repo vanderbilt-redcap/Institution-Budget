@@ -182,6 +182,17 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 	});
 	gng_table += "\
 				</tr>"
+				
+	// add small text delta describer row
+	gng_table += "\
+				<tr>\
+					<th><small>[difference between 'CC Reimbursement' and 'My Cost']</small></th>";
+	col_totals.forEach(function(total, visit_i) {
+		gng_table += "\
+					<th></th>";
+	});
+	gng_table += "\
+				</tr>"
 	
 	
 	// finish table
@@ -220,11 +231,11 @@ TINGoNoGo.makeHoverInfo = function() {
 	TINGoNoGo.hover_info = $("<div id='gng-hover-info'>\
 	<p><span><b>My Cost:</b></span><span></span></p>\
 	<p><span><b>CC Reimbursement Amount:</b></span><span></span></p>\
-	<p><span><b>&#x394;:</b></span><span></span><small>[difference between my cost and cc reimbursement]</small></p>\
+	<p><span><b>&#x394;:</b></span><span></span></p>\
 	</div>");
 	
 	// temporarily append after instructions
-	$("#surveyinstructions").append(TINGoNoGo.hover_info)
+	$("#surveyinstructions").after(TINGoNoGo.hover_info)
 	$("#gng-hover-info").hide();
 	
 	// register events to update hover info when mouseover a gng cell

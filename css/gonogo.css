@@ -72,6 +72,10 @@ div#gng_arm_tables {
 .gng_arm_table tfoot td.green {
 	background-color: #35DE35;
 }
+#gng_arm_tables small {
+	top: -18px;
+	position: relative;
+}
 
 .gng_sidebar {
 	padding: 24px;
@@ -97,11 +101,9 @@ div#gng_arm_tables {
 #gng-hover-info {
 	position: fixed;
 	z-index: 999;
+	padding: 8px;
 }
-#gng-hover-info p {
-	margin-left: 6px;
-}
-#gng-hover-info span, #gng-hover-info small {
+#gng-hover-info span {
 	margin-left: 6px;
 }
 #gng-hover-info.green {
