@@ -7,6 +7,8 @@ TINGoNoGo.initialize = function() {
 	
 	var schedule = TINGoNoGo.schedule;
 	
+	TINGoNoGo.makeHoverInfo();
+	
 	if (typeof schedule != 'object') {
 		$("div#gonogo").append("<div class='alert alert-secondary w-50' role='alert'>\
 			The TIN Budget module couldn't find schedule data to create the Go/No-Go table.\
@@ -112,7 +114,7 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 				var cell_class = (cell_value > (center_cost * Number(proc_count))) ? "class='high_cost' " : "class='low_cost' ";
 				
 				gng_table += "\
-				<td " + cell_class + "data-center-cost='" + center_cost + "' data-site-cost='" + site_cost + "'>$" + cell_value + "</td>";
+				<td " + cell_class + "data-center-cost='" + center_cost + "' data-site-cost='" + site_cost + "' data-proc-count='" + Number(proc_count) + "'>$" + cell_value + "</td>";
 			}
 		});
 		
@@ -211,6 +213,65 @@ TINGoNoGo.makeArmSidebar = function(arm_i) {
 		</div>";
 	
 	return sidebar;
+}
+
+TINGoNoGo.makeHoverInfo = function() {
+	// make the gng cell hover over div
+	TINGoNoGo.hover_info = $("<div id='gng-hover-info'>\
+	<p><span><b>My Cost:</b></span><span></span></p>\
+	<p><span><b>CC Reimbursement Amount:</b></span><span></span></p>\
+	<p><span><b>(Delta icon):</b></span><span></span><small>[difference between my cost and cc reimbursement]</small></p>\
+	</div>");
+	
+	// temporarily append after instructions
+	$("#surveyinstructions").append(TINGoNoGo.hover_info)
+	$("#gng-hover-info").hide();
+	
+	// register events to update hover info when mouseover a gng cell
+	$("body").on("mouseenter", ".low_cost, .high_cost", function(event) {
+		// console.log('mouseenter event', event);
+		var cell = $(event.target);
+		var proc_count = cell.attr('data-proc-count');
+		var site_cost = cell.attr('data-site-cost');
+		var center_cost = cell.attr('data-center-cost');
+		var site_total = proc_count * site_cost;
+		var center_total = proc_count * center_cost;
+		var delta = center_total - site_total;
+		if (delta < 0) {
+			delta = "-$" + String(-delta);
+		} else {
+			delta = "$" + String(delta);
+		}
+		
+		$("#gng-hover-info p:eq(0) span:eq(1)").html("$" + site_total);
+		$("#gng-hover-info p:eq(1) span:eq(1)").html("$" + center_total);
+		$("#gng-hover-info p:eq(2) span:eq(1)").html(delta);
+		$("#gng-hover").removeClass('green');
+		$("#gng-hover").removeClass('red');
+		if (cell.hasClass('high_cost')) {
+			console.log('red');
+			$("#gng-hover-info").addClass('red');
+		} else {
+			console.log('green');
+			$("#gng-hover-info").addClass('green');
+		}
+		
+		// reposition info div
+		var info_div = $("#gng-hover-info");
+		info_div.css('top', event.originalEvent.clientY + 10);
+		info_div.css('left', event.originalEvent.clientX + 10);
+		info_div.show();
+	});
+	$("body").on("mousemove", ".low_cost, .high_cost", function(event) {
+		var info_div = $("#gng-hover-info");
+		if (info_div.is(":visible")) {
+			info_div.css('top', event.originalEvent.clientY + 10);
+			info_div.css('left', event.originalEvent.clientX + 10);
+		}
+	});
+	$("body").on("mouseleave", ".low_cost, .high_cost", function(event) {
+		$("#gng-hover-info").hide();
+	});
 }
 
 TINGoNoGo.showArmTable = function(arm_i) {

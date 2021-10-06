@@ -92,3 +92,23 @@ div#gng_arm_tables {
 .modal {
 	text-align: center;
 }
+
+/* GNG table cell hover info div */
+#gng-hover-info {
+	position: fixed;
+	z-index: 999;
+}
+#gng-hover-info p {
+	margin-left: 6px;
+}
+#gng-hover-info span, #gng-hover-info small {
+	margin-left: 6px;
+}
+#gng-hover-info.green {
+	background-color: #e2efd9;
+	border: 3px solid #375623;
+}
+#gng-hover-info.red {
+	background-color: #fcece0;
+	border: 3px solid #ff0000;
+}
