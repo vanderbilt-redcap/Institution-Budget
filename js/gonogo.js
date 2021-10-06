@@ -126,10 +126,10 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 			<tfoot>\
 				<tr style='height: 12px; border-bottom: 2px solid #0062cc;'></tr>";
 	
-	// add My Cost $$ row
+	// add My Cost row
 	gng_table += "\
 				<tr>\
-					<th>Total $$</th>";
+					<th>My Cost</th>";
 	col_totals.forEach(function(total, visit_i) {
 		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
 		var cell_class = " class='green' ";
@@ -143,10 +143,10 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 	gng_table += "\
 				</tr>"
 				
-	// add CC Reimbursement $$ row
+	// add CC Reimbursement row
 	gng_table += "\
 				<tr>\
-					<th>CC Reimbursement $$</th>";
+					<th>CC Reimbursement</th>";
 	col_totals.forEach(function(total, visit_i) {
 		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
 		var cell_class = " class='green' ";
@@ -163,7 +163,7 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 	// add delta (&#x394;) row
 	gng_table += "\
 				<tr>\
-					<th>&#x394; $$</th>";
+					<th>&#x394;</th>";
 	col_totals.forEach(function(total, visit_i) {
 		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
 		var cell_class = " class='green' ";
@@ -220,7 +220,7 @@ TINGoNoGo.makeHoverInfo = function() {
 	TINGoNoGo.hover_info = $("<div id='gng-hover-info'>\
 	<p><span><b>My Cost:</b></span><span></span></p>\
 	<p><span><b>CC Reimbursement Amount:</b></span><span></span></p>\
-	<p><span><b>(Delta icon):</b></span><span></span><small>[difference between my cost and cc reimbursement]</small></p>\
+	<p><span><b>&#x394;:</b></span><span></span><small>[difference between my cost and cc reimbursement]</small></p>\
 	</div>");
 	
 	// temporarily append after instructions
@@ -291,7 +291,10 @@ TINGoNoGo.showArmTable = function(arm_i) {
 TINGoNoGo.getCCVisitTotal = function(arm_i, visit_i) {
 	var sum = 0;
 	TINGoNoGo.schedule.arms[arm_i].visits[visit_i].procedure_counts.forEach(function(procedure) {
-		sum += procedure.count * Number(procedure.cost);
+		var procedure_count = Number(procedure.count);
+		var procedure_cost = Number(procedure.cost);
+		if (!isNaN(procedure_cost) && !isNaN(procedure_cost))
+			sum += procedure_count * procedure_cost
 	});
 	return sum;
 }
