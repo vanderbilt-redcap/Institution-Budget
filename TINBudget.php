@@ -38,10 +38,14 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				}
 			}
 			
+			// cache event_ids (in order)
 			$this->event_ids = [];
 			foreach ($Proj->eventsForms as $eid => $formList) {
 				$this->event_ids[] = $eid;
 			}
+			
+			// cache list of 2nd event's forms
+			$this->event_2_forms = $Proj->eventsForms[$this->event_ids[1]];
 		}
 	}
 	
@@ -831,8 +835,64 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$writer->save('php://output');
 	}
 	
-	private function createSiteInstances($record_id) {
-		carl_log("calling TINBudget::createSiteInstances($record_id)", true);
+	public function getSiteInstances($record_id) {
+		// return an array of event 2 instances (only)
+		
+		// build list of form _complete field names for forms in event 2
+		$fields = [];
+		foreach ($this->event_2_forms as $formName) {
+			$fields[] = $formName . "_complete";
+		}
+		
+		// add record ID field (to get extra identifying fields like redcap_repeat_instance from getData
+		$fields[] = $this->getRecordIdField();
+		// get this field too
+		$fields[] = 'institution';
+		
+		// build parameters array and get data
+		$parameters = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => 'json',
+			"records" => $record_id,
+			"fields" => $fields
+		];
+		$data = json_decode(\REDCap::getData($parameters));
+		
+		// remove non event 2 instance objects
+		foreach($data as $index => $obj) {
+			if (empty($obj->redcap_repeat_instance))
+				unset($data[$index]);
+		}
+		
+		// re-index
+		$data = array_values($data);
+		
+		return $data;
+	}
+	
+	public function getInstitutionNames($record_id) {
+		$names = [];
+		
+		// build parameters array and get data
+		$fields = [];
+		for ($i = 1; $i <= 50; $i++) {
+			$fields[] = "institution$i";
+		}
+		$parameters = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => 'json',
+			"records" => $record_id,
+			"fields" => $fields
+		];
+		$data = json_decode(\REDCap::getData($parameters))[0];
+		
+		foreach ($fields as $i => $name) {
+			$names[$i+1] = $data->$name;
+		}
+		return $names;
+	}
+	
+	public function createSiteInstances($record_id) {
 		// this function is called upon completing the survey containing [send_to_sites] (if [send_to_sites] === '1' for the associated record)
 		$parameters = [
 			"project_id" => $this->getProjectId(),
@@ -845,18 +905,45 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		$log_message = "Attempting to create site instances upon submission of survey containing [sites_to_send] field:\n";
 		
 		if ($eoi_count > 0) {
-			$instances = [];
+			// get current instance data and site names
+			$instances = $this->getSiteInstances($record_id);
+			$site_names = $this->getInstitutionNames($record_id);
+			
+			// if there are instances missing, add them
 			for ($site_index = 1; $site_index <= $eoi_count; $site_index++) {
-				$instance = new \stdClass();
-				$primary_key_name = $this->getRecordIdField();
-				$instance->$primary_key_name = "$record_id";
-				$instance->redcap_repeat_instance = $site_index;
-				$instance->redcap_event_name = "event_1_arm_1";
-				// if Michelle doesn't want to fill eoi_instance, maybe set budget_review_and_feasibility_complete = '0'?
-				$instance->eoi_instance = $site_index;
-				$instances[] = $instance;
+				$found = false;
+				foreach($instances as $instance) {
+					if ($instance->redcap_repeat_instance == $site_index) {
+						$found = true;
+						break;
+					}
+				}
+				
+				if (!$found) {
+					$missing_instance = new \stdClass();
+					$primary_key_name = $this->getRecordIdField();
+					$missing_instance->$primary_key_name = "$record_id";
+					$missing_instance->redcap_repeat_instance = $site_index;
+					$missing_instance->redcap_event_name = "event_1_arm_1";
+					$missing_instance->institution = $site_names[$site_index];
+					$instances[] = $missing_instance;
+				}
 			}
 			
+			// set form complete status 0s for instances whose form complete field is empty
+			// if instance institution name is empty, try to fill that, too
+			foreach ($instances as $instance) {
+				foreach ($this->event_2_forms as $formName) {
+					$field = $formName . "_complete";
+					if ($instance->$field == '')
+						$instance->$field = '0';
+				}
+				
+				if (empty($instance->institution))
+					$instance->institution = $site_names[$instance->redcap_repeat_instance];
+			}
+			
+			// save all instances
 			$payload = json_encode($instances);
 			$parameters = [
 				"project_id" => $this->getProjectId(),
@@ -865,28 +952,25 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			];
 			$result = \REDCap::saveData($parameters);
 			
+			// determine log message
 			if (!empty($result['errors'])) {
 				$log_message .= "FAILURE\nThe [eoi] field for record '$record_id' is > 0 but there was an error saving the data:\n";
 				$log_message .= "\\REDCap::saveData return array ['errors']:\n" . print_r($result['errors'], true) . "\n";
 				// $log_message .= "\\REDCap::saveData data argument given:\n" . print_r($payload, true);
 			} else {
-				// verify we have more than [eoi] instances of 'event_1_arm_1' in this record
-				$parameters = [
-					"project_id" => $this->getProjectId(),
-					"return_format" => 'json',
-					"records" => $record_id,
-					"fields" => 'proposal_id'
-				];
-				$data = json_decode(\REDCap::getData($parameters));
+				// refresh instances array from db so we can verify instance count
+				$instances = $this->getSiteInstances($record_id);
+				
+				// count instances of second event
 				$sum = 0;
-				foreach ($data as $instance) {
+				foreach ($instances as $instance) {
 					if ($instance->redcap_event_name == 'event_1_arm_1')
 						$sum++;
 				}
-				if ($sum > $eoi_count) {
+				if ($sum >= $eoi_count) {
 					$log_message .= "SUCCESS\nRecord '$record_id' has at least $eoi_count instances of event 'Event 1'";
 				} else {
-					$log_message .= "FAILURE\n\\REDCap::saveData returned no errors, but the module failed to verify the creation of $eoi_count new 'Event 1' instances.";
+					$log_message .= "FAILURE\n\\REDCap::saveData returned no errors, but the module failed to verify the creation of $eoi_count new 'Event 1' instances. Count: $sum.";
 				}
 			}
 		} else {
@@ -934,7 +1018,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				"fields" => 'send_to_sites'
 			];
 			$data = json_decode(\REDCap::getData($parameters));
-			carl_log("\$getData: " . print_r($data, true));
 			if ($data[0]->send_to_sites === '1') {
 				$this->createSiteInstances($record);
 			}
