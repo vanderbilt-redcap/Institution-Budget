@@ -240,7 +240,6 @@ TINGoNoGo.makeHoverInfo = function() {
 	
 	// register events to update hover info when mouseover a gng cell
 	$("body").on("mouseenter", ".low_cost, .high_cost", function(event) {
-		// console.log('mouseenter event', event);
 		var cell = $(event.target);
 		var proc_count = cell.attr('data-proc-count');
 		var site_cost = cell.attr('data-site-cost');
@@ -260,10 +259,8 @@ TINGoNoGo.makeHoverInfo = function() {
 		$("#gng-hover-info").removeClass('green');
 		$("#gng-hover-info").removeClass('red');
 		if (cell.hasClass('high_cost')) {
-			console.log('red');
 			$("#gng-hover-info").addClass('red');
 		} else {
-			console.log('green');
 			$("#gng-hover-info").addClass('green');
 		}
 		
