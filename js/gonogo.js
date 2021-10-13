@@ -113,6 +113,9 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 				// choose cell color/class
 				var cell_class = (cell_value > (center_cost * Number(proc_count))) ? "class='high_cost' " : "class='low_cost' ";
 				
+				// add commas to cell_value if applicable
+				cell_value = cell_value.toLocaleString('en', {useGroupings: true});
+				
 				gng_table += "\
 				<td " + cell_class + "data-center-cost='" + center_cost + "' data-site-cost='" + site_cost + "' data-proc-count='" + Number(proc_count) + "'>$" + cell_value + "</td>";
 			}
@@ -137,6 +140,9 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 			cell_class = " class='red' ";
 			sidebar_color = "red";
 		}
+		
+		// add commas to total if applicable
+		total = total.toLocaleString('en', {useGroupings: true});
 		gng_table += "\
 					<th" + cell_class + ">$" + total + "</th>";
 	});
@@ -154,6 +160,9 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 			cell_class = " class='red' ";
 			sidebar_color = "red";
 		}
+		
+		// add commas to cc_visit_cost if applicable
+		cc_visit_cost = cc_visit_cost.toLocaleString('en', {useGroupings: true});
 		gng_table += "\
 					<th" + cell_class + ">$" + cc_visit_cost + "</th>";
 	});
@@ -173,9 +182,11 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 		}
 		var delta_amount = cc_visit_cost - total;
 		if (delta_amount < 0) {
-			delta_amount = "-$" + String(-delta_amount);
+			// add commas to delta_amount if applicable
+			delta_amount = "-$" + (-delta_amount).toLocaleString('en', {useGroupings: true});
 		} else {
-			delta_amount = "$" + String(delta_amount);
+			// add commas to delta_amount if applicable
+			delta_amount = "$" + (delta_amount).toLocaleString('en', {useGroupings: true});
 		}
 		gng_table += "\
 					<th" + cell_class + ">" + delta_amount + "</th>";
@@ -248,13 +259,13 @@ TINGoNoGo.makeHoverInfo = function() {
 		var center_total = proc_count * center_cost;
 		var delta = center_total - site_total;
 		if (delta < 0) {
-			delta = "-$" + String(-delta);
+			delta = "-$" + (-delta).toLocaleString('en', {useGrouping: true});
 		} else {
-			delta = "$" + String(delta);
+			delta = "$" + (delta).toLocaleString('en', {useGrouping: true});
 		}
 		
-		$("#gng-hover-info p:eq(0) span:eq(1)").html("$" + site_total);
-		$("#gng-hover-info p:eq(1) span:eq(1)").html("$" + center_total);
+		$("#gng-hover-info p:eq(0) span:eq(1)").html("$" + site_total.toLocaleString('en', {useGrouping: true}));
+		$("#gng-hover-info p:eq(1) span:eq(1)").html("$" + center_total.toLocaleString('en', {useGrouping: true}));
 		$("#gng-hover-info p:eq(2) span:eq(1)").html(delta);
 		$("#gng-hover-info").removeClass('green');
 		$("#gng-hover-info").removeClass('red');
