@@ -257,8 +257,8 @@ TINGoNoGo.makeHoverInfo = function() {
 		$("#gng-hover-info p:eq(0) span:eq(1)").html("$" + site_total);
 		$("#gng-hover-info p:eq(1) span:eq(1)").html("$" + center_total);
 		$("#gng-hover-info p:eq(2) span:eq(1)").html(delta);
-		$("#gng-hover").removeClass('green');
-		$("#gng-hover").removeClass('red');
+		$("#gng-hover-info").removeClass('green');
+		$("#gng-hover-info").removeClass('red');
 		if (cell.hasClass('high_cost')) {
 			console.log('red');
 			$("#gng-hover-info").addClass('red');

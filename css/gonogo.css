@@ -109,8 +109,10 @@ div#gng_arm_tables {
 #gng-hover-info.green {
 	background-color: #e2efd9;
 	border: 3px solid #375623;
+	color: black;
 }
 #gng-hover-info.red {
 	background-color: #fcece0;
 	border: 3px solid #ff0000;
+	color: black;
 }
