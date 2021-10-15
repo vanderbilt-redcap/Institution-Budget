@@ -97,7 +97,7 @@ TINBudget.refreshProcedureCosts = function() {
 			}
 		}
 		if (!proc_cost) {
-			console.log("The TIN Budget module couldn't find the procedure cost for procedure named '" + proc_name + "'!");
+			alert("The TIN Budget module couldn't find the procedure cost for procedure named '" + proc_name + "'!");
 			return;
 		}
 		

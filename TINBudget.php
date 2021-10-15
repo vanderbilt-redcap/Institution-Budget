@@ -22,6 +22,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		
 		global $Proj;
 		if (gettype($Proj) == 'object') {
+			$this->proj = $Proj;
 			// collect instruments that hold schedule, gng, summary fields
 			foreach ($Proj->metadata as $field) {
 				if ($field['field_name'] === $budget_field) {
@@ -777,6 +778,67 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
+	private function getRecordFormStatus($record_id, $instrument, $event_id) {
+		$form_name = $instrument . "_complete";
+		$params = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => 'json',
+			"records" => $record_id,
+			"fields" => $form_name,
+			"events" => $event_id
+		];
+		$data = json_decode(\REDCap::getData($params));
+		return $data[0]->$form_name;
+	}
+	
+	private function addSummaryReviewLinkToSurvey($rid, $inst, $eid) {
+		$buttonHtml = <<<HEREDOC
+	<tr>\
+		<td colspan=\"2\" style=\"text-align:center;padding:1px 0px 6px 0px;\">\
+			<button tabindex=\"1\" name=\"submit-btn-gotosummary\" class=\"jqbutton nowrap ui-button ui-corner-all ui-widget saveandgotosummary\">Save &amp; go to Review Summary Page</button>\
+		</td>\
+	</tr>
+HEREDOC;
+		?>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				// get button html from server
+				var buttonHtml = "<?php echo($buttonHtml); ?>";
+				
+				// add button to survey and initialize with .button()
+				$("tr.surveysubmit tbody").append(buttonHtml);
+				var button = $("button.saveandgotosummary");
+				button.button();
+				
+				// register click event
+				$('body').on("click", "button.saveandgotosummary", function(event) {
+					// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
+					var form_action = $('#form').attr('action');
+					var redirect_parameter = "&__gotosummaryreview=1";
+					if (!form_action.includes(redirect_parameter)) {
+						$('#form').attr('action', form_action + redirect_parameter);
+					}
+					
+					// add end survey param to prevent survey queue and autocomplete from preventing user from getting redirected
+					form_action = $('#form').attr('action');
+					var end_survey_param = "&__endsurvey=1";
+					if (!form_action.includes(end_survey_param)) {
+						$('#form').attr('action', form_action + end_survey_param);
+					}
+					
+					// update form action
+					form_action = $('#form').attr('action');
+					
+					// submit form
+					$(this).button('disable');
+					dataEntrySubmit(this);
+					return false;
+				});
+			});
+		</script>
+		<?php
+	}
+	
 	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
 		// get procedure info for given record_id
 		$procedure_fields = [];
@@ -1007,6 +1069,22 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		if ($instrument == 'summary_review_page') {
 			$this->replaceCCSummaryReviewField($record, $repeat_instance);
 		}
+		
+		if (gettype($this->proj) != 'object')
+			$this->proj = new \Project($this->getProjectId());
+		
+		if (
+			$event_id == $this->proj->firstEventId &&
+			$instrument != "procedure" &&
+			$instrument != "arms_and_visits"
+			) {
+			// see if this instrument was previously saved
+			$status = $this->getRecordFormStatus($record, $instrument, $event_id);
+			if ($status == '2') {
+				// add "Save & Return to Summary Review Page" button
+				$this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
+			}
+		}
 	}
 	
 	public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
@@ -1017,10 +1095,17 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				"records" => $record,
 				"fields" => 'send_to_sites'
 			];
+			
 			$data = json_decode(\REDCap::getData($parameters));
 			if ($data[0]->send_to_sites === '1') {
 				$this->createSiteInstances($record);
 			}
+		}
+		
+		$request_uri = $_SERVER['REQUEST_URI'];
+		if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
+			$surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
+			redirect($surveyLink);
 		}
 	}
 
