@@ -306,7 +306,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
 	public function getCCSummaryData() {
 		$data = [];
-		$record = '1';
+		global $record;
 		
 		// get STUDY INTAKE FORM data
 		$fields_needed = [
@@ -471,75 +471,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
-	public function makeStudyIntakeForm($cc_data) {
-		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'];
-		$funding_mechanism = $cc_data['funding_mechanism'] ?? $cc_data['funding_other'];
-		return <<<HEREDOC
-		<!--STUDY INTAKE FORM-->
-		<div>
-		<h5 class="table_title"><u>STUDY INTAKE FORM</u></h5>
-		<table class="cc_rev_table blue_table_headers">
-			<thead>
-				<tr>
-					<th>COORDINATING CENTER/STUDY INFORMATION</th>
-					<th>INFORMATION PROVIDED</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>Coordinating Center Contact Information</td>
-					<td>$td1</td>
-				</tr>
-				<tr>
-					<td>Short study name Protocol/protocol synopsis for this study</td>
-					<td></td><!-- TODO: make link to download edoc or say no file attached -->
-				</tr>
-				<tr>
-					<td>Brief Study Description</td>
-					<td>{$cc_data['brief_stud_description']}</td>
-				</tr>
-				<tr>
-					<td>Description of Study Intervention</td>
-					<td>{$cc_data['prop_summary_describe2_5f5']}</td>
-				</tr>
-				<tr>
-					<td>Enrollment Goals</td>
-					<td>
-						Estimated number of subjects: {$cc_data['number_subjects']}<br>
-						Study Population: {$cc_data['study_population']}<br>
-						Estimated number of sites: {$cc_data['number_sites']}
-					</td>
-				</tr>
-				<tr>
-					<td>Funding/Support for the Proposal</td>
-					<td>Current funding source: {$cc_data['funding_source']}<br>
-						Funding mechanism: $funding_mechanism<br>
-						Identified I/C: {$cc_data['institute_center']}<br>
-						Grant/application number: {$cc_data['grant_app_no']}<br>
-						FOA (if applicable): {$cc_data['funding_opp_announcement']}<br>
-						Anticipated total budget (direct and indirect): {$cc_data['anticipated_budget']}<br>
-						Total duration of funding period: {$cc_data['funding_duration']}<br>
-						Anticipated funding start date for application: {$cc_data['reci_date']}
-					</td>
-				</tr>
-				<tr>
-					<td>Timelines</td>
-					<td>Date planned for first site activated: {$cc_data['site_active_date']}<br>
-						Anticipated start date for initiation of funding: {$cc_data['support_date']}
-					</td>
-				</tr>
-			</tbody>
-		</table>
-		</div>
-HEREDOC;
-	}
-	
 	public function getCCSummaryHTML($cc_data) {
 		if (empty($cc_data)) {
 			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
 		}
-		
-		$record = '1';
+		global $record;
 		$budget_data = $this->getBudgetTableData($record);
 		if (empty($budget_data)) {
 			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
@@ -757,7 +693,8 @@ HEREDOC;
 					$('#' + TINSummary.cc_summary_review_field + '-tr').hide();
 					$('#surveyinstructions').after("<div id='cc_summary_review'></div>");
 					// $("#cc_summary_review_td").append("<div id='cc_summary_review'></div>");
-					$.ajax(TINSummary.cc_html_url).done(function(data) {
+					var ajax_url = TINSummary.cc_html_url + "&record_id=" + encodeURI(TINSummary.record_id);
+					$.ajax(ajax_url).done(function(data) {
 						var div = $("div#cc_summary_review");
 						div.html(data);
 					});
@@ -1053,21 +990,6 @@ HEREDOC;
 		\REDCap::logEvent("TIN Budget Module", $log_message);
 	}
 	
-	public function saveIntakeForm($record, $intake_form) {
-		if (empty($record)) {
-			// todo, how to handle failure?
-			return;
-		}
-		$this->removeLogs("record = ? AND message = ?", [
-			$record,
-			'study_intake_form_message'
-		]);
-		$this->log("study_intake_form_message", [
-			"record" => $record,
-			"study_intake_form" => $intake_form
-		]);
-	}
-	
 	public function determineRecordIdFromMessage($email_message) {
 		$pattern = "/You have been identified as a possible site for (.*?)\./";
 		preg_match($pattern, $email_message, $match);
@@ -1090,6 +1012,21 @@ HEREDOC;
 		return $rid;
 	}
 	
+	public function saveIntakeForm($record, $intake_form) {
+		if (empty($record)) {
+			// todo, how to handle failure?
+			return;
+		}
+		$this->removeLogs("record = ? AND message = ?", [
+			$record,
+			'study_intake_form_message'
+		]);
+		$this->log("study_intake_form_message", [
+			"record" => $record,
+			"study_intake_form" => $intake_form
+		]);
+	}
+	
 	public function getStudyIntakeForm($record) {
 		$sql = "SELECT study_intake_form WHERE record = ? AND message = ?";
 		$result = $this->queryLogs($sql, [
@@ -1097,6 +1034,69 @@ HEREDOC;
 			"study_intake_form_message"
 		]);
 		return $result->fetch_assoc()['study_intake_form'];
+	}
+	
+	public function makeStudyIntakeForm($cc_data) {
+		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'];
+		$funding_mechanism = $cc_data['funding_mechanism'] ?? $cc_data['funding_other'];
+		return <<<HEREDOC
+		<!--STUDY INTAKE FORM-->
+		<div>
+		<h5 class="table_title"><u>STUDY INTAKE FORM</u></h5>
+		<table class="cc_rev_table blue_table_headers">
+			<thead>
+				<tr>
+					<th>COORDINATING CENTER/STUDY INFORMATION</th>
+					<th>INFORMATION PROVIDED</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Coordinating Center Contact Information</td>
+					<td>$td1</td>
+				</tr>
+				<tr>
+					<td>Short study name Protocol/protocol synopsis for this study</td>
+					<td></td><!-- TODO: make link to download edoc or say no file attached -->
+				</tr>
+				<tr>
+					<td>Brief Study Description</td>
+					<td>{$cc_data['brief_stud_description']}</td>
+				</tr>
+				<tr>
+					<td>Description of Study Intervention</td>
+					<td>{$cc_data['prop_summary_describe2_5f5']}</td>
+				</tr>
+				<tr>
+					<td>Enrollment Goals</td>
+					<td>
+						Estimated number of subjects: {$cc_data['number_subjects']}<br>
+						Study Population: {$cc_data['study_population']}<br>
+						Estimated number of sites: {$cc_data['number_sites']}
+					</td>
+				</tr>
+				<tr>
+					<td>Funding/Support for the Proposal</td>
+					<td>Current funding source: {$cc_data['funding_source']}<br>
+						Funding mechanism: $funding_mechanism<br>
+						Identified I/C: {$cc_data['institute_center']}<br>
+						Grant/application number: {$cc_data['grant_app_no']}<br>
+						FOA (if applicable): {$cc_data['funding_opp_announcement']}<br>
+						Anticipated total budget (direct and indirect): {$cc_data['anticipated_budget']}<br>
+						Total duration of funding period: {$cc_data['funding_duration']}<br>
+						Anticipated funding start date for application: {$cc_data['reci_date']}
+					</td>
+				</tr>
+				<tr>
+					<td>Timelines</td>
+					<td>Date planned for first site activated: {$cc_data['site_active_date']}<br>
+						Anticipated start date for initiation of funding: {$cc_data['support_date']}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		</div>
+HEREDOC;
 	}
 	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
