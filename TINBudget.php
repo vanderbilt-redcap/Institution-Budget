@@ -1082,7 +1082,7 @@ HEREDOC;
 			$status = $this->getRecordFormStatus($record, $instrument, $event_id);
 			if ($status == '2') {
 				// add "Save & Return to Summary Review Page" button
-				$this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
+				// $this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
 			}
 		}
 	}

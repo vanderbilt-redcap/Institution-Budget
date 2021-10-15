@@ -17,7 +17,8 @@
 	
 	"permissions": [
 		"redcap_survey_page",
-		"redcap_survey_complete"
+		"redcap_survey_complete",
+		"redcap_email"
 	],
 	
 	"links": {
