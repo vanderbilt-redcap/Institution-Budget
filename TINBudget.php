@@ -1139,7 +1139,7 @@ HEREDOC;
 			$status = $this->getRecordFormStatus($record, $instrument, $event_id);
 			if ($status == '2') {
 				// add "Save & Return to Summary Review Page" button
-				// $this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
+				$this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
 			}
 		}
 	}
@@ -1162,22 +1162,44 @@ HEREDOC;
 		$request_uri = $_SERVER['REQUEST_URI'];
 		if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
 			$surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
-			redirect($surveyLink);
+			
+			// this works but survey queue and survey auto-continue features will rewrite location headers if configured
+			header("Location: $surveyLink");
+			
+			// this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
+			// redirect($surveyLink);
 		}
 	}
 	
 	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
 		if (strpos($subject, "Identified") !== false) {
-			$rid = $this->determineRecordIdFromMessage($message);
-			if (empty($rid)) {
-				return;
+			$markerText = "<div data-flag='19825293857lkjflgkjdhfg'>abcdef</div>";
+			
+			// if this is from "Identify Sites" related alert and doesn't have the Study Intake Form attached:
+			// then return false and send a duplicate email with the Study Intake Form attached
+			if (!isset($attachments["Study_Intake_Form.html"]) && strpos($message, $marker) === false) {
+				// add Study Intake Form to new email and send (via ::email)
+				$new_attachments = $attachments;
+				$rid = $this->determineRecordIdFromMessage($message);
+				if (empty($rid)) {
+					// todo still send when can't determine record ID from message?
+					return false;
+				}
+				$intake_form = $this->getStudyIntakeForm($rid);
+				$temp_file_name = tempnam(APP_PATH_TEMP, 'TINBUDGET_ATTACHMENT');
+				$temp_file = fopen($temp_file_name, "w");
+				fwrite($temp_file, $intake_form);
+				fclose($temp_file);
+				$new_attachments["Study_Intake_Form.html"] = $temp_file_name;
+				
+				// add to message to prevent infinite loop (would happen if attaching Study Intake Form fails
+				$message .= $markerText;
+				
+				\REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
+				
+				// prevent current email from sending (it doesn't have the Study Intake Form attached!)
+				return false;
 			}
-			$intake_form = $this->getStudyIntakeForm($rid);
-			$temp_file_name = tempnam(APP_PATH_TEMP, 'TINBUDGET_ATTACHMENT');
-			$temp_file = fopen($temp_file_name, "w");
-			fwrite($temp_file, $intake_form);
-			$attachments["Study_Intake_Form.html"] = $temp_file_name;
-			unlink($temp_file_name);
 		}
 	}
 	
