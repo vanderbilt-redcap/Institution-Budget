@@ -471,6 +471,38 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
+	public function packageStudyIntakeForm($intake_form_html) {
+		// prepare the intake form html for download (by adding html tag, metadata, css, etc.)
+		$html = <<<HEREDOC
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta name="googlebot" content="noindex, noarchive, nofollow, nosnippet">
+		<meta name="robots" content="noindex, noarchive, nofollow">
+		<meta name="slurp" content="noindex, noarchive, nofollow, noodp, noydir">
+		<meta name="msnbot" content="noindex, noarchive, nofollow, noodp">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta http-equiv="Cache-Control" content="no-cache">
+		<meta http-equiv="Pragma" content="no-cache">
+		<meta http-equiv="expires" content="0">
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Budget - Study Intake Form</title>
+		<style>
+HEREDOC;
+		$html .= file_get_contents($this->getUrl("css/cc_summary.css"));
+		$html .= <<<HEREDOC
+		</style>
+	</head>
+	<body>
+		$intake_form_html
+	</body>
+</html>
+HEREDOC;
+		return $html;
+	}
+	
 	public function getCCSummaryHTML($cc_data) {
 		if (empty($cc_data)) {
 			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
@@ -1193,6 +1225,10 @@ HEREDOC;
 					return false;
 				}
 				$intake_form = $this->getStudyIntakeForm($rid);
+				
+				// add stylesheet, metadata, html element and head/body wrappers
+				$intake_form = $this->packageStudyIntakeForm($intake_form);
+				
 				$temp_file_name = tempnam(APP_PATH_TEMP, 'TINBUDGET_ATTACHMENT');
 				$temp_file = fopen($temp_file_name, "w");
 				fwrite($temp_file, $intake_form);
@@ -1202,7 +1238,7 @@ HEREDOC;
 				// add to message to prevent infinite loop (would happen if attaching Study Intake Form fails
 				$message .= $markerText;
 				
-				\REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
+				$email_sent = \REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
 				// prevent current email from sending (it doesn't have the Study Intake Form attached!)
 				return false;
 			}

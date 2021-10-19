@@ -16,6 +16,7 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, table.sites_contact_info
 	font-size: 1rem;
 	padding: 8px;
 	text-align: center;
+	border-collapse: collapse;
 }
 
 /* table.cc_rev_table, table.sites_contact_info { */
