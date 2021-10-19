@@ -1039,45 +1039,52 @@ HEREDOC;
 	public function makeStudyIntakeForm($cc_data) {
 		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'];
 		$funding_mechanism = $cc_data['funding_mechanism'] ?? $cc_data['funding_other'];
+		
+		$styles = new \stdClass();
+		$styles->title = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
+		$styles->table = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		$styles->th = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
+		$styles->td = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		
 		return <<<HEREDOC
 		<!--STUDY INTAKE FORM-->
 		<div>
-		<h5 class="table_title"><u>STUDY INTAKE FORM</u></h5>
-		<table class="cc_rev_table blue_table_headers">
+		<h5 class="table_title" {$styles->title}><u>STUDY INTAKE FORM</u></h5>
+		<table class="cc_rev_table blue_table_headers" {$styles->table}>
 			<thead>
 				<tr>
-					<th>COORDINATING CENTER/STUDY INFORMATION</th>
-					<th>INFORMATION PROVIDED</th>
+					<th {$styles->th}>COORDINATING CENTER/STUDY INFORMATION</th>
+					<th {$styles->th}>INFORMATION PROVIDED</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
-					<td>Coordinating Center Contact Information</td>
-					<td>$td1</td>
+					<td {$styles->td}>Coordinating Center Contact Information</td>
+					<td {$styles->td}>$td1</td>
 				</tr>
 				<tr>
-					<td>Short study name Protocol/protocol synopsis for this study</td>
-					<td></td><!-- TODO: make link to download edoc or say no file attached -->
+					<td {$styles->td}>Short study name Protocol/protocol synopsis for this study</td>
+					<td {$styles->td}></td><!-- TODO: make link to download edoc or say no file attached -->
 				</tr>
 				<tr>
-					<td>Brief Study Description</td>
-					<td>{$cc_data['brief_stud_description']}</td>
+					<td {$styles->td}>Brief Study Description</td>
+					<td {$styles->td}>{$cc_data['brief_stud_description']}</td>
 				</tr>
 				<tr>
-					<td>Description of Study Intervention</td>
-					<td>{$cc_data['prop_summary_describe2_5f5']}</td>
+					<td {$styles->td}>Description of Study Intervention</td>
+					<td {$styles->td}>{$cc_data['prop_summary_describe2_5f5']}</td>
 				</tr>
 				<tr>
-					<td>Enrollment Goals</td>
-					<td>
+					<td {$styles->td}>Enrollment Goals</td>
+					<td {$styles->td}>
 						Estimated number of subjects: {$cc_data['number_subjects']}<br>
 						Study Population: {$cc_data['study_population']}<br>
 						Estimated number of sites: {$cc_data['number_sites']}
 					</td>
 				</tr>
 				<tr>
-					<td>Funding/Support for the Proposal</td>
-					<td>Current funding source: {$cc_data['funding_source']}<br>
+					<td {$styles->td}>Funding/Support for the Proposal</td>
+					<td {$styles->td}>Current funding source: {$cc_data['funding_source']}<br>
 						Funding mechanism: $funding_mechanism<br>
 						Identified I/C: {$cc_data['institute_center']}<br>
 						Grant/application number: {$cc_data['grant_app_no']}<br>
@@ -1088,8 +1095,8 @@ HEREDOC;
 					</td>
 				</tr>
 				<tr>
-					<td>Timelines</td>
-					<td>Date planned for first site activated: {$cc_data['site_active_date']}<br>
+					<td {$styles->td}>Timelines</td>
+					<td {$styles->td}>Date planned for first site activated: {$cc_data['site_active_date']}<br>
 						Anticipated start date for initiation of funding: {$cc_data['support_date']}
 					</td>
 				</tr>
@@ -1196,7 +1203,6 @@ HEREDOC;
 				$message .= $markerText;
 				
 				\REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
-				
 				// prevent current email from sending (it doesn't have the Study Intake Form attached!)
 				return false;
 			}
