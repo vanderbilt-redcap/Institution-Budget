@@ -111,7 +111,6 @@ TINBudget.refreshProcedureRows = function() {
 	
 	// for all existing procedure rows, if the name has changed, update the name (of dropdown)
 	// if it doesn't exist, remove procedure row
-	// if all rows in parent arm_table are gone, add 1 new procedure row
 	$('.procedure').each(function(i, div) {
 		var dropdown = $(div);
 		var proc_index = Number(dropdown.attr('data-procedure')) - 1;
@@ -126,11 +125,13 @@ TINBudget.refreshProcedureRows = function() {
 			// remove row
 			dropdown.closest('tr').remove();
 			
+			// if all rows in parent arm_table are gone, add 1 new procedure row
 			if (arm_table.find('.procedure').length == 0) {
 				TINBudget.createProcedureRow(arm_table.index() + 1);
 			}
 		}
 	});
+	
 }
 
 // arm dropdown button functions
@@ -226,6 +227,7 @@ TINBudget.createArm = function() {
 	// create elements and insert into DOM
 	$("#arm_dropdowns").append(new_arm_dropdown);
 	$("#arm_tables").append(new_arm_table);
+	
 	TINBudget.refreshSchedule();
 	return new_arm_i;
 }
@@ -438,6 +440,21 @@ $(document).ready(function() {
 	});
 	$('body').on('click', 'a.create_arm', function(event) {
 		var new_arm_index = TINBudget.createArm();
+		var this_arm_table = $('.arm_table[data-arm="' + new_arm_index + '"]');
+		
+		// add procedure rows from procedure bank
+		var procedure;
+		for (var procedure_i in TINBudget.procedures) {
+			if (procedure_i > 0) {
+				TINBudget.createProcedureRow(new_arm_index);
+			}
+			procedure = TINBudget.procedures[procedure_i];
+			
+			// set name and procedure-index attribute after creating row
+			this_arm_table.find('.procedure').last().find('button').text(procedure.name);
+			this_arm_table.find('.procedure').last().attr('data-procedure', (Number(procedure_i) + 1));
+		}
+		
 		TINBudget.showArm(new_arm_index);
 		TINBudget.pushState();
 	});
