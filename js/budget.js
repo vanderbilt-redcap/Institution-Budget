@@ -635,6 +635,7 @@ $(document).ready(function() {
 		proc_table.find('tbody tr').each(function(i, tr) {
 			var proc_name = $(tr).find('td.name input').val();
 			var proc_cost = $(tr).find('td.cost input').val();
+			var proc_cpt = $(tr).find('td.cpt input').val();
 			if (!proc_name) {
 				proc_name = "Procedure " + (i + 1);
 				$(tr).find('td.name input').val(proc_name);
@@ -643,7 +644,11 @@ $(document).ready(function() {
 				proc_cost = "0";
 				$(tr).find('td.cost input').val(proc_cost);
 			}
-			TINBudget.procedures.push({name: proc_name, cost: proc_cost});
+			TINBudget.procedures.push({
+				name: proc_name,
+				cost: proc_cost,
+				cpt: proc_cpt
+			});
 		});
 		
 		TINBudget.refreshSchedule();
