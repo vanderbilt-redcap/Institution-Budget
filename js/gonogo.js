@@ -88,9 +88,7 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 	TINGoNoGo.col_totals = [];
 	var col_totals = TINGoNoGo.col_totals;
 	var procedures = TINGoNoGo.schedule.procedures;
-	TINGoNoGo.schedule.arms[arm_i].procedureRows.forEach(function(procedure, procedure_row) {
-		
-		var proc_index = procedure.index - 1;
+	TINGoNoGo.schedule.procedures.forEach(function(procedure, proc_index) {
 		var center_cost = procedures[proc_index].cost;
 		var site_cost = TINGoNoGo.gng_data['cost' + String(proc_index + 1) + '_sc'];
 		

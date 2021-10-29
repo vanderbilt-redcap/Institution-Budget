@@ -66,7 +66,7 @@ div#arm_tables {
 .proc_count, .visit_total {
 	font-size: 1.25rem;
 }
-td.proc_dd_cell, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
+td.procedure, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
 	border: 1px solid gray;
 }
 

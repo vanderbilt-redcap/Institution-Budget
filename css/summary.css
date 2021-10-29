@@ -65,3 +65,7 @@ table.procedure-costs th {
 	color: blue;
 	text-decoration: underline;
 }
+
+.button_bank {
+	margin-right: 8px;
+}

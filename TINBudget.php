@@ -373,19 +373,12 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			<tbody>
 			<?php
 			$visit1 = $arm->visits[1];
-			$row_count = count($visit1->procedure_counts);
+			$row_count = count($budget_data->procedures);
 			for ($row_i = 1; $row_i <= $row_count; $row_i++) {
 				$row_i_0 = $row_i - 1;
 				?>
 				<tr>
-					<td><?php
-					foreach($arm->procedureRows as $procedure) {
-						if ($procedure->index == $visit1->procedure_counts[$row_i_0]->procedure_index) {
-							echo $procedure->name;
-							break;
-						}
-					}
-					?></td>
+					<td><?= $budget_data->procedures[$row_i_0]->name ?></td>
 					<?php
 					foreach ($arm->visits as $visit_i => $visit) {
 						if (!empty($visit)) {

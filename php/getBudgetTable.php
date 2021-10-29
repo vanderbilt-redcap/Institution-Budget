@@ -89,19 +89,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						
 						// add procedure cell
 						?>
-						<td class='proc_dd_cell'>
-						<div class="dropdown procedure" data-procedure="<?= $proc_i+1 ?>">
-							<button type='button' class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownProcedure<?= $proc_i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-								<?= "$proc_name" ?>
-							</button>
-							<div class="dropdown-menu" aria-labelledby="dropdownProcedure<?= $proc_i+1 ?>">
-								<div class="dropdown-divider"></div>
-								<a class="dropdown-item create_procedure" href="#">Create another procedure row</a>
-								<a class="dropdown-item edit_procedures" href="#">Edit procedures</a>
-								<a class="dropdown-item delete_procedure" href="#">Delete this procedure row</a>
-							</div>
-						</div>
-						</td>
+						<td class="procedure"><?= "$proc_name" ?></td>
 						<?php
 						
 						// add procedure count cells
@@ -130,8 +118,9 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	?>
 	</div>
 	<div style="margin-left: 32px; margin-top: 8px;">
-		<button id="tin_budget_undo" type="button" class="btn btn-outline-primary" disabled>Undo</button>
-		<button id="tin_budget_redo" type="button" class="btn btn-outline-primary" disabled>Redo</button>
+		<button id="tin_budget_undo" type="button" class="btn btn-outline-primary button_bank" disabled>Undo</button>
+		<button id="tin_budget_redo" type="button" class="btn btn-outline-primary button_bank" disabled>Redo</button>
+		<button id="tin_budget_edit_procedures" type="button" class="btn btn-outline-primary button_bank">Edit Procedures</button>
 	</div>
 	<?php
 }
