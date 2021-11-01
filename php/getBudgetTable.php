@@ -228,7 +228,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 					</tbody>
 				</table>
 				<div class="mt-3" id="edit_procedure_buttons">
-					<button type='button' class="btn btn-outline-primary" id="add_proc_table_row">Add Row</button>
+					<button type='button' class="btn btn-outline-primary" id="add_proc_table_row">Add Procedure</button>
 				</div>
 			</div>
 			<div class="modal-footer">
