@@ -89,8 +89,14 @@ TINBudget.refreshProcedureRows = function() {
 			// add proc_count cells to new row, preserving old procedure counts if applicable
 			for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 				var old_count = 0;
-				if (typeof TINBudget.states == 'object' && TINBudget.states.length != 0) {
-					var state = TINBudget.states[TINBudget.states.length - 1];
+				if (typeof TINBudget.states == 'object') {
+					var state;
+					if (TINBudget.states.length == 1 && typeof TINBudgetSurvey.soe_data == 'object') {
+						state = TINBudgetSurvey.soe_data;
+					} else {
+						state = TINBudget.states[TINBudget.states.length - 1];
+					}
+					
 					var arm = state.arms[Number(arm_i - 1)];
 					if (arm) {
 						for (var all_visit_procs_index in arm.visits[visit_i].procedure_counts) {

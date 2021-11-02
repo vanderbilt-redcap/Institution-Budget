@@ -98,9 +98,13 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 		
 		TINGoNoGo.schedule.arms[arm_i].visits.forEach(function(visit, visit_i) {
 			if (visit != null) {
-				var proc_count = visit.procedure_counts[procedure_row].count;
+				if (!visit.procedure_counts[proc_index]) {
+					console.log("visit.procedure_counts[proc_index] null for proc_index:", proc_index);
+					return;
+				}
+				var proc_count = visit.procedure_counts[proc_index].count;
 				var cell_value = Number(site_cost) * Number(proc_count);
-				
+				console.log("found visit.procedure_counts[proc_index]");
 				// update totals
 				if (TINGoNoGo.col_totals[visit_i]) {
 					TINGoNoGo.col_totals[visit_i] += cell_value;
