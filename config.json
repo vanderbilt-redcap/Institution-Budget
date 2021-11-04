@@ -28,6 +28,12 @@
 				"icon": "fas fa-table",
 				"url": "reconciliation",
 				"show-header-and-footer": true
+			},
+			{
+				"name": "TIN Budget Tool Dashboard",
+				"icon": "fas fa-table",
+				"url": "dashboard",
+				"show-header-and-footer": false
 			}
 		],
 		"control-center": []
