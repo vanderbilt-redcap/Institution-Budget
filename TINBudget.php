@@ -351,11 +351,11 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		return $data;
 	}
 	
-	public function showStaticScheduleArms($budget_data) {
+	public function showStaticScheduleArms($budget_data, $arms_and_visits_survey_link) {
 		foreach($budget_data->arms as $arm_i => $arm) {
 		?>
 		<div class="budget_container">
-		<h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm->name ?? "") ?></h6>
+		<a href="<?= $arms_and_visits_survey_link ?>"><h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm->name ?? "") ?></h6></a>
 		<table>
 			<thead>
 				<tr>
@@ -497,6 +497,11 @@ HEREDOC;
 	}
 	
 	public function getCCSummaryHTML($cc_data) {
+		global $record;
+		global $event_id;
+		$cc_data['record_id'] = $record;
+		$cc_data['event_id'] = $event_id;
+		
 		if (empty($cc_data)) {
 			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
 		}
@@ -510,6 +515,9 @@ HEREDOC;
 		
 		$study_intake_form = $this->makeStudyIntakeForm($cc_data);
 		$this->saveIntakeForm($record, $study_intake_form);
+		
+		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "contact_and_fixed_costs_info", $event_id);
+		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "arms_and_visits", $event_id);
 		
 		?>
 		<button type="button" class="btn btn-primary" style="margin: 8px;" onclick="window.print()">Print</button>
@@ -531,7 +539,7 @@ HEREDOC;
 			<tbody>
 			<?php
 			for ($i = 1; $i <= 5; $i++) {
-				echo "<tr><td>" . $cc_data["fixedcost$i"] . "</td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
+				echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>" . $cc_data["fixedcost$i"] . "</a></td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
 			}
 			?>
 			</tbody>
@@ -562,7 +570,7 @@ HEREDOC;
 		<!--SCHEDULE OF EVENTS REVIEW-->
 		<div class='pbb pba'>
 		<h5 class="table_title"><u>SCHEDULE OF EVENTS REVIEW</u></h5>
-		<?php $this->showStaticScheduleArms($budget_data); ?>
+		<?php $this->showStaticScheduleArms($budget_data, $arms_and_visits_survey_link); ?>
 		</div>
 		
 		<!--IDENTIFIED SITES REVIEW-->
@@ -702,13 +710,14 @@ HEREDOC;
 		<?php
 	}
 	
-	public function replaceCCSummaryReviewField($record, $instance) {
+	public function replaceCCSummaryReviewField($record, $instance, $event_id) {
 		$cc_html_url = $this->getUrl("cc_summary.php");
 		$cc_replace_field = "summary_review_upload";
 		?>
 		<script type="text/javascript">
 			TINSummary = {
 				record_id: '<?= $record; ?>',
+				event_id: '<?= $event_id; ?>',
 				instance: '<?= $instance; ?>',
 				cc_summary_review_field: '<?= $cc_replace_field; ?>',
 				cc_html_url: '<?= $cc_html_url; ?>'
@@ -718,7 +727,7 @@ HEREDOC;
 					$('#' + TINSummary.cc_summary_review_field + '-tr').hide();
 					$('#surveyinstructions').after("<div id='cc_summary_review'></div>");
 					// $("#cc_summary_review_td").append("<div id='cc_summary_review'></div>");
-					var ajax_url = TINSummary.cc_html_url + "&record_id=" + encodeURI(TINSummary.record_id);
+					var ajax_url = TINSummary.cc_html_url + "&record_id=" + encodeURI(TINSummary.record_id) + "&event_id=" + encodeURI(TINSummary.event_id);
 					$.ajax(ajax_url).done(function(data) {
 						var div = $("div#cc_summary_review");
 						div.html(data);
@@ -1065,6 +1074,8 @@ HEREDOC;
 		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'];
 		$funding_mechanism = $cc_data['funding_mechanism'] ?? $cc_data['funding_other'];
 		
+		$survey_link = \REDCap::getSurveyLink($cc_data['record_id'], 'study_intake_form', $cc_data['event_id']);
+		
 		$styles = new \stdClass();
 		$styles->title = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
 		$styles->table = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
@@ -1084,23 +1095,23 @@ HEREDOC;
 			</thead>
 			<tbody>
 				<tr>
-					<td {$styles->td}>Coordinating Center Contact Information</td>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Coordinating Center Contact Information</a></td>
 					<td {$styles->td}>$td1</td>
 				</tr>
 				<tr>
-					<td {$styles->td}>Short study name Protocol/protocol synopsis for this study</td>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Short study name Protocol/protocol synopsis for this study</a></td>
 					<td {$styles->td}></td><!-- TODO: make link to download edoc or say no file attached -->
 				</tr>
 				<tr>
-					<td {$styles->td}>Brief Study Description</td>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Brief Study Description</a></td>
 					<td {$styles->td}>{$cc_data['brief_stud_description']}</td>
 				</tr>
 				<tr>
-					<td {$styles->td}>Description of Study Intervention</td>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Description of Study Intervention</a></td>
 					<td {$styles->td}>{$cc_data['prop_summary_describe2_5f5']}</td>
 				</tr>
 				<tr>
-					<td {$styles->td}>Enrollment Goals</td>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Enrollment Goals</a></td>
 					<td {$styles->td}>
 						Estimated number of subjects: {$cc_data['number_subjects']}<br>
 						Study Population: {$cc_data['study_population']}<br>
@@ -1108,7 +1119,7 @@ HEREDOC;
 					</td>
 				</tr>
 				<tr>
-					<td {$styles->td}>Funding/Support for the Proposal</td>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Funding/Support for the Proposal</a></td>
 					<td {$styles->td}>Current funding source: {$cc_data['funding_source']}<br>
 						Funding mechanism: $funding_mechanism<br>
 						Identified I/C: {$cc_data['institute_center']}<br>
@@ -1120,7 +1131,7 @@ HEREDOC;
 					</td>
 				</tr>
 				<tr>
-					<td {$styles->td}>Timelines</td>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Timelines</a></td>
 					<td {$styles->td}>Date planned for first site activated: {$cc_data['site_active_date']}<br>
 						Anticipated start date for initiation of funding: {$cc_data['support_date']}
 					</td>
@@ -1156,7 +1167,7 @@ HEREDOC;
 		}
 		
 		if ($instrument == 'summary_review_page') {
-			$this->replaceCCSummaryReviewField($record, $repeat_instance);
+			$this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
 		}
 		
 		if (gettype($this->proj) != 'object')
