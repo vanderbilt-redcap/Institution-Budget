@@ -496,6 +496,24 @@ HEREDOC;
 		return $html;
 	}
 	
+	public function renderDashboard() {
+		$user_name = "Michelle Jones";
+		?>
+		<div id="solid_header">
+			<h1>VUMC Budget Tool</h1>
+		</div>
+		<div id="user_controls">
+			<span>Welcome <?= $user_name ?> - <a href="#">Logout</a></span>
+		</div>
+		<div id="study_tables">
+			<div class="blue_bar"></div>
+		</div>
+		<script type="text/javascript">
+			$('head').append("<link rel=\"stylesheet\" type=\"text/css\" href=\"<?php echo $this->getUrl('css/dashboard.css'); ?>\">")
+		</script>
+		<?php
+	}
+	
 	public function getCCSummaryHTML($cc_data) {
 		if (empty($cc_data)) {
 			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");

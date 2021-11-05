@@ -1,0 +1,28 @@
+div#solid_header {
+	background-color: #A5A5A5;
+}
+div#solid_header h1 {
+	color: white;
+	font-size: 40px;
+}
+
+table#reconciliation, table#reconciliation tr, table#reconciliation th, table#reconciliation td {
+	border: 1px solid black;
+	text-align: center;
+}
+
+h3 {
+	margin-left: 120px;
+}
+.site-action-dd {
+	padding: 3px 12px;
+	margin: 4px;
+	background-color: #2e75b6;
+}
+
+#reconciliation tr:nth-child(odd) {
+	background-color: #F2F6FB;
+}
+#reconciliation tr:nth-child(even) {
+	background-color: #E9ECF6;
+}

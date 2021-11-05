@@ -1,1 +1,2 @@
 <?php
+$module->renderDashboard();
