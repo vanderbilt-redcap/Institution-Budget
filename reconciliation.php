@@ -1,7 +1,6 @@
 <?php
 
 $table_data = $module->getReconciliationData();
-
 if (gettype($table_data) == 'string') {
 	echo "<div class='alert alert-warning w-50' style='border: 1px solid orange !important;'>$recon_data</div>";
 	exit();
