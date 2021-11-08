@@ -625,6 +625,7 @@ HEREDOC;
 					<tbody>";
 			foreach ($study['table'] as $row_index => $row) {
 				// determine row color
+				$row['decision'] = 'NO-GO';
 				$row_class = "";
 				if (strtoupper($row['decision']) == "NO-GO") {
 					$row_class = " class='red'";

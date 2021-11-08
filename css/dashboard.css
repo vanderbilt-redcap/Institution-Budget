@@ -89,9 +89,11 @@ table.reconciliation, table.reconciliation tr, table.reconciliation th, table.re
 /* } */
 table.reconciliation tr.red {
 	background-color: #FFE0E3;
+	color: #830502;
 }
 table.reconciliation tr.yellow {
 	background-color: #FFFFC3;
+	color: #483402;
 }
 button.site-action-dd {
 	padding: 3px 12px;
