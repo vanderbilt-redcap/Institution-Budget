@@ -609,9 +609,9 @@ HEREDOC;
 		// create study rows and tables
 		foreach ($data as $study_i => $study) {
 			$detailed_recon_view_link = "<a class='detailed_recon_view' href='#'>See detailed reconciliation view</a>";
-			echo "<div class='study_row' data-study-i='$study_i'><span class='study_short_name'>Study Name: {$study['name']}</span> <img class='study_toggle' src='$plus_icon_url' alt='plus sign'>$detailed_recon_view_link</div>";
+			echo "<div class='study_row' data-study-i='$study_i'><span class='study_short_name'>Study Name: {$study['name']}</span> <img class='study_toggle' src='$plus_icon_url' alt='study toggle icon'>$detailed_recon_view_link</div>";
 			echo "<div class='study_table_container' data-study-i='$study_i'>
-				<table id='reconciliation' class='w-75'>
+				<table class='reconciliation'>
 					<thead>
 						<tr>
 							<th>Institution</th>

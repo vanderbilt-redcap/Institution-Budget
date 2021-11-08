@@ -54,13 +54,11 @@ div.study_row .study_toggle {
 	filter: invert(100%);
 }
 div.study_row a.detailed_recon_view {
-	/* align-self: flex-end; */
 	margin-left: auto;
 	margin-right: 8px;
 	color: white;
 	font-size: 1rem;
 	text-decoration: none;
-	/* display: none; */
 }
 
 div.study_table_container {
@@ -76,15 +74,24 @@ div.study_table_container div input {
 
 
 /* reconciliation table style rules*/
-table#reconciliation, table#reconciliation tr, table#reconciliation th, table#reconciliation td {
+table.reconciliation {
+	margin-left: 16px;
+}
+table.reconciliation, table.reconciliation tr, table.reconciliation th, table.reconciliation td {
 	border: 1px solid black;
 	text-align: center;
 }
-table#reconciliation tr:nth-child(odd) {
-	background-color: #F2F6FB;
+/* table.reconciliation tr:nth-child(odd) { */
+	/* background-color: #F2F6FB; */
+/* } */
+/* table.reconciliation tr:nth-child(even) { */
+	/* background-color: #E9ECF6; */
+/* } */
+table.reconciliation tr.red {
+	background-color: #FFE0E3;
 }
-table#reconciliation tr:nth-child(even) {
-	background-color: #E9ECF6;
+table.reconciliation tr.yellow {
+	background-color: #FFFFC3;
 }
 button.site-action-dd {
 	padding: 3px 12px;
