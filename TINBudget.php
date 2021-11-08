@@ -580,14 +580,16 @@ HEREDOC;
 		$data = $this->getDashboardData();
 		$plus_icon_url = $this->getUrl("icons/plus-solid.svg");
 		$minus_icon_url = $this->getUrl("icons/minus-solid.svg");
+		// $new_record_url = app_path_webroot+'DataEntry/record_home.php?pid='+pid+'&id=4&auto=1&arm=1'
+		$new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
 		$dropdown_i = 1;
 		?>
 		<div id="solid_header">
 			<h1>VUMC Budget Tool</h1>
 		</div>
 		<div id="user_controls">
-			<span>Welcome <?= $user_name ?> - <a href="#">Logout</a></span>
-			<button type="button" class="btn btn-primary" id="new_budget_feasibility_request">Generate New Budget Feasibility Request</button>
+			<span>Welcome <?= $user_name ?> - <a href="/redcap/index.php?logout=1">Logout</a></span>
+			<button type="button" class="btn btn-primary" id="new_budget_feasibility_request" onclick="window.location.href=BudgetDashboard.new_record_url">Generate New Budget Feasibility Request</button>
 		</div>
 		<div id="study_tables">
 			<div class="blue_bar"></div>
@@ -625,7 +627,6 @@ HEREDOC;
 					<tbody>";
 			foreach ($study['table'] as $row_index => $row) {
 				// determine row color
-				$row['decision'] = 'NO-GO';
 				$row_class = "";
 				if (strtoupper($row['decision']) == "NO-GO") {
 					$row_class = " class='red'";
@@ -665,7 +666,8 @@ HEREDOC;
 		<script type="text/javascript">
 			BudgetDashboard = {
 				plus_icon_url: "<?= $plus_icon_url ?>",
-				minus_icon_url: "<?= $minus_icon_url ?>"
+				minus_icon_url: "<?= $minus_icon_url ?>",
+				new_record_url: "<?= $new_record_url ?>"
 			};
 			BudgetDashboard.collapseStudyRows = function() {
 				$("div.study_row").each(function(i, study_row) {

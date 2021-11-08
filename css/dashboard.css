@@ -39,7 +39,7 @@ div.study_row {
 	margin-bottom: 4px;
 	
 	font-weight: 400;
-	font-size: 1.5rem;
+	font-size: 1.65rem;
 	font-family: calibri;
 	
 	background-color: #138085;
@@ -66,10 +66,14 @@ div.study_table_container {
 }
 div.study_table_container div {
 	margin: 8px;
+	color: #2f5597;
+	font-weight: bold;
 }
 div.study_table_container div input {
 	width: 20px;
 	height: 20px;
+	border: 1px solid #2f5597;
+	background-color: #2f5597;
 }
 
 
