@@ -251,11 +251,13 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		];
 		
 		$params = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => "array",
 			"fields" => $fields,
 			"events" => $event_id,
 			"exportAsLabels" => true
 		];
-		$records = \REDCap::getData('array', null, $fields, $event_id);
+		$records = \REDCap::getData($params);
 		if (!$records) {
 			return "REDCap couldn't get institution data at this time.";
 		}
@@ -494,6 +496,210 @@ HEREDOC;
 </html>
 HEREDOC;
 		return $html;
+	}
+	
+	public function getDashboardData() {
+		// get event ID
+		$event_ids = \REDCap::getEventNames();
+		$event_id_0 = array_search('Coordinating Center GNG', $event_ids);
+		$event_id = array_search('Event 1', $event_ids);
+		$fields = [
+			"institution",
+			"institution_ctsa_name",
+			"institution_non_ctsa_name",
+			"affiliate_ctsa_institution",
+			"budget_request_date",
+			"consideration",
+			"final_gonogo",
+			"final_gonogo_comments",
+			"short_name"
+		];
+		
+		$params = [
+			"project_id" => $this->getProjectId(),
+			"return_format" => "array",
+			"fields" => $fields,
+			"exportAsLabels" => true
+		];
+		$records = \REDCap::getData($params);
+		if (!$records) {
+			return "REDCap couldn't get institution data at this time.";
+		}
+		
+		// get tables
+		$data = [];
+		
+		foreach ($records as $record) {
+			$site_array = $record['repeat_instances'][$event_id][''];
+			$table_rows = [];
+			foreach($site_array as $site) {
+				$row = [];
+				
+				// determine site name
+				if ($site['institution'] == 500) {
+					$row['name'] = $site['affiliate_ctsa_institution'] . " Affiliate: " . $site['institution_ctsa_name'];
+				} elseif ($site['institution'] == 999) {
+					$row['name'] = "Non-CTSA Site: " . $site['institution_non_ctsa_name'];
+				} else {
+					$row['name'] = "N/A";
+				}
+				
+				$row['date_of_request'] = $site['budget_request_date'];
+				
+				if ($site['consideration'] == '0') {
+					$row['date_of_response'] = 'Talk to Clint';
+				} elseif ($site['consideration'] == '1') {
+					$row['date_of_response'] = 'Talk to Clint or use Go/No-Go pending field';
+				} else {
+					$row['date_of_response'] = "N/A";
+				}
+				
+				$row['decision'] = 'N/A';
+				if ($site['final_gonogo'] == '1') {
+					$row['decision'] = 'Go';
+				} elseif ($site['final_gonogo'] == '2') {
+					$row['decision'] = 'No-Go';
+				} elseif ($site['final_gonogo'] == '3') {
+					$row['decision'] = 'Need More Info';
+				}
+				$row['decision_comments'] = $site['final_gonogo_comments'];
+				
+				$table_rows[] = $row;
+			}
+			$data[] = [
+				"name" => $record[$event_id_0]['short_name'],
+				"table" => $table_rows,
+			];
+		}
+		
+		return $data;
+	}
+	
+	public function renderDashboard() {
+		$user_name = "Michelle Jones";
+		$data = $this->getDashboardData();
+		$plus_icon_url = $this->getUrl("icons/plus-solid.svg");
+		$minus_icon_url = $this->getUrl("icons/minus-solid.svg");
+		// $new_record_url = app_path_webroot+'DataEntry/record_home.php?pid='+pid+'&id=4&auto=1&arm=1'
+		$new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
+		$dropdown_i = 1;
+		?>
+		<div id="solid_header">
+			<h1>VUMC Budget Tool</h1>
+		</div>
+		<div id="user_controls">
+			<span>Welcome <?= $user_name ?> - <a href="/redcap/index.php?logout=1">Logout</a></span>
+			<button type="button" class="btn btn-primary" id="new_budget_feasibility_request" onclick="window.location.href=BudgetDashboard.new_record_url">Generate New Budget Feasibility Request</button>
+		</div>
+		<div id="study_tables">
+			<div class="blue_bar"></div>
+		<?php
+		// Actions column dropdown
+		$action_dropdown = "<div class='dropdown'>
+			<button class='btn btn-primary dropdown-toggle site-action-dd' type='button' id='_id' data-toggle='dropdown' aria-expanded='false'>
+				View
+			</button>
+			<ul class='dropdown-menu' aria-labelledby='_id'>
+				<li><a class='action-item dropdown-item' href='#'>Contact Site</a></li>
+				<li><a class='action-item dropdown-item' href='#'>Accept Decision</a></li>
+				<li><a class='action-item dropdown-item' href='#'>Provide Information</a></li>
+				<li><a class='action-item dropdown-item' href='#'>Create Note</a></li>
+				<li><a class='action-item dropdown-item' href='#'>Send Reminder</a></li>
+			</ul>
+		</div>";
+		
+		// create study rows and tables
+		foreach ($data as $study_i => $study) {
+			$detailed_recon_view_link = "<a class='detailed_recon_view' href='#'>See detailed reconciliation view</a>";
+			echo "<div class='study_row' data-study-i='$study_i'><span class='study_short_name'>Study Name: {$study['name']}</span> <img class='study_toggle' src='$plus_icon_url' alt='study toggle icon'>$detailed_recon_view_link</div>";
+			echo "<div class='study_table_container' data-study-i='$study_i'>
+				<table class='reconciliation'>
+					<thead>
+						<tr>
+							<th>Institution</th>
+							<th>Date of Request</th>
+							<th>Date of Response</th>
+							<th>Decision</th>
+							<th>Decision Comments</th>
+							<th>Action</th>
+						</tr>
+					</thead>
+					<tbody>";
+			foreach ($study['table'] as $row_index => $row) {
+				// determine row color
+				$row_class = "";
+				if (strtoupper($row['decision']) == "NO-GO") {
+					$row_class = " class='red'";
+				} elseif (strtoupper($row['decision']) == "MORE INFO NEEDED") {
+					$row_class = " class='yellow'";
+				}
+				
+				// make action button
+				$action_button = str_replace("_id", "site_action_dd_$dropdown_i", $action_dropdown);
+				$dropdown_i++;
+				
+				echo "
+					<tr$row_class>
+						<td>{$row["name"]}</td>
+						<td>{$row["date_of_request"]}</td>
+						<td>{$row["date_of_response"]}</td>
+						<td>{$row["decision"]}</td>
+						<td>{$row["decision_comments"]}</td>
+						<td class='action_button'>$action_button</td>
+					</tr>";
+			}
+			echo "
+					</tbody>
+				</table>
+				<div>
+					<input class='show_hidden_sites' type='checkbox' data-study-i='$study_i'>
+					<label>Show hidden sites</label>
+				</div>
+			</div>";
+		}
+		?>
+		
+		</div>
+		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+		<script type="text/javascript">
+			BudgetDashboard = {
+				plus_icon_url: "<?= $plus_icon_url ?>",
+				minus_icon_url: "<?= $minus_icon_url ?>",
+				new_record_url: "<?= $new_record_url ?>"
+			};
+			BudgetDashboard.collapseStudyRows = function() {
+				$("div.study_row").each(function(i, study_row) {
+					$(study_row).find('img.study_toggle').attr('src', BudgetDashboard.plus_icon_url);
+					$(study_row).find('a.detailed_recon_view').hide();
+				});
+				$("div.study_table_container").hide();
+			};
+			$(document).ready(function() {
+				$('head').append("<link rel='stylesheet' href='<?php echo $this->getUrl('css/dashboard.css'); ?>'>")
+				// add bootstrap css
+				$('head').append("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>")
+				BudgetDashboard.collapseStudyRows();
+			});
+			
+			$('body').on('click', 'img.study_toggle', function(event) {
+				var toggle = $(event.target);
+				var study_row = toggle.closest('div.study_row');
+				if (toggle.attr('src') == BudgetDashboard.plus_icon_url) {
+					toggle.attr('src', BudgetDashboard.minus_icon_url);
+					study_row.find('a.detailed_recon_view').show();
+					var study_index = study_row.attr('data-study-i');
+					$("div.study_table_container[data-study-i='" + Number(study_index) + "']").show();
+				} else {
+					toggle.attr('src', BudgetDashboard.plus_icon_url);
+					study_row.find('a.detailed_recon_view').hide();
+					var study_index = study_row.attr('data-study-i');
+					$("div.study_table_container[data-study-i='" + Number(study_index) + "']").hide();
+				}
+			});
+		</script>
+		<?php
 	}
 	
 	public function getCCSummaryHTML($cc_data) {

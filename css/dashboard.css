@@ -1,0 +1,106 @@
+div#solid_header {
+	background-color: #A5A5A5;
+	border: 2px solid #787878;
+	min-height: 124px;
+	text-align: center;
+}
+div#solid_header h1 {
+	color: white;
+	font-family: calibri;
+	font-size: 64px;
+	font-weight: 400;
+}
+
+div#user_controls {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px;
+	font-size: 1.15rem;
+	font-family: helvetica;
+	font-weight: 200;
+}
+div#user_controls button#new_budget_feasibility_request {
+	background-color: #a66bd3;
+	border: none;
+	padding: 16px;
+}
+
+div.blue_bar {
+	background-color: #055877;
+	min-height: 52px;
+}
+
+div.study_row {
+	display: flex;
+	align-items: center;
+	max-height: 100px;
+	padding: 4px;
+	margin-bottom: 4px;
+	
+	font-weight: 400;
+	font-size: 1.65rem;
+	font-family: calibri;
+	
+	background-color: #138085;
+	color: white;
+}
+div.study_row .study_short_name {
+	margin-left: 8px;
+	margin-right: 16px;
+}
+div.study_row .study_toggle {
+	max-height: 30px;
+	filter: invert(100%);
+}
+div.study_row a.detailed_recon_view {
+	margin-left: auto;
+	margin-right: 8px;
+	color: white;
+	font-size: 1rem;
+	text-decoration: none;
+}
+
+div.study_table_container {
+	padding: 8px;
+}
+div.study_table_container div {
+	margin: 8px;
+	color: #2f5597;
+	font-weight: bold;
+}
+div.study_table_container div input {
+	width: 20px;
+	height: 20px;
+	border: 1px solid #2f5597;
+	background-color: #2f5597;
+}
+
+
+/* reconciliation table style rules*/
+table.reconciliation {
+	margin-left: 16px;
+}
+table.reconciliation, table.reconciliation tr, table.reconciliation th, table.reconciliation td {
+	border: 1px solid black;
+	text-align: center;
+}
+/* table.reconciliation tr:nth-child(odd) { */
+	/* background-color: #F2F6FB; */
+/* } */
+/* table.reconciliation tr:nth-child(even) { */
+	/* background-color: #E9ECF6; */
+/* } */
+table.reconciliation tr.red {
+	background-color: #FFE0E3;
+	color: #830502;
+}
+table.reconciliation tr.yellow {
+	background-color: #FFFFC3;
+	color: #483402;
+}
+button.site-action-dd {
+	padding: 3px 12px;
+	margin: 4px;
+	background-color: #2e75b6;
+}
