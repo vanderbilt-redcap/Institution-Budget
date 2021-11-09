@@ -89,21 +89,19 @@ TINBudget.refreshProcedureRows = function() {
 			// add proc_count cells to new row, preserving old procedure counts if applicable
 			for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 				var old_count = 0;
+				var state;
 				if (typeof TINBudget.states == 'object') {
-					var state;
-					if (TINBudget.states.length == 1 && typeof TINBudgetSurvey.soe_data == 'object') {
-						state = TINBudgetSurvey.soe_data;
-					} else {
-						state = TINBudget.states[TINBudget.states.length - 1];
-					}
-					
-					var arm = state.arms[Number(arm_i - 1)];
-					if (arm) {
-						for (var all_visit_procs_index in arm.visits[visit_i].procedure_counts) {
-							var visit_proc = arm.visits[visit_i].procedure_counts[all_visit_procs_index];
-							if (visit_proc.name == procedure.name) {
-								old_count = visit_proc.count;
-							}
+					state = TINBudget.states[TINBudget.states.length - 1];
+				} else {
+					state = TINBudgetSurvey.soe_data;
+				}
+				
+				var arm = state.arms[Number(arm_i - 1)];
+				if (arm) {
+					for (var all_visit_procs_index in arm.visits[visit_i].procedure_counts) {
+						var visit_proc = arm.visits[visit_i].procedure_counts[all_visit_procs_index];
+						if (visit_proc.name == procedure.name) {
+							old_count = visit_proc.count;
 						}
 					}
 				}
@@ -302,6 +300,7 @@ TINBudget.createVisit = function() {
 	arm_table.find('thead tr').append(visit_dd);
 	arm_table.find('tbody tr:not(:last-child)').append(visit_proc_cell);
 	arm_table.find('tbody tr:last-child').append(visit_total_cell);
+	TINBudget.pushState();
 	
 	TINBudget.refreshProcedureRows();
 }
@@ -344,7 +343,7 @@ TINBudget.deleteVisit = function(visit_index) {
 	if (arm_table.find('th').length > 2) {
 		arm_table.find('th:nth-child(' + (visit_index + 1) + '), td:nth-child(' + (visit_index + 1) + ')').remove()
 	}
-	
+	TINBudget.pushState();
 	TINBudget.refreshSchedule();
 }
 
@@ -680,13 +679,15 @@ TINBudget.getState = function() {
 		
 		var visit_count = $('.arm_table[data-arm="' + arm_i + '"] .visit').length;
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
-			var visit_name = $(".arm_table[data-arm=" + arm_i + "] .visit[data-visit='" + visit_i + "']").find('button').text();
+			var visit_dropdown = $(".arm_table[data-arm=" + arm_i + "] .visit:eq(" + (visit_i - 1) + ")");
+			var visit_name = visit_dropdown.find('button').text();
 			visit_name = visit_name.substring(visit_name.search(':') + 1).trim();
 			
 			// collect procedure counts for this visit
 			var procedure_counts = [];
+			var procedures_added = [];
 			var visit_sum = 0;
-			$('.arm_table[data-arm="' + arm_i + '"] .proc_cell[data-visit="' + visit_i + '"]').each(function(i, td) {
+			$('.arm_table[data-arm="' + arm_i + '"] .proc_cell[data-visit="' + visit_dropdown.attr('data-visit') + '"]').each(function(i, td) {
 				var proc_name = $(".procedure:eq(" + Number(i) + ")").text().trim();
 				var proc_count = Number($(td).find('span').text());
 				var proc_cost = $(td).find('span').attr('data-cost');
@@ -695,7 +696,19 @@ TINBudget.getState = function() {
 					count: proc_count,
 					cost: proc_cost
 				});
+				procedures_added.push(proc_name);
 				visit_sum += proc_count * proc_cost;
+			});
+			
+			// add 0 counts for any procedures that are still missing
+			TINBudget.procedures.forEach(function(procedure, proc_i) {
+				if (!procedures_added.includes(procedure.name)) {
+					procedure_counts.push({
+						name: procedure.name,
+						count: 0,
+						cost: procedure.cost
+					});
+				}
 			});
 			
 			// add visit obj to arm.visits
