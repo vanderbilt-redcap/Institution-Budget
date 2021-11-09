@@ -458,7 +458,7 @@ $(document).ready(function() {
 	});
 	$('body').on('click', '.modal .overwrite_arms', function(event) {
 		var visible_table_index = $('.arm_table:visible').attr('data-arm');
-		var src_arm_table_clone = $(".arm_table[data-arm='" + TINBudget.copy_source_arm_index + "']").clone()
+		var src_arm_table_clone = $(".arm_table[data-arm='" + TINBudget.copy_source_arm_index + "']").clone();
 		$("#select_arms button").each(function(i, btn) {
 			if ($(btn).hasClass('btn-primary')) {
 				var dest_arm_index = $(btn).attr('data-arm-index');
@@ -467,8 +467,8 @@ $(document).ready(function() {
 			}
 		});
 		TINBudget.copy_source_arm_index = null;
-		TINBudget.showArm(visible_table_index);
 		TINBudget.pushState();
+		TINBudget.showArm(visible_table_index);
 	});
 	
 	// register visit dropdown buttons
@@ -738,7 +738,8 @@ TINBudget.loadState = function(schedule) {
 		// set arm name
 		var arm_label_index = Number(arm_i) + 1;
 		TINBudget.active_arm_index = arm_label_index;
-		$('.active-arm').text("Arm " + arm_label_index + ": " + arm.name);
+		var arm_button = $("[data-arm='" + Number(arm_label_index) + "'] button");
+		arm_button.text("Arm " + arm_label_index + ": " + arm.name);
 		var this_arm_table = $('.arm_table[data-arm="' + arm_label_index + '"]');
 		
 		// add visits
