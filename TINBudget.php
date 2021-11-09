@@ -580,6 +580,7 @@ HEREDOC;
 		$data = $this->getDashboardData();
 		$plus_icon_url = $this->getUrl("icons/plus-solid.svg");
 		$minus_icon_url = $this->getUrl("icons/minus-solid.svg");
+		$reconciliiation_page_url = $this->getUrl("reconciliation.php");
 		// $new_record_url = app_path_webroot+'DataEntry/record_home.php?pid='+pid+'&id=4&auto=1&arm=1'
 		$new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
 		$dropdown_i = 1;
@@ -610,7 +611,7 @@ HEREDOC;
 		
 		// create study rows and tables
 		foreach ($data as $study_i => $study) {
-			$detailed_recon_view_link = "<a class='detailed_recon_view' href='#'>See detailed reconciliation view</a>";
+			$detailed_recon_view_link = "<a class='detailed_recon_view' href='$reconciliiation_page_url'>See detailed reconciliation view</a>";
 			echo "<div class='study_row' data-study-i='$study_i'><span class='study_short_name'>Study Name: {$study['name']}</span> <img class='study_toggle' src='$plus_icon_url' alt='study toggle icon'>$detailed_recon_view_link</div>";
 			echo "<div class='study_table_container' data-study-i='$study_i'>
 				<table class='reconciliation'>
