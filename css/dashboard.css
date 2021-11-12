@@ -107,3 +107,8 @@ button.site-action-dd {
 	margin: 4px;
 	background-color: #2e75b6;
 }
+
+.dataTables_filter input[type="search"] {
+	width: 350px;
+	display: inline-block;
+}

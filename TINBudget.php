@@ -665,6 +665,7 @@ HEREDOC;
 		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+		<script src="//cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
 		<script type="text/javascript">
 			BudgetDashboard = {
 				plus_icon_url: "<?= $plus_icon_url ?>",
@@ -682,6 +683,24 @@ HEREDOC;
 				$('head').append("<link rel='stylesheet' href='<?php echo $this->getUrl('css/dashboard.css'); ?>'>")
 				// add bootstrap css
 				$('head').append("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>")
+				$('head').append("<link rel='stylesheet' href='//cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css' crossorigin='anonymous'>")
+				
+				// make each recon table a DataTables table
+				BudgetDashboard.recon_tables = [];
+				var options = {
+					columns: [
+						{orderable: true, searchable: true},
+						{orderable: true, searchable: true},
+						{orderable: true, searchable: true},
+						{orderable: true, searchable: true},
+						{orderable: false, searchable: false},
+						{orderable: false, searchable: false}
+					]
+				};
+				$('.reconciliation').each(function(i, recon_table) {
+					BudgetDashboard.recon_tables.push($(recon_table).DataTable(options));
+				});
+				
 				BudgetDashboard.collapseStudyRows();
 			});
 			
