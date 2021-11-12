@@ -1,3 +1,6 @@
+body {
+	display: block;
+}
 div#solid_header {
 	background-color: #A5A5A5;
 	border: 2px solid #787878;

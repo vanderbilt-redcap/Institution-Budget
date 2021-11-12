@@ -585,6 +585,7 @@ HEREDOC;
 		$new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
 		$dropdown_i = 1;
 		?>
+		<style>body {display: none;}</style>
 		<div id="solid_header">
 			<h1>VUMC Budget Tool</h1>
 		</div>
