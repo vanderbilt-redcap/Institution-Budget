@@ -1048,6 +1048,44 @@ HEREDOC;
 		<?php
 	}
 	
+	private function convertSaveAndReturnLaterButton() {
+		?>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				// remove existing onclick attribute
+				var saveAndReturnButton = $("button[name='submit-btn-savereturnlater']");
+				saveAndReturnButton.attr('onclick', 'preventDefault(); return false;');
+				saveAndReturnButton.button();
+				
+				// register click event
+				$('body').on("click", "button[name='submit-btn-savereturnlater']", function(event) {
+					// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
+					var form_action = $('#form').attr('action');
+					var redirect_parameter = "&__gotodashboard=1";
+					if (!form_action.includes(redirect_parameter)) {
+						$('#form').attr('action', form_action + redirect_parameter);
+					}
+					
+					// add end survey param to prevent survey queue and autocomplete from preventing user from getting redirected
+					form_action = $('#form').attr('action');
+					var end_survey_param = "&__endsurvey=1";
+					if (!form_action.includes(end_survey_param)) {
+						$('#form').attr('action', form_action + end_survey_param);
+					}
+					
+					// update form action
+					form_action = $('#form').attr('action');
+					
+					// submit form
+					$(this).button('disable');
+					dataEntrySubmit(this);
+					return false;
+				});
+			});
+		</script>
+		<?php
+	}
+	
 	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
 		// get procedure info for given record_id
 		$procedure_fields = [];
@@ -1369,6 +1407,18 @@ HEREDOC;
 HEREDOC;
 	}
 	
+	public function redcap_every_page_top($project_id) {
+		$request_uri = $_SERVER['REQUEST_URI'];
+		if (strpos($request_uri, '__gotodashboard=1') !== false) {
+			$dashboard_url = $this->getUrl('dashboard.php');
+			// this works but survey queue and survey auto-continue features will rewrite location headers if configured
+			header("Location: $dashboard_url");
+			
+			// this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
+			// redirect($surveyLink);
+		}
+	}
+	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
 		// replace schedule of event field in survey page with generated table
 		if ($instrument == $this->budget_table_instrument) {
@@ -1400,17 +1450,14 @@ HEREDOC;
 		if (gettype($this->proj) != 'object')
 			$this->proj = new \Project($this->getProjectId());
 		
-		if (
-			$event_id == $this->proj->firstEventId &&
-			$instrument != "procedure" &&
-			$instrument != "arms_and_visits"
-			) {
-			// see if this instrument was previously saved
-			$status = $this->getRecordFormStatus($record, $instrument, $event_id);
-			if ($status == '2') {
+		if ($event_id == $this->proj->firstEventId) {
+			// // see if this instrument was previously saved
+			// $status = $this->getRecordFormStatus($record, $instrument, $event_id);
+			// if ($status == '2') {
 				// add "Save & Return to Summary Review Page" button
 				$this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
-			}
+			// }
+			$this->convertSaveAndReturnLaterButton();
 		}
 	}
 	
