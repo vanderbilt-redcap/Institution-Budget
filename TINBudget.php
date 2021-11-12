@@ -581,8 +581,12 @@ HEREDOC;
 		$plus_icon_url = $this->getUrl("icons/plus-solid.svg");
 		$minus_icon_url = $this->getUrl("icons/minus-solid.svg");
 		$reconciliiation_page_url = $this->getUrl("reconciliation.php");
-		// $new_record_url = app_path_webroot+'DataEntry/record_home.php?pid='+pid+'&id=4&auto=1&arm=1'
-		$new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
+		
+		// get public survey url
+		// $new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
+		$public_survey_hash = \Survey::getSurveyHash($this->proj->firstFormSurveyId, $this->proj->firstEventId);
+		$public_survey_url = APP_PATH_SURVEY_FULL . "?s=$public_survey_hash";
+		
 		$dropdown_i = 1;
 		?>
 		<style>body {display: none;}</style>
@@ -591,7 +595,7 @@ HEREDOC;
 		</div>
 		<div id="user_controls">
 			<span>Welcome <?= $user_name ?> - <a href="/redcap/index.php?logout=1">Logout</a></span>
-			<button type="button" class="btn btn-primary" id="new_budget_feasibility_request" onclick="window.location.href=BudgetDashboard.new_record_url">Generate New Budget Feasibility Request</button>
+			<button type="button" class="btn btn-primary" id="new_budget_feasibility_request" onclick="window.location.href=BudgetDashboard.public_survey_url">Generate New Budget Feasibility Request</button>
 		</div>
 		<div id="study_tables">
 			<div class="blue_bar"></div>
@@ -670,7 +674,7 @@ HEREDOC;
 			BudgetDashboard = {
 				plus_icon_url: "<?= $plus_icon_url ?>",
 				minus_icon_url: "<?= $minus_icon_url ?>",
-				new_record_url: "<?= $new_record_url ?>"
+				public_survey_url: "<?= $public_survey_url ?>"
 			};
 			BudgetDashboard.collapseStudyRows = function() {
 				$("div.study_row").each(function(i, study_row) {
