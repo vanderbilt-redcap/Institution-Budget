@@ -93,15 +93,17 @@ TINBudget.refreshProcedureRows = function() {
 				if (typeof TINBudget.states == 'object') {
 					state = TINBudget.states[TINBudget.states.length - 1];
 				} else {
-					state = TINBudgetSurvey.soe_data;
+					state = false;
 				}
 				
-				var arm = state.arms[Number(arm_i - 1)];
-				if (arm) {
-					for (var all_visit_procs_index in arm.visits[visit_i].procedure_counts) {
-						var visit_proc = arm.visits[visit_i].procedure_counts[all_visit_procs_index];
-						if (visit_proc.name == procedure.name) {
-							old_count = visit_proc.count;
+				if (state) {
+					var arm = state.arms[Number(arm_i - 1)];
+					if (arm) {
+						for (var all_visit_procs_index in arm.visits[visit_i].procedure_counts) {
+							var visit_proc = arm.visits[visit_i].procedure_counts[all_visit_procs_index];
+							if (visit_proc.name == procedure.name) {
+								old_count = visit_proc.count;
+							}
 						}
 					}
 				}
