@@ -2,13 +2,6 @@
 namespace Vanderbilt\TINBudget;
 
 class TINBudget extends \ExternalModules\AbstractExternalModule {
-	
-	public $noSubmitConversionFormNames = [
-		"identify_sites",
-		"final_decision",
-		"piped_data"
-	];
-	
 	public function __construct() {
 		parent::__construct();
 		
@@ -47,6 +40,9 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			
 			// cache list of 2nd event's forms
 			$this->event_2_forms = $Proj->eventsForms[$this->event_ids[1]];
+			
+			// determine name of study intake form instrument
+			$this->study_intake_form_name = 'study_coordinating_center_information';
 		}
 	}
 	
@@ -969,11 +965,51 @@ HEREDOC;
 		<?php
 	}
 	
-	private function renameSubmitForSurvey() {
+	private function changeSurveySubmitButton($record_id, $current_survey_name) {
+		$eid1 = $this->proj->firstEventId;
+		$form_sequence = $this->proj->eventsForms[$eid1];
+		if ($current_survey_name == end($form_sequence)) {
+			?>
+			<style>
+				button[name="submit-btn-saverecord"].tin-generate-requests {
+					max-width: 250px !important;
+				}
+			</style>
+			<script type="text/javascript">
+				$(document).ready(function() {
+					// get button html from server
+					var submit_button = $("button[name='submit-btn-saverecord']");
+					submit_button.text("Generate & Send Budget Request");
+					submit_button.addClass("tin-generate-requests");
+				});
+			</script>
+			<?php
+			return;
+		}
+		
+		$current_survey_index = array_search($current_survey_name, $form_sequence);
+		$next_survey_name = $form_sequence[$current_survey_index + 1];
 		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
-				$("button[name='submit-btn-saverecord']").html("Next")
+				var submit_button = $("button[name='submit-btn-saverecord']");
+				submit_button.html("Next");
+				submit_button.attr('onclick', '');
+				
+				// register new click event for old submit button (now with "Next" label)
+				$('body').on("click", "button[name='submit-btn-saverecord']", function(event) {
+					// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
+					var form_action = $('#form').attr('action');
+					var redirect_parameter = "&__gotosurvey=<?=$next_survey_name?>";
+					if (!form_action.includes(redirect_parameter)) {
+						$('#form').attr('action', form_action + redirect_parameter);
+					}
+					
+					// submit form
+					$(this).button('disable');
+					dataEntrySubmit(this);
+					return false;
+				});
 			});
 		</script>
 		<?php
@@ -1031,16 +1067,6 @@ HEREDOC;
 					if (!form_action.includes(redirect_parameter)) {
 						$('#form').attr('action', form_action + redirect_parameter);
 					}
-					
-					// add end survey param to prevent survey queue and autocomplete from preventing user from getting redirected
-					form_action = $('#form').attr('action');
-					var end_survey_param = "&__endsurvey=1";
-					if (!form_action.includes(end_survey_param)) {
-						$('#form').attr('action', form_action + end_survey_param);
-					}
-					
-					// update form action
-					form_action = $('#form').attr('action');
 					
 					// submit form
 					$(this).button('disable');
@@ -1343,7 +1369,7 @@ HEREDOC;
 		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'];
 		$funding_mechanism = $cc_data['funding_mechanism'] ?? $cc_data['funding_other'];
 		
-		$survey_link = \REDCap::getSurveyLink($cc_data['record_id'], 'study_intake_form', $cc_data['event_id']);
+		$survey_link = \REDCap::getSurveyLink($cc_data['record_id'], $this->study_intake_form_name, $cc_data['event_id']);
 		
 		$styles = new \stdClass();
 		$styles->title = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
@@ -1439,29 +1465,21 @@ HEREDOC;
 			$this->replaceSummaryReviewField($record, $repeat_instance);
 		}
 		
-		if (!in_array($instrument, $this->noSubmitConversionFormNames)) {
-			$this->renameSubmitForSurvey();
-		}
-		
 		if ($instrument == 'enter_cost_to_run_procedure') {
 			$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
-		}
-		
-		if ($instrument == 'summary_review_page') {
-			$this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
 		}
 		
 		if (gettype($this->proj) != 'object')
 			$this->proj = new \Project($this->getProjectId());
 		
 		if ($event_id == $this->proj->firstEventId) {
-			// // see if this instrument was previously saved
-			// $status = $this->getRecordFormStatus($record, $instrument, $event_id);
-			// if ($status == '2') {
-				// add "Save & Return to Summary Review Page" button
+			if ($instrument != 'summary_review_page') {
 				$this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
-			// }
+			} else {
+				$this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
+			}
 			$this->convertSaveAndReturnLaterButton();
+			$this->changeSurveySubmitButton($record, $instrument);
 		}
 	}
 	
@@ -1481,14 +1499,19 @@ HEREDOC;
 		}
 		
 		$request_uri = $_SERVER['REQUEST_URI'];
+		if (strpos($request_uri, '__gotosurvey=') !== false) {
+			preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
+			$next_survey_name = $matches[1];
+			$surveyLink = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
+			
+			// this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
+			header("Location: $surveyLink");
+		}
+		
 		if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
 			$surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
 			
-			// this works but survey queue and survey auto-continue features will rewrite location headers if configured
 			header("Location: $surveyLink");
-			
-			// this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
-			// redirect($surveyLink);
 		}
 	}
 	
