@@ -499,6 +499,7 @@ HEREDOC;
 		$event_ids = \REDCap::getEventNames();
 		$event_id_0 = array_search('Coordinating Center GNG', $event_ids);
 		$event_id = array_search('Event 1', $event_ids);
+		$generate_request_form_complete_field = $this->send_to_sites_instrument . "_complete";
 		$fields = [
 			"institution",
 			"institution_ctsa_name",
@@ -508,7 +509,9 @@ HEREDOC;
 			"consideration",
 			"final_gonogo",
 			"final_gonogo_comments",
-			"short_name"
+			"short_name",
+			"send_to_sites",
+			$generate_request_form_complete_field
 		];
 		
 		$params = [
@@ -562,8 +565,15 @@ HEREDOC;
 				
 				$table_rows[] = $row;
 			}
+			
+			$pending_text = "";
+			if ($record[$event_id_0]['send_to_sites'] !== '1' || $record[$event_id_0][$generate_request_form_complete_field] !== '2') {
+				$pending_text = " (PENDING)";
+			}
+			
 			$data[] = [
 				"name" => $record[$event_id_0]['short_name'],
+				"pending" => $pending_text,
 				"table" => $table_rows,
 			];
 		}
@@ -613,7 +623,7 @@ HEREDOC;
 		// create study rows and tables
 		foreach ($data as $study_i => $study) {
 			$detailed_recon_view_link = "<a class='detailed_recon_view' href='$reconciliiation_page_url'>See detailed reconciliation view</a>";
-			echo "<div class='study_row' data-study-i='$study_i'><span class='study_short_name'>Study Name: {$study['name']}</span> <img class='study_toggle' src='$plus_icon_url' alt='study toggle icon'>$detailed_recon_view_link</div>";
+			echo "<div class='study_row' data-study-i='$study_i'><span class='study_short_name'>Study Name: {$study['name']}{$study['pending']}</span> <img class='study_toggle' src='$plus_icon_url' alt='study toggle icon'>$detailed_recon_view_link</div>";
 			echo "<div class='study_table_container' data-study-i='$study_i'>
 				<table class='reconciliation'>
 					<thead>
@@ -1044,7 +1054,7 @@ HEREDOC;
 		$buttonHtml = <<<HEREDOC
 	<tr>\
 		<td colspan=\"2\" style=\"text-align:center;padding:1px 0px 6px 0px;\">\
-			<button tabindex=\"1\" name=\"submit-btn-gotosummary\" class=\"jqbutton nowrap ui-button ui-corner-all ui-widget saveandgotosummary\">Save &amp; go to Review Summary Page</button>\
+			<button tabindex=\"1\" name=\"submit-btn-gotosummary\" class=\"jqbutton nowrap ui-button ui-corner-all ui-widget saveandgotosummary\">Save &amp; Go to Review Summary Page</button>\
 		</td>\
 	</tr>
 HEREDOC;
@@ -1517,7 +1527,7 @@ HEREDOC;
 	
 	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
 		if (strpos($subject, "Identified") !== false) {
-			$markerText = "<div data-flag='19825293857lkjflgkjdhfg'>abcdef</div>";
+			$markerText = "<div data-flag='19825293857lkjflgkjdhfg'></div>";
 			
 			// if this is from "Identify Sites" related alert and doesn't have the Study Intake Form attached:
 			// then return false and send a duplicate email with the Study Intake Form attached
