@@ -385,15 +385,7 @@ TINBudget.editProcedures = function() {
 	$("#tinbudget_modal").modal('show');
 }
 
-// initialization/registration
-$('head').append('<link rel="stylesheet" type="text/css" href="' + TINBudget.budget_css_url + '">');
-$('body').append($('#tinbudget_modal').remove());
-$(document).ready(function() {
-	// initialization
-	TINBudget.refreshProceduresBank();
-	TINBudget.refreshProcedureRows();
-	TINBudget.showArm(1);
-	
+TINBudget.registerEvents = function() {
 	// register arm dropdown button click events
 	$('body').on('click', 'a.show_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
@@ -652,6 +644,18 @@ $(document).ready(function() {
 	// register undo/redo button click events
 	$('body').on('click', '#tin_budget_undo', TINBudget.undo);
 	$('body').on('click', '#tin_budget_redo', TINBudget.redo);
+}
+
+// initialization/registration
+$('head').append('<link rel="stylesheet" type="text/css" href="' + TINBudget.budget_css_url + '">');
+$('body').append($('#tinbudget_modal').remove());
+$(document).ready(function() {
+	// initialization
+	TINBudget.refreshProceduresBank();
+	TINBudget.refreshProcedureRows();
+	TINBudget.showArm(1);
+	
+	TINBudget.registerEvents();
 	
 	TINBudget.states = [];
 	TINBudget.stateIndex = 0;
