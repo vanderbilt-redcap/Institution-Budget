@@ -43,6 +43,9 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			
 			// determine name of study intake form instrument
 			$this->study_intake_form_name = 'study_coordinating_center_information';
+			
+			// set label pattern (to convert raw values to label values)
+			$this->label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
 		}
 	}
 	
@@ -328,7 +331,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			"funding_duration",
 			"reci_date",
 			"site_active_date",
-			"support_date",
+			"support_date"
 		];
 		
 		for ($i = 1; $i <= 5; $i++) {
@@ -344,6 +347,18 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		];
 		$study_intake_data = \REDCap::getData($getDataParams);
 		
+		// convert some raw values to label values
+		$fields_to_labelize = ['study_population', 'funding_mechanism', 'funding_source', 'institute_center'];
+		foreach($fields_to_labelize as $field_name) {
+			unset($labels, $matches, $raw_value);
+			preg_match_all($this->label_pattern, $this->proj->metadata[$field_name]["element_enum"], $matches);
+			$labels = array_map("trim", $matches[2]);
+			$raw_value = $study_intake_data[$record][$this->proj->firstEventId][$field_name];
+			
+			// actually replace raw value
+			$study_intake_data[$record][$this->proj->firstEventId][$field_name] = $labels[$raw_value];
+		}
+		
 		$data = reset($study_intake_data[$record]);
 		
 		return $data;
@@ -351,9 +366,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
 	public function showStaticScheduleArms($budget_data, $arms_and_visits_survey_link) {
 		foreach($budget_data->arms as $arm_i => $arm) {
+		$link_arm_index = $arm_i + 1;
 		?>
 		<div class="budget_container">
-		<a href="<?= $arms_and_visits_survey_link ?>"><h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm->name ?? "") ?></h6></a>
+		<a href="<?= $arms_and_visits_survey_link . "&arm=$link_arm_index" ?>"><h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm->name ?? "") ?></h6></a>
 		<table>
 			<thead>
 				<tr>
@@ -754,7 +770,7 @@ HEREDOC;
 		$this->saveIntakeForm($record, $study_intake_form);
 		
 		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "contact_and_fixed_costs_info", $event_id);
-		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "arms_and_visits", $event_id);
+		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "schedule_of_event", $event_id);
 		
 		?>
 		<button type="button" class="btn btn-primary" style="margin: 8px;" onclick="window.print()">Print</button>
