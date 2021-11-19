@@ -50,7 +50,6 @@ TINBudget.refreshSchedule = function() {
 	// refresh procedures, costs, and sums
 	TINBudget.refreshProceduresBank();
 	TINBudget.refreshProcedureRows();
-	TINBudget.updateAllVisitCosts();
 }
 TINBudget.refreshProceduresBank = function() {
 	// remove all rows
@@ -72,8 +71,14 @@ TINBudget.refreshProceduresBank = function() {
 		});
 	});
 }
-TINBudget.refreshProcedureRows = function() {
+TINBudget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs and visit costs
 	// to be called when procedures have changed
+	
+	// determine which state/schedule to pull arm/visit/procedure count information from
+	var state = schedule;
+	if (!state && TINBudget.states && typeof TINBudget.stateIndex != 'undefined') {
+		state = TINBudget.states[TINBudget.stateIndex];
+	}
 	
 	// iterate over all arms, updating the rows of the arm tables to match new set of procedures
 	var arm_count = $('.arm_table').length;
@@ -89,12 +94,6 @@ TINBudget.refreshProcedureRows = function() {
 			// add proc_count cells to new row, preserving old procedure counts if applicable
 			for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 				var old_count = 0;
-				var state;
-				if (typeof TINBudget.states == 'object') {
-					state = TINBudget.states[TINBudget.states.length - 1];
-				} else {
-					state = false;
-				}
 				
 				if (state) {
 					var arm = state.arms[Number(arm_i - 1)];
@@ -154,7 +153,6 @@ TINBudget.showArm = function(arm_index) {
 	
 	// set active_arm_index and highlight active arm dd button
 	TINBudget.active_arm_index = arm_index;
-	TINBudget.refreshSchedule();
 }
 TINBudget.copyArm = function(arm_index) {
 	// show a modal asking which arm(s) to copy to
@@ -241,7 +239,6 @@ TINBudget.createArm = function() {
 	$("#arm_dropdowns").append(new_arm_dropdown);
 	$("#arm_tables").append(new_arm_table);
 	
-	TINBudget.refreshSchedule();
 	return new_arm_i;
 }
 TINBudget.renameArm = function(arm_index) {
@@ -260,9 +257,6 @@ TINBudget.deleteArm = function(arm_index) {
 	if ($('.arm').length > 1) {
 		$('[data-arm="' + arm_index + '"]').remove()
 	}
-	
-	TINBudget.refreshSchedule();
-	TINBudget.showArm(Math.max(1, arm_index - 1));
 }
 
 // visit dropdown buttons
@@ -302,9 +296,6 @@ TINBudget.createVisit = function() {
 	arm_table.find('thead tr').append(visit_dd);
 	arm_table.find('tbody tr:not(:last-child)').append(visit_proc_cell);
 	arm_table.find('tbody tr:last-child').append(visit_total_cell);
-	TINBudget.pushState();
-	
-	TINBudget.refreshProcedureRows();
 }
 TINBudget.renameVisit = function(visit_index) {
 	$('.modal-content').hide()
@@ -345,8 +336,6 @@ TINBudget.deleteVisit = function(visit_index) {
 	if (arm_table.find('th').length > 2) {
 		arm_table.find('th:nth-child(' + (visit_index + 1) + '), td:nth-child(' + (visit_index + 1) + ')').remove()
 	}
-	TINBudget.pushState();
-	TINBudget.refreshSchedule();
 }
 
 // visit level helper functions
@@ -390,6 +379,7 @@ TINBudget.registerEvents = function() {
 	$('body').on('click', 'a.show_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		TINBudget.showArm(arm_index);
+		TINBudget.refreshSchedule();
 		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.copy_arm', function(event) {
@@ -403,6 +393,7 @@ TINBudget.registerEvents = function() {
 		TINBudget.refreshProceduresBank();
 		TINBudget.refreshProcedureRows();
 		TINBudget.showArm(new_arm_index);
+		TINBudget.refreshSchedule();
 		TINBudget.pushState();
 	});
 	$('body').on('click', '.arm .rename_arm', function(event) {
@@ -425,6 +416,8 @@ TINBudget.registerEvents = function() {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		TINBudget.confirmDelete = function() {
 			TINBudget.deleteArm(arm_index);
+			TINBudget.showArm(Math.max(1, arm_index - 1));
+			TINBudget.refreshSchedule();
 			TINBudget.pushState();
 		}
 	});
@@ -467,6 +460,7 @@ TINBudget.registerEvents = function() {
 	// register visit dropdown buttons
 	$('body').on('click', 'a.create_visit', function(event) {
 		TINBudget.createVisit();
+		TINBudget.refreshProcedureRows();
 		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.copy_visit', function(event) {
@@ -495,6 +489,7 @@ TINBudget.registerEvents = function() {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
 		TINBudget.confirmDelete = function() {
 			TINBudget.deleteVisit(visit_index);
+			TINBudget.refreshSchedule();
 			TINBudget.pushState();
 		}
 	});
@@ -651,19 +646,17 @@ $('head').append('<link rel="stylesheet" type="text/css" href="' + TINBudget.bud
 $('body').append($('#tinbudget_modal').remove());
 $(document).ready(function() {
 	// initialization
-	TINBudget.refreshProceduresBank();
-	TINBudget.refreshProcedureRows();
-	TINBudget.showArm(1);
-	
 	TINBudget.registerEvents();
-	
 	TINBudget.states = [];
 	TINBudget.stateIndex = 0;
-	TINBudget.pushState();
 	
 	if (TINBudgetSurvey.soe_data) {
 		TINBudget.loadState(TINBudgetSurvey.soe_data);
+	} else {
+		TINBudget.refreshSchedule();
+		TINBudget.showArm(1);
 	}
+	TINBudget.pushState();
 });
 
 // saving/loading
@@ -742,7 +735,7 @@ TINBudget.pushState = function() {
 	TINBudget.refreshStateButtons()
 	
 	if (TINBudgetSurvey) {
-		TINBudgetSurvey.updateScheduleField(JSON.stringify(TINBudget.states[TINBudget.states.length-1]));
+		TINBudgetSurvey.updateScheduleField(JSON.stringify(TINBudget.states[TINBudget.stateIndex]));
 	}
 }
 
@@ -777,7 +770,7 @@ TINBudget.loadState = function(schedule) {
 		});
 	}
 	TINBudget.refreshProceduresBank();
-	TINBudget.refreshProcedureRows();
+	TINBudget.refreshProcedureRows(schedule);
 	TINBudget.showArm(schedule.active_arm_index);
 	
 	TINBudget.refreshStateButtons()
