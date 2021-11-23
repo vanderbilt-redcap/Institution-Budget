@@ -1558,6 +1558,9 @@ HEREDOC;
 	}
 	
 	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
+		// determine whether we should log or not
+		$enable_email_logging_value = $this->getProjectSetting('enable_email_logging');
+		
 		if (strpos($subject, "Identified") !== false) {
 			$markerText = "<div data-flag='19825293857lkjflgkjdhfg'></div>";
 			
@@ -1569,6 +1572,11 @@ HEREDOC;
 				$rid = $this->determineRecordIdFromMessage($message);
 				if (empty($rid)) {
 					// todo still send when can't determine record ID from message?
+					\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
+					to: " . db_escape($to) . "
+					from: " . db_escape($from) . "
+					subject: " . db_escape($subject) . "
+					action: The TIN Budget module will not send this email -- can't determine record ID to fetch Study Intake Form");
 					return false;
 				}
 				$intake_form = $this->getStudyIntakeForm($rid);
@@ -1585,9 +1593,22 @@ HEREDOC;
 				// add to message to prevent infinite loop (would happen if attaching Study Intake Form fails
 				$message .= $markerText;
 				
+				\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
+				to: " . db_escape($to) . "
+				from: " . db_escape($from) . "
+				subject: " . db_escape($subject) . "
+				action: The TIN Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.");
+				
 				$email_sent = \REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
+				
 				// prevent current email from sending (it doesn't have the Study Intake Form attached!)
 				return false;
+			} else {
+				\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
+				to: " . db_escape($to) . "
+				from: " . db_escape($from) . "
+				subject: " . db_escape($subject) . "
+				action: The TIN Budget module is releasing this email to be sent.");
 			}
 		}
 	}

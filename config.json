@@ -65,6 +65,11 @@
 			"key": "cpt_endpoint_url",
 			"name": "CPT Selector module code lookup endpoint",
 			"type": "text"
+		},
+		{
+			"key": "enable_email_logging",
+			"name": "Log extra email handling information to the Project Logging page.",
+			"type": "checkbox"
 		}
 	],
 
