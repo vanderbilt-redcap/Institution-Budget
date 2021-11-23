@@ -1593,22 +1593,25 @@ HEREDOC;
 				// add to message to prevent infinite loop (would happen if attaching Study Intake Form fails
 				$message .= $markerText;
 				
-				\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
-				to: " . db_escape($to) . "
-				from: " . db_escape($from) . "
-				subject: " . db_escape($subject) . "
-				action: The TIN Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.");
-				
+				if ($enable_email_logging_value) {
+					\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
+					to: " . db_escape($to) . "
+					from: " . db_escape($from) . "
+					subject: " . db_escape($subject) . "
+					action: The TIN Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.");
+				}
 				$email_sent = \REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
 				
 				// prevent current email from sending (it doesn't have the Study Intake Form attached!)
 				return false;
 			} else {
-				\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
-				to: " . db_escape($to) . "
-				from: " . db_escape($from) . "
-				subject: " . db_escape($subject) . "
-				action: The TIN Budget module is releasing this email to be sent.");
+				if ($enable_email_logging_value) {
+					\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
+					to: " . db_escape($to) . "
+					from: " . db_escape($from) . "
+					subject: " . db_escape($subject) . "
+					action: The TIN Budget module is releasing this email to be sent.");
+				}
 			}
 		}
 	}
