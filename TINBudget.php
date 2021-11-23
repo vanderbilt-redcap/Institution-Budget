@@ -315,6 +315,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			"cc_contact_person_ln",
 			"cc_email",
 			"cc_phone_number",
+			"short_name",
 			"protocol_synopsis",
 			"brief_stud_description",
 			"prop_summary_describe2_5f5",
@@ -1397,6 +1398,17 @@ HEREDOC;
 		
 		$survey_link = \REDCap::getSurveyLink($cc_data['record_id'], $this->study_intake_form_name, $cc_data['event_id']);
 		
+		if (!empty($cc_data['protocol_synopsis'])) {
+			$project_id = $this->getProjectId();
+			$page = $this->study_intake_form_name;
+			$edoc_id = $cc_data['protocol_synopsis'];
+			$edoc_id_hash = \Files::docIdHash($edoc_id);
+			$protocol_link = APP_PATH_WEBROOT . "DataEntry/file_download.php?pid=$project_id&field_name=protocol_synopsis&record={$cc_data['record_id']}&event_id={$this->proj->firstEventId}&doc_id_hash=$edoc_id_hash&instance=1&id=$edoc_id";
+			$protocol_link = "<a href='$protocol_link'>Protocol Synopsis File</a>";
+		} else {
+			$protocol_link = "<small style='font-weight: bold; color: #777;'>(No protocol synopsis file attached)</small>";
+		}
+		
 		$styles = new \stdClass();
 		$styles->title = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
 		$styles->table = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
@@ -1420,8 +1432,12 @@ HEREDOC;
 					<td {$styles->td}>$td1</td>
 				</tr>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Short study name Protocol/protocol synopsis for this study</a></td>
-					<td {$styles->td}></td><!-- TODO: make link to download edoc or say no file attached -->
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Short Study Name</a></td>
+					<td {$styles->td}>{$cc_data['short_name']}</td>
+				</tr>
+				<tr>
+					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Protocol Synopsis</a></td>
+					<td {$styles->td}>$protocol_link</td>
 				</tr>
 				<tr>
 					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Brief Study Description</a></td>
