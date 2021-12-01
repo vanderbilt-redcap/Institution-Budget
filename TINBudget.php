@@ -1557,6 +1557,7 @@ HEREDOC;
 		}
 	}
 	
+	/*
 	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
 		// determine whether we should log or not
 		$enable_email_logging_value = $this->getProjectSetting('enable_email_logging');
@@ -1615,5 +1616,6 @@ HEREDOC;
 			}
 		}
 	}
+	*/
 	
 }
