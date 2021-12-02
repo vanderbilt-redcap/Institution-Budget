@@ -2,6 +2,7 @@
 namespace Vanderbilt\TINBudget;
 
 class TINBudget extends \ExternalModules\AbstractExternalModule {
+	
 	public function __construct() {
 		parent::__construct();
 		
@@ -1347,7 +1348,8 @@ HEREDOC;
 	}
 	
 	public function determineRecordIdFromMessage($email_message) {
-		$pattern = "/You have been identified as a possible site for (.*?)\./";
+		// $pattern = "/You have been identified as a possible site for (.*?)\./";
+		$pattern = "/with their proposal titled: (.*?)\./";
 		preg_match($pattern, $email_message, $match);
 		$short_name = $match[1];
 		if (empty($short_name)) {
@@ -1557,65 +1559,66 @@ HEREDOC;
 		}
 	}
 	
-	/*
 	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
-		// determine whether we should log or not
-		$enable_email_logging_value = $this->getProjectSetting('enable_email_logging');
+		$magic_text = '<p><span style="display: none;">LDVj89w3j4v9SJG43w4gsdkgjg4J</span></p>';
 		
-		if (strpos($subject, "Identified") !== false) {
-			$markerText = "<div data-flag='19825293857lkjflgkjdhfg'></div>";
-			
-			// if this is from "Identify Sites" related alert and doesn't have the Study Intake Form attached:
-			// then return false and send a duplicate email with the Study Intake Form attached
-			if (!isset($attachments["Study_Intake_Form.html"]) && strpos($message, $marker) === false) {
-				// add Study Intake Form to new email and send (via ::email)
-				$new_attachments = $attachments;
-				$rid = $this->determineRecordIdFromMessage($message);
-				if (empty($rid)) {
-					// todo still send when can't determine record ID from message?
-					\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
-					to: " . db_escape($to) . "
-					from: " . db_escape($from) . "
-					subject: " . db_escape($subject) . "
-					action: The TIN Budget module will not send this email -- can't determine record ID to fetch Study Intake Form");
-					return false;
-				}
-				$intake_form = $this->getStudyIntakeForm($rid);
-				
-				// add stylesheet, metadata, html element and head/body wrappers
-				$intake_form = $this->packageStudyIntakeForm($intake_form);
-				
-				$temp_file_name = tempnam(APP_PATH_TEMP, 'TINBUDGET_ATTACHMENT');
-				$temp_file = fopen($temp_file_name, "w");
-				fwrite($temp_file, $intake_form);
-				fclose($temp_file);
-				$new_attachments["Study_Intake_Form.html"] = $temp_file_name;
-				
-				// add to message to prevent infinite loop (would happen if attaching Study Intake Form fails
-				$message .= $markerText;
-				
-				if ($enable_email_logging_value) {
-					\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
-					to: " . db_escape($to) . "
-					from: " . db_escape($from) . "
-					subject: " . db_escape($subject) . "
-					action: The TIN Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.");
-				}
-				$email_sent = \REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
-				
-				// prevent current email from sending (it doesn't have the Study Intake Form attached!)
-				return false;
-			} else {
-				if ($enable_email_logging_value) {
-					\REDCap::logEvent("TIN Budget Module", "Found pre-flight email with 'Identified' in subject
-					to: " . db_escape($to) . "
-					from: " . db_escape($from) . "
-					subject: " . db_escape($subject) . "
-					action: The TIN Budget module is releasing this email to be sent.");
-				}
-			}
+		// return (null) early if we don't find the magic text in the email message
+		if (strpos($message, $magic_text) === false) {
+			return;
 		}
+		// if email already has study intake form attachment, throw exception because that should never happen
+		if (isset($attachments["Study_Intake_Form.html"])) {
+			$err_msg = "redcap_email is called with a message that includes the alert marker text ($magic_text) AND an attached 'Study_Intake_Form.html'. It's likely this email was improperly generated/handled.";
+			$this->log_email_event($to, $from, $subject, $err_msg);
+			throw new \Exception("redcap_email is called with a message that includes the alert marker text ($magic_text) AND an attached 'Study_Intake_Form.html'. It's likely this email was improperly generated/handled.");
+		}
+		
+		// determine the record this email is associated with (always log failure to determine record ID)
+		$rid = $this->determineRecordIdFromMessage($message);
+		if (empty($rid)) {
+			$log_msg = "The TIN Budget module will not send this email -- can't determine record ID to fetch Study Intake Form!";
+			$this->log_email_event($to, $from, $subject, $log_msg);
+			return false;
+		}
+		
+		
+		// add Study Intake Form to new email and send (via ::email)
+		$new_attachments = $attachments;
+		$intake_form = $this->getStudyIntakeForm($rid);
+		
+		// add stylesheet, metadata, html element and head/body wrappers
+		$intake_form = $this->packageStudyIntakeForm($intake_form);
+		
+		$temp_file_name = tempnam(APP_PATH_TEMP, 'TINBUDGET_ATTACHMENT');
+		$temp_file = fopen($temp_file_name, "w");
+		fwrite($temp_file, $intake_form);
+		fclose($temp_file);
+		$new_attachments["Study_Intake_Form.html"] = $temp_file_name;
+		
+		// remove $magic_text from message to prevent infinite loop
+		$message = str_replace($magic_text, "", $message);
+		$email_sent = \REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
+		
+		// determine whether we should log successful attachment/resends or not
+		$log_successful_sends = $this->getProjectSetting('enable_email_logging');
+		if ($email_sent && $log_successful_sends) {
+			$log_msg = "The TIN Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.";
+			$this->log_email_event($to, $from, $subject, $log_msg);
+		} elseif (empty($email_sent)) {
+			$log_msg = "The TIN Budget module attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
+			$this->log_email_event($to, $from, $subject, $log_msg);
+		}
+		
+		// prevent intercepted email from sending (it doesn't have the Study Intake Form attached)
+		return false;
 	}
-	*/
+	
+	private function log_email_event($to, $from, $subject, $log_message) {
+		\REDCap::logEvent("TIN Budget Module", "Found 'Identify Site' email from TIN Budget project Alert:
+		to: " . db_escape($to) . "
+		from: " . db_escape($from) . "
+		subject: " . db_escape($subject) . "
+		action: $log_message");
+	}
 	
 }
