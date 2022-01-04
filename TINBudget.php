@@ -1365,8 +1365,15 @@ HEREDOC;
 			"filterLogic" => "[short_name]='$short_name'",
 			"fields" => $rid_field
 		];
-		$data = json_decode(\REDCap::getData($parameters));
-		$rid = $data[0]->$rid_field;
+		try {
+			$data = json_decode(\REDCap::getData($parameters));
+			$rid = $data[0]->$rid_field;
+			if (empty($rid)) {
+				throw new \Exception("Couldn't determine record ID from the given email message");
+			}
+		} catch (\Exception $e) {
+			return null;
+		}
 		return $rid;
 	}
 	
