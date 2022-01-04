@@ -360,6 +360,14 @@ TINBudget.deleteVisit = function(visit_index) {
 	if (arm_table.find('th').length > 2) {
 		arm_table.find('th:nth-child(' + (visit_index + 1) + '), td:nth-child(' + (visit_index + 1) + ')').remove()
 	}
+	
+	var state = TINBudget.states[TINBudget.stateIndex];
+	if (state) {
+		var arm = state.arms[TINBudget.active_arm_index - 1];
+		if (arm) {
+			arm.visits.splice(visit_index, 1);
+		}
+	}
 }
 
 // visit level helper functions
