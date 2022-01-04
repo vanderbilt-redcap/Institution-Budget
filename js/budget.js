@@ -296,6 +296,30 @@ TINBudget.createVisit = function() {
 	arm_table.find('thead tr').append(visit_dd);
 	arm_table.find('tbody tr:not(:last-child)').append(visit_proc_cell);
 	arm_table.find('tbody tr:last-child').append(visit_total_cell);
+	
+	// add procedure_counts for new visit to this arm in schedule
+	var state = TINBudget.states[TINBudget.stateIndex];
+	if (state) {
+		var arm = state.arms[TINBudget.active_arm_index - 1];
+		if (arm) {
+			
+			// add 0 counts for all procedures
+			var zero_proc_counts = [];
+			TINBudget.procedures.forEach(function(procedure, proc_i) {
+				zero_proc_counts.push({
+					name: procedure.name,
+					count: 0,
+					cost: procedure.cost
+				});
+			});
+			
+			arm.visits[visit_j] = {
+				name: "New Visit (" + String(visit_j)  + ")",
+				procedure_counts: zero_proc_counts,
+				total: 0
+			}
+		}
+	}
 }
 TINBudget.renameVisit = function(visit_index) {
 	$('.modal-content').hide()
