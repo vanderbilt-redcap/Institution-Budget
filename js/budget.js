@@ -59,11 +59,18 @@ TINBudget.refreshProceduresBank = function() {
 		$("table#edit_procedures tbody").append("<tr>\
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
 			<td class='name'><input type='text'></td>\
+			<td class='routine-care'><input type='checkbox'></td>\
 			<td class='cost'><input type='number'></td>\
 			<td class='cpt'><input class='cptSelect' type='text'></td>\
 		</tr>");
+		
+		if (procedure.routine_care)
+			procedure.cost = 0;
+		
 		$("table#edit_procedures tbody tr:last-child td.name input").val(procedure.name);
+		$("table#edit_procedures tbody tr:last-child td.routine-care input").prop('checked', procedure.routine_care);
 		$("table#edit_procedures tbody tr:last-child td.cost input").val(procedure.cost);
+		$("table#edit_procedures tbody tr:last-child td.cost input").prop('disabled', procedure.routine_care);
 		$("table#edit_procedures tbody tr:last-child td.cpt input").val(procedure.cpt);
 		
 		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(TINBudget.autocompSettings).focus(function(){
@@ -405,7 +412,6 @@ TINBudget.editProcedures = function() {
 	$('#tinbudget_edit_procedures').show()
 	$("#tinbudget_modal").modal('show');
 }
-
 TINBudget.registerEvents = function() {
 	// register arm dropdown button click events
 	$('body').on('click', 'a.show_arm', function(event) {
@@ -584,6 +590,7 @@ TINBudget.registerEvents = function() {
 		TINBudget.procedures = [];
 		proc_table.find('tbody tr').each(function(i, tr) {
 			var proc_name = $(tr).find('td.name input').val();
+			var proc_routine_care = $(tr).find('td.routine-care input').prop('checked');
 			var proc_cost = $(tr).find('td.cost input').val();
 			var proc_cpt = $(tr).find('td.cpt input').val();
 			if (!proc_name) {
@@ -596,6 +603,7 @@ TINBudget.registerEvents = function() {
 			}
 			TINBudget.procedures.push({
 				name: proc_name,
+				routine_care: proc_routine_care,
 				cost: proc_cost,
 				cpt: proc_cpt
 			});
@@ -671,6 +679,21 @@ TINBudget.registerEvents = function() {
 	// register undo/redo button click events
 	$('body').on('click', '#tin_budget_undo', TINBudget.undo);
 	$('body').on('click', '#tin_budget_redo', TINBudget.redo);
+	
+	// register event to disable/enable cost field when routine care checkbox is changed
+	$('body').on('change', '.routine-care input', function(event) {
+		var routine_care_checkbox = $(event.target);
+		var is_routine_care = routine_care_checkbox.prop('checked');
+		var cost_field = $(event.target).closest('tr').find("td.cost input");
+		
+		if (is_routine_care) {
+			cost_field.val(0);
+			cost_field.prop('disabled', true);
+		} else {
+			cost_field.prop('disabled', false);
+		}
+		
+	});
 }
 
 // initialization/registration

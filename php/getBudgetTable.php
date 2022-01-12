@@ -220,6 +220,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						<tr>
 							<th>Delete</th>
 							<th>Procedure Name</th>
+							<th>Routine Care</th>
 							<th>Cost ($)</th>
 							<th>CPT Code</th>
 						</tr>

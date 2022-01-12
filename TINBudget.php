@@ -815,6 +815,9 @@ HEREDOC;
 			<tbody>
 			<?php
 			foreach($budget_data->procedures as $i => $info) {
+				if ($info->routine_care === true) {
+					$info->cost = "Routine Care";
+				}
 				echo "<tr><td>" . $info->name . "</td><td>" . $info->cpt . "</td><td>" . $info->cost . "</td></tr>";
 			}
 			?>
