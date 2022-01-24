@@ -620,6 +620,7 @@ TINBudget.registerEvents = function() {
 		$("table#edit_procedures tbody").append("<tr>\
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
 			<td class='name'><input type='text'></td>\
+			<td class='routine-care'><input type='checkbox'></td>\
 			<td class='cost'><input type='number'></td>\
 			<td class='cpt'><input class='cptSelect' type='text'></td>\
 		</tr>");

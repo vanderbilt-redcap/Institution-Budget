@@ -355,8 +355,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			unset($labels, $matches, $raw_value);
 			preg_match_all($this->label_pattern, $this->proj->metadata[$field_name]["element_enum"], $matches);
 			$labels = array_map("trim", $matches[2]);
-			$raw_value = $study_intake_data[$record][$this->proj->firstEventId][$field_name];
-			
+			$raw_value = intval($study_intake_data[$record][$this->proj->firstEventId][$field_name]) - 1;
 			// actually replace raw value
 			$study_intake_data[$record][$this->proj->firstEventId][$field_name] = $labels[$raw_value];
 		}
