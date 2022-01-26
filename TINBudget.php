@@ -758,13 +758,14 @@ HEREDOC;
 		$cc_data['record_id'] = $record;
 		$cc_data['event_id'] = $event_id;
 		
-		if (empty($cc_data)) {
-			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
-		}
+		// if (empty($cc_data)) {
+			// throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
+		// }
 		global $record;
 		$budget_data = $this->getBudgetTableData($record);
 		if (empty($budget_data)) {
-			throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
+			// throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
+			$budget_data = new \stdClass();
 		} else {
 			$budget_data = json_decode($budget_data);
 		}
