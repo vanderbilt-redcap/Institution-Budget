@@ -10,7 +10,7 @@ TINBudget.autocompSettings = {
 			response(data);
 		});
 	},
-	minLength: 1
+	minLength: 0
 }
 
 TINBudget.refreshSchedule = function() {
