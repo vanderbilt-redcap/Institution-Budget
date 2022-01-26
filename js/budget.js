@@ -64,6 +64,10 @@ TINBudget.refreshProceduresBank = function() {
 			<td class='cpt'><input class='cptSelect' type='text'></td>\
 		</tr>");
 		
+		if (procedure.routine_care_procedure_form == 1 && !procedure.routine_care) {
+			procedure.routine_care = true
+		}
+		
 		if (procedure.routine_care)
 			procedure.cost = 0;
 		

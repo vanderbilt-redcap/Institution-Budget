@@ -65,6 +65,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				$fields[] = "procedure$proc";
 				$fields[] = "cost$proc";
 				$fields[] = "cpt$proc";
+				$fields[] = "rtc_$proc";
 			}
 			$this->scheduleDataFields = $fields;
 		}
@@ -118,7 +119,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				$procedures[] = (object) [
 					"name" => $proc_name,
 					"cost" => $data->{"cost$proc_i"},
-					"cpt" => $data->{"cpt$proc_i"}
+					"cpt" => $data->{"cpt$proc_i"},
+					"routine_care_procedure_form" => $data->{"rtc_$proc_i" . "___1"}
 				];
 			}
 		}
