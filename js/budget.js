@@ -308,7 +308,7 @@ TINBudget.createVisit = function() {
 	arm_table.find('tbody tr:not(:last-child)').append(visit_proc_cell);
 	arm_table.find('tbody tr:last-child').append(visit_total_cell);
 	
-	// add procedure_counts for new visit to this arm in schedule
+	// add procedure_counts for new visit to this arm in schedule (if they don't already exist)
 	var state = TINBudget.states[TINBudget.stateIndex];
 	if (state) {
 		var arm = state.arms[TINBudget.active_arm_index - 1];
@@ -324,10 +324,12 @@ TINBudget.createVisit = function() {
 				});
 			});
 			
-			arm.visits[visit_j] = {
-				name: "New Visit (" + String(visit_j)  + ")",
-				procedure_counts: zero_proc_counts,
-				total: 0
+			if (!arm.visits[visit_j] || !arm.visits[visit_j].procedure_counts) {
+				arm.visits[visit_j] = {
+					name: "New Visit",
+					procedure_counts: zero_proc_counts,
+					total: 0
+				}
 			}
 		}
 	}
@@ -501,9 +503,11 @@ TINBudget.registerEvents = function() {
 	
 	// register visit dropdown buttons
 	$('body').on('click', 'a.create_visit', function(event) {
+		// we actually push state because we're about to make changes to the 'current' state by calling createVisit
+		// so pushing early preserves state that we want to preserve
+		TINBudget.pushState();
 		TINBudget.createVisit();
 		TINBudget.refreshProcedureRows();
-		TINBudget.pushState();
 	});
 	$('body').on('click', 'a.copy_visit', function(event) {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
