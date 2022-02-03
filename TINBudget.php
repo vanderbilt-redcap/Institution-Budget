@@ -120,7 +120,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 					"name" => $proc_name,
 					"cost" => $data->{"cost$proc_i"},
 					"cpt" => $data->{"cpt$proc_i"},
-					"routine_care_procedure_form" => $data->{"rtc_$proc_i" . "___1"}
+					"routine_care_procedure_form" => $data->{"rtc_$proc_i"}
 				];
 			}
 		}
@@ -333,7 +333,6 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			"funding_opp_announcement",
 			"anticipated_budget",
 			"funding_duration",
-			"reci_date",
 			"site_active_date",
 			"support_date"
 		];
@@ -1150,33 +1149,28 @@ HEREDOC;
 	}
 	
 	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
-		// get procedure info for given record_id
-		$procedure_fields = [];
-		for ($i = 1; $i <= 25; $i++) {
-			$procedure_fields[] = "procedure$i";
-			$procedure_fields[] = "cpt$i";
+		$budget_field = $this->getProjectSetting('budget_table_field');
+		if (empty($budget_field)) {
+			return;
 		}
-		$study_short_name_field = "short_name";
-		$procedure_fields[] = $study_short_name_field;
 		
-		$params = [
-			"project_id" => $this->getProjectId(),
-			"return_format" => "array",
-			"records" => $record_id,
-			// "events" => $event_id,
-			"fields" => $procedure_fields
-		];
-		$data = \REDCap::getData($params);
-		global $Proj;
-		$record = $data[$record_id][$Proj->firstEventId];
-		$ri = $data[$record_id]["repeat_instances"];
-		$ri = reset($ri);
-		$ri = reset($ri);
-		$ri = $ri[$instance];
-		foreach ($ri as $field=>$value) {
-			if (empty($record[$field])) {
-				$record[$field] = $value;
-			}
+		try {
+			$params = [
+				"project_id" => $this->getProjectId(),
+				"return_format" => "array",
+				"records" => $record_id,
+				"fields" => $budget_field
+			];
+			$data = \REDCap::getData($params);
+			global $Proj;
+			$budget_data = json_decode($data[$record_id][$Proj->firstEventId][$budget_field]);
+			$procedures = $budget_data->procedures;
+		} catch (\Exception $e) {
+			return;
+		}
+		
+		if (empty($procedures)) {
+			return;
 		}
 		
 		// create workbook from template in module directory
@@ -1192,8 +1186,8 @@ HEREDOC;
 		
 		// update workbook cells
 		for ($i = 1; $i <= 25; $i++) {
-			$name = $record["procedure$i"];
-			$cpt = $record["cpt$i"];
+			$name = $procedures[$i]->name;
+			$cpt = $procedures[$i]->cpt;
 			
 			$sheet->setCellValue("B" . ($i + 2), $name);
 			$sheet->setCellValue("C" . ($i + 2), $cpt);
@@ -1478,7 +1472,7 @@ HEREDOC;
 						FOA (if applicable): {$cc_data['funding_opp_announcement']}<br>
 						Anticipated total budget (direct and indirect): {$cc_data['anticipated_budget']}<br>
 						Total duration of funding period: {$cc_data['funding_duration']}<br>
-						Anticipated funding start date for application: {$cc_data['reci_date']}
+						Anticipated funding start date for application: {$cc_data['support_date']}
 					</td>
 				</tr>
 				<tr>
