@@ -46,14 +46,20 @@ TINSummary.addFixedCostsTable = function(parent) {
 	for (i = 1; i <= 5; i++) {
 		// convert decision to GO or NO-GO or NEED INFO
 		var result = TINSummary.convertDecision(data["arm" + i + "_decision"]);
+		var fixed_cost = data["fixedcost" + i] ?? '';
+		var fixed_cost_detail = data["fixedcost" + i + "_detail"] ?? '';
+		var go_no_go_decision = result.decision ?? '';
+		var site_comments = data["fixedcost" + i + "_comments"] ?? '';
 		
-		table_html += "\
-			<tr" + result.row_class + ">\
-				<td>" + data["fixedcost" + i] + "</td>\
-				<td>" + data["fixedcost" + i + "_detail"] + "</td>\
-				<td>" + result.decision + "</td>\
-				<td>" + data["fixedcost" + i + "_comments"] + "</td>\
-			</tr>";
+		if (fixed_cost || fixed_cost_detail || go_no_go_decision || site_comments) {
+			table_html += "\
+				<tr" + result.row_class + ">\
+					<td>" + fixed_cost + "</td>\
+					<td>" + fixed_cost_detail + "</td>\
+					<td>" + go_no_go_decision + "</td>\
+					<td>" + site_comments + "</td>\
+				</tr>";
+		}
 	}
 	
 	table_html += "\
