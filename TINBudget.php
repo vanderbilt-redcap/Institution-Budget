@@ -1578,7 +1578,7 @@ HEREDOC;
 	}
 	
 	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
-		$magic_text = '<p><span style="display: none;">LDVj89w3j4v9SJG43w4gsdkgjg4J</span></p>';
+		$magic_text = 'LDVj89w3j4v9SJG43w4gsdkgjg4J';
 		
 		// return (null) early if we don't find the magic text in the email message
 		if (strpos($message, $magic_text) === false) {
