@@ -1623,7 +1623,7 @@ HEREDOC;
 		if ($email_sent && $log_successful_sends) {
 			$log_msg = "The TIN Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.";
 			$this->log_email_event($to, $from, $subject, $log_msg);
-		} elseif (empty($email_sent)) {
+		} else {
 			$log_msg = "The TIN Budget module attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
 			$this->log_email_event($to, $from, $subject, $log_msg);
 		}
