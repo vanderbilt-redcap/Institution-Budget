@@ -1,6 +1,6 @@
 <?php
 namespace Vanderbilt\TINBudget;
-
+require __DIR__ . '/vendor/autoload.php';
 class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
 	public function __construct() {
@@ -480,8 +480,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
-	public function packageStudyIntakeForm($intake_form_html) {
-		// prepare the intake form html for download (by adding html tag, metadata, css, etc.)
+	public function packageStudyIntakeFormAndConvertToPDF($intake_form_html) {
+		// create the intake form html document (by adding html tag, metadata, css, etc.)
 		$html = <<<HEREDOC
 <!DOCTYPE HTML>
 <html>
@@ -509,7 +509,19 @@ HEREDOC;
 	</body>
 </html>
 HEREDOC;
-		return $html;
+		// return $html; - instead of returning html, convert to PDF before sending back
+		$options = new \Dompdf\Options();
+		$options->setIsHtml5ParserEnabled(true);
+		$dompdf = new \Dompdf\Dompdf($options);
+		$dompdf->loadHtml($html);
+
+		// set the paper size and orientation
+		$dompdf->setPaper('A4', 'landscape');
+
+		// Render the HTML as PDF
+		$dompdf->render();
+		
+		return $dompdf;
 	}
 	
 	public function getDashboardData() {
@@ -1592,14 +1604,15 @@ HEREDOC;
 		$new_attachments = $attachments;
 		$intake_form = $this->getStudyIntakeForm($rid);
 		
-		// add stylesheet, metadata, html element and head/body wrappers
-		$intake_form = $this->packageStudyIntakeForm($intake_form);
+		// add stylesheet, metadata, html element and head/body wrappers and then convert to PDF
+		$dompdf = $this->packageStudyIntakeFormAndConvertToPDF($intake_form);
+		$pdf_output_string = $dompdf->output();
 		
 		$temp_file_name = tempnam(APP_PATH_TEMP, 'TINBUDGET_ATTACHMENT');
 		$temp_file = fopen($temp_file_name, "w");
-		fwrite($temp_file, $intake_form);
+		fwrite($temp_file, $pdf_output_string);
 		fclose($temp_file);
-		$new_attachments["Study_Intake_Form.html"] = $temp_file_name;
+		$new_attachments["Study_Intake_Form.pdf"] = $temp_file_name;
 		
 		// remove $magic_text from message to prevent infinite loop
 		$message = str_replace($magic_text, "", $message);
