@@ -781,9 +781,12 @@ HEREDOC;
 			$budget_data = json_decode($budget_data);
 		}
 		
-		$study_intake_form = $this->makeStudyIntakeForm($cc_data);
-		$this->saveIntakeForm($record, $study_intake_form);
+		// the study intake form that gets attached to email should not have hyperlinks in first column
+		$study_intake_form_no_links = $this->makeStudyIntakeFormForAttachment($cc_data);
+		$this->saveIntakeForm($record, $study_intake_form_no_links);
 		
+		// this version of the study intake table should have hyperlinks in the first column
+		$study_intake_form = $this->makeStudyIntakeForm($cc_data);
 		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "contact_and_fixed_costs_info", $event_id);
 		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "schedule_of_event", $event_id);
 		
@@ -1489,6 +1492,95 @@ HEREDOC;
 				</tr>
 				<tr>
 					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Timelines</a></td>
+					<td {$styles->td}>Date planned for first site activated: {$cc_data['site_active_date']}<br>
+						Anticipated start date for initiation of funding: {$cc_data['support_date']}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+		</div>
+HEREDOC;
+	}
+	
+	public function makeStudyIntakeFormForAttachment($cc_data) {
+		// this function should be exactly as above, except the first column should contain no hyperlinks
+		
+		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'];
+		$funding_mechanism = $cc_data['funding_mechanism'] ?? $cc_data['funding_other'];
+		
+		$survey_link = \REDCap::getSurveyLink($cc_data['record_id'], $this->study_intake_form_name, $cc_data['event_id']);
+		
+		if (!empty($cc_data['protocol_synopsis'])) {
+			$project_id = $this->getProjectId();
+			$page = $this->study_intake_form_name;
+			$edoc_id = $cc_data['protocol_synopsis'];
+			$edoc_id_hash = \Files::docIdHash($edoc_id);
+			$protocol_link = APP_PATH_WEBROOT . "DataEntry/file_download.php?pid=$project_id&field_name=protocol_synopsis&record={$cc_data['record_id']}&event_id={$this->proj->firstEventId}&doc_id_hash=$edoc_id_hash&instance=1&id=$edoc_id";
+			$protocol_link = "<a href='$protocol_link'>Protocol Synopsis File</a>";
+		} else {
+			$protocol_link = "<small style='font-weight: bold; color: #777;'>(No protocol synopsis file attached)</small>";
+		}
+		
+		$styles = new \stdClass();
+		$styles->title = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
+		$styles->table = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		$styles->th = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
+		$styles->td = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		
+		return <<<HEREDOC
+		<!--STUDY INTAKE FORM-->
+		<div>
+		<h5 class="table_title" {$styles->title}><u>STUDY INTAKE FORM</u></h5>
+		<table class="cc_rev_table blue_table_headers" {$styles->table}>
+			<thead>
+				<tr>
+					<th {$styles->th}>COORDINATING CENTER/STUDY INFORMATION</th>
+					<th {$styles->th}>INFORMATION PROVIDED</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>Coordinating Center Contact Information</td>
+					<td {$styles->td}>$td1</td>
+				</tr>
+				<tr>
+					<td>Short Study Name</td>
+					<td {$styles->td}>{$cc_data['short_name']}</td>
+				</tr>
+				<tr>
+					<td>Protocol Synopsis</td>
+					<td {$styles->td}>$protocol_link</td>
+				</tr>
+				<tr>
+					<td>Brief Study Description</td>
+					<td {$styles->td}>{$cc_data['brief_stud_description']}</td>
+				</tr>
+				<tr>
+					<td>Description of Study Intervention</td>
+					<td {$styles->td}>{$cc_data['prop_summary_describe2_5f5']}</td>
+				</tr>
+				<tr>
+					<td>Enrollment Goals</td>
+					<td {$styles->td}>
+						Estimated number of subjects: {$cc_data['number_subjects']}<br>
+						Study Population: {$cc_data['study_population']}<br>
+						Estimated number of sites: {$cc_data['number_sites']}
+					</td>
+				</tr>
+				<tr>
+					<td>Funding/Support for the Proposal</td>
+					<td {$styles->td}>Current funding source: {$cc_data['funding_source']}<br>
+						Funding mechanism: $funding_mechanism<br>
+						Identified I/C: {$cc_data['institute_center']}<br>
+						Grant/application number: {$cc_data['grant_app_no']}<br>
+						FOA (if applicable): {$cc_data['funding_opp_announcement']}<br>
+						Anticipated total budget (direct and indirect): {$cc_data['anticipated_budget']}<br>
+						Total duration of funding period: {$cc_data['funding_duration']}<br>
+						Anticipated funding start date for application: {$cc_data['support_date']}
+					</td>
+				</tr>
+				<tr>
+					<td>Timelines</td>
 					<td {$styles->td}>Date planned for first site activated: {$cc_data['site_active_date']}<br>
 						Anticipated start date for initiation of funding: {$cc_data['support_date']}
 					</td>
