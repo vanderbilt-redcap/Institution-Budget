@@ -137,11 +137,12 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			"return_format" => 'json'
 		];
 		$data = json_decode(\REDCap::getData($params));
+		
 		if (empty($data)) {
-			throw new \Exception("The TIN Budget module was unable to retrieve $budget_table_field (configured budget_table_field) data.");
+			return new \stdClass();
 		}
-		$budget_table = $data[0]->$budget_table_field;
-		return $budget_table;
+		
+		return $data[0]->$budget_table_field;
 	}
 	
 	public function getGoNoGoTableData($record, $instance) {
@@ -1163,6 +1164,54 @@ HEREDOC;
 		<?php
 	}
 	
+	public function overwriteProceduresOnSOESaved($record) {
+		if (empty($record)) {
+			\REDCap::logEvent("TIN Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event due to empty \$record value.");
+			return false;
+		}
+		
+		// get precursor data
+		$soe_data = $this->getBudgetTableData($record);
+		$soe_data = json_decode($soe_data);
+		$procedures = $soe_data->procedures;
+		
+		// make data object
+		$data_to_save = new \stdClass();
+		
+		// start settings data to be saved
+		$rid_field = $this->getRecordIdField();
+		$data_to_save->$rid_field = $record;
+		$data_to_save->proc = count($procedures);
+		
+		foreach ($procedures as $index => $procedure) {
+			unset($cost, $i1);
+			
+			// 0 to 1-based indexing
+			$i1 = $index+1;
+			
+			// formatting -- cost1, cost2, etc require number_2d validation (REDCap enforced)
+			$cost = number_format((float) $procedure->cost, 2);
+			
+			$data_to_save->{"procedure$i1"} = $procedure->name;
+			$data_to_save->{"cost$i1"} = $cost;
+			$data_to_save->{"cpt$i1"} = $procedure->cpt;
+			$data_to_save->{"rtc_$i1"} = $procedure->routine_care;
+		}
+		
+		$save_params = [
+			"project_id" => $this->getProjectId(),
+			"dataFormat" => "json",
+			"overwriteBehavior" => "normal",
+			"data" => json_encode([$data_to_save])
+		];
+		$result = \REDCap::saveData($save_params);
+		if (gettype($result) == 'string') {
+			\REDCap::logEvent("TIN Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData error: $result");
+		} elseif (!empty($result['errors'])) {
+			\REDCap::logEvent("TIN Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData errors: " . implode("\n", $result['errors']));
+		}
+	}
+	
 	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
 		$budget_field = $this->getProjectSetting('budget_table_field');
 		if (empty($budget_field)) {
@@ -1667,6 +1716,14 @@ HEREDOC;
 			
 			header("Location: $surveyLink");
 		}
+		
+		if ($instrument === "schedule_of_event") {
+			// overwrite Procedures instrument with procedures information from Schedule of Event table
+			if (!empty($record)) {
+				$this->overwriteProceduresOnSOESaved($record);
+			}
+		}
+		
 	}
 	
 	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
