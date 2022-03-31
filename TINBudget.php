@@ -335,7 +335,10 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			"anticipated_budget",
 			"funding_duration",
 			"site_active_date",
-			"support_date"
+			"support_date",
+			"costs_4",
+			"costs_5",
+			"costs_6"
 		];
 		
 		for ($i = 1; $i <= 5; $i++) {
@@ -813,6 +816,10 @@ HEREDOC;
 			for ($i = 1; $i <= 5; $i++) {
 				echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>" . $cc_data["fixedcost$i"] . "</a></td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
 			}
+			// add Personnel Costs, non-Personnel Costs, Participant Reimbursement rows
+			echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>Personnel Costs</a></td><td>" . $cc_data["costs_4"] . "</td></tr>";
+			echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>non-Personnel Costs</a></td><td>" . $cc_data["costs_5"] . "</td></tr>";
+			echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>Participant Reimbursement</a></td><td>" . $cc_data["costs_6"] . "</td></tr>";
 			?>
 			</tbody>
 		</table>
