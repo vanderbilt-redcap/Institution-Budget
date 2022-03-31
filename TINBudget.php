@@ -1024,6 +1024,8 @@ HEREDOC;
 	private function changeSurveySubmitButton($record_id, $current_survey_name) {
 		$eid1 = $this->proj->firstEventId;
 		$form_sequence = $this->proj->eventsForms[$eid1];
+		
+		// For the last survey of the Coordinating Center event, convert "Submit" to "Generate & Send Budget Request" and return early
 		if ($current_survey_name == end($form_sequence)) {
 			?>
 			<style>
@@ -1232,7 +1234,11 @@ HEREDOC;
 			$data_to_save->{"procedure$i1"} = $procedure->name;
 			$data_to_save->{"cost$i1"} = $cost;
 			$data_to_save->{"cpt$i1"} = $procedure->cpt;
-			$data_to_save->{"rtc_$i1"} = $procedure->routine_care;
+			if ($procedure->routine_care != "1") {
+				$data_to_save->{"rtc_$i1"} = '0';
+			} else {
+				$data_to_save->{"rtc_$i1"} = '1';
+			}
 		}
 		
 		$save_params = [
@@ -1282,6 +1288,7 @@ HEREDOC;
 		$sheet = $workbook->getActiveSheet();
 		
 		// update study name in wb first cell
+		$study_short_name_field = "short_name";
 		$study_name = $record[$study_short_name_field] ?? "<study name>";
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
 		
