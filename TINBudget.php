@@ -629,6 +629,7 @@ HEREDOC;
 		
 		$dropdown_i = 1;
 		?>
+		<!DOCTYPE html>
 		<style>body {display: none;}</style>
 		<div id="solid_header">
 			<h1>VUMC Budget Tool</h1>
@@ -1032,10 +1033,39 @@ HEREDOC;
 			</style>
 			<script type="text/javascript">
 				$(document).ready(function() {
-					// get button html from server
+					// remove existing onclick attribute
 					var submit_button = $("button[name='submit-btn-saverecord']");
+					submit_button.attr('onclick', 'return false;');
+					submit_button.button();
+					
+					// forward user to dashboard page upon survey completion
 					submit_button.text("Generate & Send Budget Request");
 					submit_button.addClass("tin-generate-requests");
+					
+					// register click event
+					$('body').on("click", "button[name='submit-btn-saverecord']", function(event) {
+						// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
+						var form_action = $('#form').attr('action');
+						var redirect_parameter = "&__gotodashboard=1";
+						if (!form_action.includes(redirect_parameter)) {
+							$('#form').attr('action', form_action + redirect_parameter);
+						}
+						
+						// add end survey param to prevent survey queue and autocomplete from preventing user from getting redirected
+						form_action = $('#form').attr('action');
+						var end_survey_param = "&__endsurvey=1";
+						if (!form_action.includes(end_survey_param)) {
+							$('#form').attr('action', form_action + end_survey_param);
+						}
+						
+						// update form action
+						form_action = $('#form').attr('action');
+						
+						// submit form
+						$(this).button('disable');
+						dataEntrySubmit(this);
+						return false;
+					});
 				});
 			</script>
 			<?php
@@ -1139,7 +1169,7 @@ HEREDOC;
 			$(document).ready(function() {
 				// remove existing onclick attribute
 				var saveAndReturnButton = $("button[name='submit-btn-savereturnlater']");
-				saveAndReturnButton.attr('onclick', 'preventDefault(); return false;');
+				saveAndReturnButton.attr('onclick', 'return false;');
 				saveAndReturnButton.button();
 				
 				// register click event
