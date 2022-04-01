@@ -11,7 +11,8 @@ try {
 	$arms = $module->getArms();
 	$procedures = $module->getProcedures();
 	
-	$rid = preg_replace("/\D/", '', $_GET['rid']);
+	$rid = htmlentities($_GET['rid'], ENT_QUOTES);
+	$rid = preg_replace("/\D/", '', $rid);
 } catch (\Exception $e) {
 	?>
 	<div class="alert alert-warning col-md-6 col-sm-9" style="border-color: #ffcca9 !important;">

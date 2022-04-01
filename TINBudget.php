@@ -792,7 +792,7 @@ HEREDOC;
 		
 		// this version of the study intake table should have hyperlinks in the first column
 		$study_intake_form = $this->makeStudyIntakeForm($cc_data);
-		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "contact_and_fixed_costs_info", $event_id);
+		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "fixed_costs_information", $event_id);
 		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "schedule_of_event", $event_id);
 		
 		?>
@@ -1022,7 +1022,8 @@ HEREDOC;
 	}
 	
 	private function changeSurveySubmitButton($record_id, $current_survey_name) {
-		$eid1 = $this->proj->firstEventId;
+		$event_ids = array_keys($this->proj->events[1]['events']);
+		$eid1 = $event_ids[0];
 		$form_sequence = $this->proj->eventsForms[$eid1];
 		
 		// For the last survey of the Coordinating Center event, convert "Submit" to "Generate & Send Budget Request" and return early
@@ -1074,8 +1075,11 @@ HEREDOC;
 			return;
 		}
 		
+		$eid2 = $event_ids[1];
+		$form_sequence = $this->proj->eventsForms[$eid2];
 		$current_survey_index = array_search($current_survey_name, $form_sequence);
 		$next_survey_name = $form_sequence[$current_survey_index + 1];
+		
 		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
@@ -1726,6 +1730,16 @@ HEREDOC;
 				$this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
 			}
 			$this->convertSaveAndReturnLaterButton();
+			$this->changeSurveySubmitButton($record, $instrument);
+		}
+		
+		$site_event_forms_to_convert_submit_button = [
+			"budget_review_and_feasibility",
+			"review_fixed_costs",
+			"enter_cost_to_run_procedure",
+			"gonogo_table"
+		];
+		if (in_array($instrument, $site_event_forms_to_convert_submit_button) !== false) {
 			$this->changeSurveySubmitButton($record, $instrument);
 		}
 	}
