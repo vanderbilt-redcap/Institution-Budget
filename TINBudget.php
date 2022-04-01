@@ -1261,12 +1261,13 @@ HEREDOC;
 			return;
 		}
 		
+		$study_short_name_field = "short_name";
 		try {
 			$params = [
 				"project_id" => $this->getProjectId(),
 				"return_format" => "array",
 				"records" => $record_id,
-				"fields" => $budget_field
+				"fields" => [$budget_field, $study_short_name_field]
 			];
 			$data = \REDCap::getData($params);
 			global $Proj;
@@ -1288,8 +1289,7 @@ HEREDOC;
 		$sheet = $workbook->getActiveSheet();
 		
 		// update study name in wb first cell
-		$study_short_name_field = "short_name";
-		$study_name = $record[$study_short_name_field] ?? "<study name>";
+		$study_name = $data[$record_id][$Proj->firstEventId][$study_short_name_field] ?? "<study name>";
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
 		
 		// update workbook cells
