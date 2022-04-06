@@ -1021,13 +1021,17 @@ HEREDOC;
 		<?php
 	}
 	
-	private function changeSurveySubmitButton($record_id, $current_survey_name) {
+	private function changeSurveySubmitButton($record_id, $event_id, $current_survey_name) {
 		$event_ids = array_keys($this->proj->events[1]['events']);
-		$eid1 = $event_ids[0];
-		$form_sequence = $this->proj->eventsForms[$eid1];
+		$form_sequence = $this->proj->eventsForms[$event_id];
+		$current_survey_index = array_search($current_survey_name, $form_sequence);
+		$next_survey_name = $form_sequence[$current_survey_index + 1];
 		
-		// For the last survey of the Coordinating Center event, convert "Submit" to "Generate & Send Budget Request" and return early
-		if ($current_survey_name == end($form_sequence)) {
+		if (	// For the last survey of the Coordinating Center event, convert "Submit" to "Generate & Send Budget Request" and return early
+			$event_id == $event_ids[0]
+			&&
+			$current_survey_name == end($form_sequence)
+		) {
 			?>
 			<style>
 				button[name="submit-btn-saverecord"].tin-generate-requests {
@@ -1075,35 +1079,36 @@ HEREDOC;
 			return;
 		}
 		
-		$eid2 = $event_ids[1];
-		$form_sequence = $this->proj->eventsForms[$eid2];
-		$current_survey_index = array_search($current_survey_name, $form_sequence);
-		$next_survey_name = $form_sequence[$current_survey_index + 1];
-		
-		?>
-		<script type="text/javascript">
-			$(document).ready(function() {
-				var submit_button = $("button[name='submit-btn-saverecord']");
-				submit_button.html("Next");
-				submit_button.attr('onclick', '');
-				
-				// register new click event for old submit button (now with "Next" label)
-				$('body').on("click", "button[name='submit-btn-saverecord']", function(event) {
-					// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
-					var form_action = $('#form').attr('action');
-					var redirect_parameter = "&__gotosurvey=<?=$next_survey_name?>";
-					if (!form_action.includes(redirect_parameter)) {
-						$('#form').attr('action', form_action + redirect_parameter);
-					}
+		if (	// for surveys that are not the last survey in their event, convert "Submit" to "Next"
+			$event_id == $event_ids[1]
+			&&
+			$current_survey_name != end($form_sequence)
+		) {
+			?>
+			<script type="text/javascript">
+				$(document).ready(function() {
+					var submit_button = $("button[name='submit-btn-saverecord']");
+					submit_button.html("Next");
+					submit_button.attr('onclick', '');
 					
-					// submit form
-					$(this).button('disable');
-					dataEntrySubmit(this);
-					return false;
+					// register new click event for old submit button (now with "Next" label)
+					$('body').on("click", "button[name='submit-btn-saverecord']", function(event) {
+						// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
+						var form_action = $('#form').attr('action');
+						var redirect_parameter = "&__gotosurvey=<?=$next_survey_name?>";
+						if (!form_action.includes(redirect_parameter)) {
+							$('#form').attr('action', form_action + redirect_parameter);
+						}
+						
+						// submit form
+						$(this).button('disable');
+						dataEntrySubmit(this);
+						return false;
+					});
 				});
-			});
-		</script>
-		<?php
+			</script>
+			<?php
+		}
 	}
 	
 	private function addDownloadProcedureResourceButton($record, $event_id, $repeat_instance) {
@@ -1730,7 +1735,7 @@ HEREDOC;
 				$this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
 			}
 			$this->convertSaveAndReturnLaterButton();
-			$this->changeSurveySubmitButton($record, $instrument);
+			$this->changeSurveySubmitButton($record, $event_id, $instrument);
 		}
 		
 		$site_event_forms_to_convert_submit_button = [
@@ -1740,7 +1745,7 @@ HEREDOC;
 			"gonogo_table"
 		];
 		if (in_array($instrument, $site_event_forms_to_convert_submit_button) !== false) {
-			$this->changeSurveySubmitButton($record, $instrument);
+			$this->changeSurveySubmitButton($record, $event_id, $instrument);
 		}
 	}
 	
