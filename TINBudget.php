@@ -61,7 +61,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 					$fields[] = "visit$visit$suffix";
 				}
 			}
-			for ($proc = 1; $proc <= 25; $proc++) {
+			for ($proc = 1; $proc <= 100; $proc++) {
 				$fields[] = "procedure$proc";
 				$fields[] = "cost$proc";
 				$fields[] = "cpt$proc";
@@ -154,7 +154,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		}
 		
 		$fields = [];
-		for ($i = 1; $i <= 25; $i++) {
+		for ($i = 1; $i <= 100; $i++) {
 			$fields[] = "procedure" . $i . "_sc";
 			$fields[] = "cost" . $i . "_sc";
 		}
@@ -1079,36 +1079,30 @@ HEREDOC;
 			return;
 		}
 		
-		if (	// for surveys that are not the last survey in their event, convert "Submit" to "Next"
-			$event_id == $event_ids[1]
-			&&
-			$current_survey_name != end($form_sequence)
-		) {
-			?>
-			<script type="text/javascript">
-				$(document).ready(function() {
-					var submit_button = $("button[name='submit-btn-saverecord']");
-					submit_button.html("Next");
-					submit_button.attr('onclick', '');
+		?>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				var submit_button = $("button[name='submit-btn-saverecord']");
+				submit_button.html("Next");
+				submit_button.attr('onclick', '');
+				
+				// register new click event for old submit button (now with "Next" label)
+				$('body').on("click", "button[name='submit-btn-saverecord']", function(event) {
+					// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
+					var form_action = $('#form').attr('action');
+					var redirect_parameter = "&__gotosurvey=<?=$next_survey_name?>";
+					if (!form_action.includes(redirect_parameter)) {
+						$('#form').attr('action', form_action + redirect_parameter);
+					}
 					
-					// register new click event for old submit button (now with "Next" label)
-					$('body').on("click", "button[name='submit-btn-saverecord']", function(event) {
-						// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
-						var form_action = $('#form').attr('action');
-						var redirect_parameter = "&__gotosurvey=<?=$next_survey_name?>";
-						if (!form_action.includes(redirect_parameter)) {
-							$('#form').attr('action', form_action + redirect_parameter);
-						}
-						
-						// submit form
-						$(this).button('disable');
-						dataEntrySubmit(this);
-						return false;
-					});
+					// submit form
+					$(this).button('disable');
+					dataEntrySubmit(this);
+					return false;
 				});
-			</script>
-			<?php
-		}
+			});
+		</script>
+		<?php
 	}
 	
 	private function addDownloadProcedureResourceButton($record, $event_id, $repeat_instance) {
@@ -1302,7 +1296,7 @@ HEREDOC;
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
 		
 		// update workbook cells
-		for ($i = 1; $i <= 25; $i++) {
+		for ($i = 1; $i <= 100; $i++) {
 			$name = $procedures[$i]->name;
 			$cpt = $procedures[$i]->cpt;
 			
