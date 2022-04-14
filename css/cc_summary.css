@@ -37,6 +37,12 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, table.sites_contact_info
 	margin-top: 24px;
 }
 
+.table_title a {
+	font-weight: 200;
+	font-size: 1.5rem;
+	align-self: start;
+}
+
 .blue_table_headers th {
 	background-color: #32344F;
 }

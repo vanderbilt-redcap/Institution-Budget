@@ -794,6 +794,7 @@ HEREDOC;
 		$study_intake_form = $this->makeStudyIntakeForm($cc_data);
 		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "fixed_costs_information", $event_id);
 		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "schedule_of_event", $event_id);
+		$identify_sites_survey_link = \REDCap::getSurveyLink($record, "identify_sites", $event_id);
 		
 		?>
 		<button type="button" class="btn btn-primary" style="margin: 8px;" onclick="window.print()">Print</button>
@@ -858,7 +859,7 @@ HEREDOC;
 		
 		<!--IDENTIFIED SITES REVIEW-->
 		<div class='pbb pba extra-top-space'>
-		<h5 class="table_title"><u>IDENTIFIED SITES REVIEW</u></h5>
+		<h5 class="table_title"><u><a href="<?=$identify_sites_survey_link?>">IDENTIFIED SITES REVIEW</a></u></h5>
 		<?php $this->showSummarySiteTable($record); ?>
 		</div>
 		
