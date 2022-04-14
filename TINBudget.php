@@ -532,7 +532,7 @@ HEREDOC;
 		// get event ID
 		$event_ids = \REDCap::getEventNames();
 		$event_id_0 = array_search('Coordinating Center GNG', $event_ids);
-		$event_id = array_search('Event 1', $event_ids);
+		$event_id_1 = array_search('Event 1', $event_ids);
 		$generate_request_form_complete_field = $this->send_to_sites_instrument . "_complete";
 		$fields = [
 			"institution",
@@ -545,8 +545,14 @@ HEREDOC;
 			"final_gonogo_comments",
 			"short_name",
 			"send_to_sites",
+			"request_date",
+			"response_date",
 			$generate_request_form_complete_field
 		];
+		
+		for ($i = 1; $i <= 100; $i++) {
+			$fields[] = "institution$i";
+		}
 		
 		$params = [
 			"project_id" => $this->getProjectId(),
@@ -563,9 +569,9 @@ HEREDOC;
 		$data = [];
 		
 		foreach ($records as $record) {
-			$site_array = $record['repeat_instances'][$event_id][''];
+			$site_array = $record['repeat_instances'][$event_id_1][''];
 			$table_rows = [];
-			foreach($site_array as $site) {
+			foreach($site_array as $site_i => $site) {
 				$row = [];
 				
 				// determine site name
@@ -574,18 +580,22 @@ HEREDOC;
 				} elseif ($site['institution'] == 999) {
 					$row['name'] = "Non-CTSA Site: " . $site['institution_non_ctsa_name'];
 				} else {
-					$row['name'] = "N/A";
+					// $row['name'] = "N/A";
+					$row['name'] = $record[$event_id_0]["institution$site_i"];
 				}
 				
-				$row['date_of_request'] = $site['budget_request_date'];
+				// $row['date_of_request'] = $site['budget_request_date'];
+				$row['date_of_request'] = $record[$event_id_0]['request_date'];
 				
 				if ($site['consideration'] == '0') {
 					$row['date_of_response'] = 'Talk to Clint';
 				} elseif ($site['consideration'] == '1') {
 					$row['date_of_response'] = 'Talk to Clint or use Go/No-Go pending field';
 				} else {
-					$row['date_of_response'] = "N/A";
+					// $row['date_of_response'] = "N/A";
+					$row['date_of_response'] = $site["response_date"];
 				}
+				
 				
 				$row['decision'] = 'N/A';
 				if ($site['final_gonogo'] == '1') {
@@ -733,6 +743,9 @@ HEREDOC;
 				// make each recon table a DataTables table
 				BudgetDashboard.recon_tables = [];
 				var options = {
+					order: [
+						[0, 'desc']
+					],
 					columns: [
 						{orderable: true, searchable: true},
 						{orderable: true, searchable: true},
