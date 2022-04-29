@@ -217,7 +217,7 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 		</tbody>\
 	</table>";
 	
-	if (arm_total_reimb < arm_total_cost) {
+	if (arm_total_reimb <= arm_total_cost) {
 		arm.sidebar_color = "green";
 	} else {
 		arm.sidebar_color = "red";
