@@ -70,9 +70,6 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 		<thead>\
 			<th></th>";
 	
-	// assume sidebar will be green, first visit total over CC turns it red
-	var sidebar_color = "green";
-	
 	TINGoNoGo.schedule.arms[arm_i].visits.forEach(function(visit, visit_i) {
 		if (visit != null) {
 			gng_table += "\
@@ -135,10 +132,10 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 					<th>My Cost</th>";
 	col_totals.forEach(function(total, visit_i) {
 		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
+		
 		var cell_class = " class='green' ";
-		if (cc_visit_cost <= total) {
+		if (cc_visit_cost < total) {
 			cell_class = " class='red' ";
-			sidebar_color = "red";
 		}
 		
 		// add commas to total if applicable
@@ -155,10 +152,10 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 					<th>CC Reimbursement</th>";
 	col_totals.forEach(function(total, visit_i) {
 		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
+		
 		var cell_class = " class='green' ";
-		if (cc_visit_cost <= total) {
+		if (cc_visit_cost < total) {
 			cell_class = " class='red' ";
-			sidebar_color = "red";
 		}
 		
 		// add commas to cc_visit_cost if applicable
@@ -168,18 +165,25 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 	});
 	gng_table += "\
 				</tr>"
-				
+	
 	// add delta (&#x394;) row
+	var arm_total_cost = 0;
+	var arm_total_reimb = 0;
 	gng_table += "\
 				<tr>\
 					<th>&#x394;</th>";
 	col_totals.forEach(function(total, visit_i) {
 		cc_visit_cost = TINGoNoGo.getCCVisitTotal(arm_i, visit_i);
+		
 		var cell_class = " class='green' ";
-		if (cc_visit_cost <= total) {
+		if (cc_visit_cost < total) {
 			cell_class = " class='red' ";
-			sidebar_color = "red";
 		}
+		
+		// arm sidebar color value increment
+		arm_total_cost += cc_visit_cost;
+		arm_total_reimb += total;
+		
 		var delta_amount = cc_visit_cost - total;
 		if (delta_amount < 0) {
 			// add commas to delta_amount if applicable
@@ -191,6 +195,7 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 		gng_table += "\
 					<th" + cell_class + ">" + delta_amount + "</th>";
 	});
+	
 	gng_table += "\
 				</tr>"
 				
@@ -212,7 +217,12 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 		</tbody>\
 	</table>";
 	
-	arm.sidebar_color = sidebar_color;
+	if (arm_total_reimb < arm_total_cost) {
+		arm.sidebar_color = "green";
+	} else {
+		arm.sidebar_color = "red";
+	}
+	
 	
 	return gng_table;
 }
