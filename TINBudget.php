@@ -66,6 +66,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 				$fields[] = "cost$proc";
 				$fields[] = "cpt$proc";
 				$fields[] = "rtc_$proc";
+				$fields[] = "rtc_comments_$proc";
 			}
 			$this->scheduleDataFields = $fields;
 		}
@@ -120,7 +121,8 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 					"name" => $proc_name,
 					"cost" => $data->{"cost$proc_i"},
 					"cpt" => $data->{"cpt$proc_i"},
-					"routine_care_procedure_form" => $data->{"rtc_$proc_i"}
+					"routine_care_procedure_form" => $data->{"rtc_$proc_i"},
+					"comment" => $data->{"rtc_comments_$proc_i"}
 				];
 			}
 		}
@@ -1251,6 +1253,7 @@ HEREDOC;
 			$data_to_save->{"procedure$i1"} = $procedure->name;
 			$data_to_save->{"cost$i1"} = $cost;
 			$data_to_save->{"cpt$i1"} = $procedure->cpt;
+			$data_to_save->{"rtc_comments_$i1"} = $procedure->comment;
 			if ($procedure->routine_care != "1") {
 				$data_to_save->{"rtc_$i1"} = '0';
 			} else {

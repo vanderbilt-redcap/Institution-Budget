@@ -75,7 +75,7 @@ td.procedure, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
 	flex-direction: column;
 	align-items: center;
 }
-#edit_procedures th, #edit_procedures td {
+#edit_procedures th, #edit_procedures td, #edit_procedure_comments th, #edit_procedure_comments td {
 	padding: 8px;
 	text-align: center;
 	border: 1px solid black;

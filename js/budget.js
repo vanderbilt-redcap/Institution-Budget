@@ -52,10 +52,13 @@ TINBudget.refreshSchedule = function() {
 	TINBudget.refreshProcedureRows();
 }
 TINBudget.refreshProceduresBank = function() {
-	// remove all rows
+	// remove all rows from edit_procedures and edit_procedure_comments tables
 	$("table#edit_procedures tbody").empty()
-	// add rows to edit_procedures table using TINBudget.procedures data
+	$("table#edit_procedure_comments tbody").empty()
+	
+	// add rows to edit_procedures and edit_procedure_comments tables using TINBudget.procedures data
 	TINBudget.procedures.forEach(function(procedure, i) {
+		// add to edit_procedures
 		$("table#edit_procedures tbody").append("<tr>\
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
 			<td class='name'><input type='text'></td>\
@@ -80,6 +83,18 @@ TINBudget.refreshProceduresBank = function() {
 		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(TINBudget.autocompSettings).focus(function(){
 			$(this).data("uiAutocomplete").search($(this).val());
 		});
+		
+		// add to edit_procedure_comments if this procedure is not routine care
+		if (!procedure.routine_care) {
+			var this_comment = "";
+			if (procedure.comment) {
+				this_comment = procedure.comment;
+			}
+			$("table#edit_procedure_comments tbody").append("<tr>\
+				<td class='name'>" + procedure.name + "</td>\
+				<td class='comment'><textarea class='comment' row='4' cols='45'>" + this_comment + "</textarea></td>\
+			</tr>");
+		}
 	});
 }
 TINBudget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs and visit costs
@@ -413,11 +428,20 @@ TINBudget.updateAllVisitCosts = function() {
 		}
 	};
 }
+
+// modal functions
 TINBudget.editProcedures = function() {
 	$('.modal-content').hide()
 	$('#tinbudget_edit_procedures').show()
 	$("#tinbudget_modal").modal('show');
 }
+TINBudget.procedureComments = function() {
+	$('.modal-content').hide()
+	$('#tinbudget_procedure_comments').show()
+	$("#tinbudget_modal").modal('show');
+}
+
+// event registration
 TINBudget.registerEvents = function() {
 	// register arm dropdown button click events
 	$('body').on('click', 'a.show_arm', function(event) {
@@ -591,6 +615,10 @@ TINBudget.registerEvents = function() {
 		TINBudget.editProcedures();
 	});
 	
+	$('body').on('click', 'button#tin_budget_procedure_comments', function(event) {
+		TINBudget.procedureComments();
+	});
+	
 	// edit procedures table's modal events (save, cancel, add row, remove row)
 	$('body').on('click', '.modal .save_proc_changes', function(event) {
 		// update TINBudget.procedures using edit procedures table
@@ -641,6 +669,30 @@ TINBudget.registerEvents = function() {
 	$('body').on('click', '.delete_this_row', function(event) {
 		$(event.target).closest('tr').remove();
 	});
+	
+	// edit PROCEDURE COMMENTS table's modal events (save, cancel)
+	$('body').on('click', '.modal .save_proc_comment_changes', function(event) {
+		// update TINBudget.procedures using textarea input from user
+		var comments_table = $('table#edit_procedure_comments');
+		comments_table.find('tbody tr').each(function(i, tr) {
+			TINBudget.my_tr = $(tr);
+			var proc_name = $(tr)[0].cells[0].innerText;
+			var proc_comment = $(tr).find('td.comment textarea').val();
+			TINBudget.procedures.forEach(function(procedure, proc_i) {
+				if (procedure.name == proc_name) {
+					TINBudget.procedures[proc_i].comment = proc_comment;
+				}
+			})
+		});
+		
+		TINBudget.refreshSchedule();
+		TINBudget.pushState();
+	});
+	$('body').on('click', '.modal .cancel_proc_comment_changes', function(event) {
+		TINBudget.refreshProceduresBank();
+	});
+	
+	// -- end modal section
 	
 	// confirm/cancel delete via modal for arms/visits/procedures
 	$('body').on('click', '#tinbudget_confirm_delete .confirm_delete', function(event) {

@@ -122,6 +122,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<button id="tin_budget_undo" type="button" class="btn btn-outline-primary button_bank" disabled>Undo</button>
 		<button id="tin_budget_redo" type="button" class="btn btn-outline-primary button_bank" disabled>Redo</button>
 		<button id="tin_budget_edit_procedures" type="button" class="btn btn-outline-primary button_bank">Edit Procedures</button>
+		<button id="tin_budget_procedure_comments" type="button" class="btn btn-outline-primary button_bank">Procedure Comments</button>
 	</div>
 	<?php
 }
@@ -236,6 +237,33 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 			<div class="modal-footer">
 				<button type="button" class="btn btn-primary save_proc_changes" data-dismiss="modal">Save Changes</button>
 				<button type="button" class="btn btn-secondary cancel_proc_changes" data-dismiss="modal">Cancel</button>
+			</div>
+		</div>
+		
+		<!-- edit procedure comments (only for non-routine care procedures) -->
+		<div id="tinbudget_procedure_comments" class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Edit Procedure Comments</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<p>Update the costs associated with each (non-routine care) procedure in the table below:</p>
+				<table id="edit_procedure_comments">
+					<thead>
+						<tr>
+							<th>Procedure</th>
+							<th>Enter Comments</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-primary save_proc_comment_changes" data-dismiss="modal">Save Changes</button>
+				<button type="button" class="btn btn-secondary cancel_proc_comment_changes" data-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 		
