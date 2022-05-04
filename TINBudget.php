@@ -1250,6 +1250,9 @@ HEREDOC;
 			// formatting -- cost1, cost2, etc require number_2d validation (REDCap enforced)
 			$cost = number_format((float) $procedure->cost, 2);
 			
+			// remove non-numeric, non-period characters (commas were causing number_2d validation failure)
+			$cost = preg_replace("/[^0-9.]/", "", $cost);
+			
 			$data_to_save->{"procedure$i1"} = $procedure->name;
 			$data_to_save->{"cost$i1"} = $cost;
 			$data_to_save->{"cpt$i1"} = $procedure->cpt;

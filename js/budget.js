@@ -45,8 +45,6 @@ TINBudget.refreshSchedule = function() {
 		visit_dd.text(visit_dd.text().replace(/\d+/, i));
 	});
 	
-	// TODO enable/disable arm, visit, procedure dropdown options as necessary
-	
 	// refresh procedures, costs, and sums
 	TINBudget.refreshProceduresBank();
 	TINBudget.refreshProcedureRows();
