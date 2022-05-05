@@ -45,7 +45,7 @@ TINSummary.addFixedCostsTable = function(parent) {
 	var i;
 	for (i = 1; i <= 5; i++) {
 		// convert decision to GO or NO-GO or NEED INFO
-		var result = TINSummary.convertDecision(data["arm" + i + "_decision"]);
+		var result = TINSummary.convertCostDecision(data["fixedcost" + i + "_decision"]);
 		var fixed_cost = data["fixedcost" + i] ?? '';
 		var fixed_cost_detail = data["fixedcost" + i + "_detail"] ?? '';
 		var go_no_go_decision = result.decision ?? '';
@@ -103,8 +103,7 @@ TINSummary.addProcedureCostsTable = function(parent) {
 		site_total += site_cost;
 		
 		// convert decision to GO or NO-GO or NEED INFO
-		var result = TINSummary.convertDecision(data["arm" + i + "_decision"]);
-		
+		var result = TINSummary.convertArmDecision(data["arm" + i + "_decision"]);
 		table_html += "\
 			<tr" + result.row_class + ">\
 				<td>" + arm_name + "</td>\
@@ -163,12 +162,30 @@ TINSummary.getSiteCost = function(arm_index) {
 	return total;
 }
 
-TINSummary.convertDecision = function(decision) {
+TINSummary.convertCostDecision = function(decision) {
 	var decision = decision;
 	var row_class = '';
 	if (decision == 'accept') {
 		decision = 'GO';
-	} else if (decision == 'unable to accept') {
+	} else if (decision.toLowerCase() == "unable to accept") {
+		decision = 'Unable to Accept';
+		row_class = " class='no-go'";
+	} else if (decision == 'request additional information') {
+		decision = 'NEED INFO';
+	}
+	
+	return {
+		decision: decision,
+		row_class: row_class
+	};
+}
+
+TINSummary.convertArmDecision = function(decision) {
+	var decision = decision;
+	var row_class = '';
+	if (decision == 'accept') {
+		decision = 'GO';
+	} else if (decision.toLowerCase() == "unable to accept") {
 		decision = 'NO-GO';
 		row_class = " class='no-go'";
 	} else if (decision == 'request additional information') {
