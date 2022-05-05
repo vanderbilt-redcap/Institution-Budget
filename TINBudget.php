@@ -1602,14 +1602,7 @@ HEREDOC;
 						Grant/application number: {$cc_data['grant_app_no']}<br>
 						FOA (if applicable): {$cc_data['funding_opp_announcement']}<br>
 						Anticipated total budget (direct and indirect): {$cc_data['anticipated_budget']}<br>
-						Total duration of funding period: {$cc_data['funding_duration']}<br>
-						Anticipated funding start date for application: {$cc_data['support_date']}
-					</td>
-				</tr>
-				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Timelines</a></td>
-					<td {$styles->td}>Date planned for first site activated: {$cc_data['site_active_date']}<br>
-						Anticipated start date for initiation of funding: {$cc_data['support_date']}
+						Total duration of funding period: {$cc_data['funding_duration']}
 					</td>
 				</tr>
 			</tbody>
@@ -1691,14 +1684,7 @@ HEREDOC;
 						Grant/application number: {$cc_data['grant_app_no']}<br>
 						FOA (if applicable): {$cc_data['funding_opp_announcement']}<br>
 						Anticipated total budget (direct and indirect): {$cc_data['anticipated_budget']}<br>
-						Total duration of funding period: {$cc_data['funding_duration']}<br>
-						Anticipated funding start date for application: {$cc_data['support_date']}
-					</td>
-				</tr>
-				<tr>
-					<td>Timelines</td>
-					<td {$styles->td}>Date planned for first site activated: {$cc_data['site_active_date']}<br>
-						Anticipated start date for initiation of funding: {$cc_data['support_date']}
+						Total duration of funding period: {$cc_data['funding_duration']}
 					</td>
 				</tr>
 			</tbody>
@@ -1838,7 +1824,7 @@ HEREDOC;
 		$temp_file = fopen($temp_file_name, "w");
 		fwrite($temp_file, $pdf_output_string);
 		fclose($temp_file);
-		$new_attachments["Study_Intake_Form.pdf"] = $temp_file_name;
+		$new_attachments["Proposal Information.pdf"] = $temp_file_name;
 		
 		// remove $magic_text from message to prevent infinite loop
 		$message = str_replace($magic_text, "", $message);
