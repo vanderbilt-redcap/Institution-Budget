@@ -73,6 +73,9 @@ TINBudget.refreshProceduresBank = function() {
 			procedure.cost = 0;
 		
 		$("table#edit_procedures tbody tr:last-child td.name input").val(procedure.name);
+		if (procedure.added_on_the_fly) {
+			$("table#edit_procedures tbody tr:last-child td.name input").addClass("added_on_the_fly");
+		}
 		$("table#edit_procedures tbody tr:last-child td.routine-care input").prop('checked', procedure.routine_care);
 		$("table#edit_procedures tbody tr:last-child td.cost input").val(procedure.cost);
 		$("table#edit_procedures tbody tr:last-child td.cost input").prop('disabled', procedure.routine_care);
@@ -83,7 +86,7 @@ TINBudget.refreshProceduresBank = function() {
 		});
 		
 		// add to edit_procedure_comments if this procedure is not routine care
-		if (!procedure.routine_care) {
+		if (!procedure.routine_care && procedure.added_on_the_fly) {
 			var this_comment = "";
 			if (procedure.comment) {
 				this_comment = procedure.comment;
@@ -627,6 +630,7 @@ TINBudget.registerEvents = function() {
 			var proc_routine_care = $(tr).find('td.routine-care input').prop('checked');
 			var proc_cost = $(tr).find('td.cost input').val();
 			var proc_cpt = $(tr).find('td.cpt input').val();
+			var proc_added_on_the_fly = $(tr).find('td.name').hasClass("added_on_the_fly");
 			if (!proc_name) {
 				proc_name = "Procedure " + (i + 1);
 				$(tr).find('td.name input').val(proc_name);
@@ -639,7 +643,8 @@ TINBudget.registerEvents = function() {
 				name: proc_name,
 				routine_care: proc_routine_care,
 				cost: proc_cost,
-				cpt: proc_cpt
+				cpt: proc_cpt,
+				added_on_the_fly: proc_added_on_the_fly
 			});
 		});
 		
@@ -653,7 +658,7 @@ TINBudget.registerEvents = function() {
 	$('body').on('click', 'button#add_proc_table_row', function(event) {
 		$("table#edit_procedures tbody").append("<tr>\
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
-			<td class='name'><input type='text'></td>\
+			<td class='name added_on_the_fly'><input type='text'></td>\
 			<td class='routine-care'><input type='checkbox'></td>\
 			<td class='cost'><input type='number'></td>\
 			<td class='cpt'><input class='cptSelect' type='text'></td>\
