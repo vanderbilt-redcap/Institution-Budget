@@ -110,7 +110,7 @@ TINSummary.addProcedureCostsTable = function(parent) {
 				<td>$" + cc_cost + "</td>\
 				<td>$" + site_cost + "</td>\
 				<td>" + result.decision + "</td>\
-				<td>" + data["arm" + i + "_comments"] + "</td>\
+				<td>" + (data["arm" + i + "_comments"] ? data["arm" + i + "_comments"] : '')  + "</td>\
 			</tr>";
 	}
 	
@@ -183,13 +183,17 @@ TINSummary.convertCostDecision = function(decision) {
 TINSummary.convertArmDecision = function(decision) {
 	var decision = decision;
 	var row_class = '';
-	if (decision == 'accept') {
-		decision = 'GO';
-	} else if (decision.toLowerCase() == "unable to accept") {
-		decision = 'NO-GO';
-		row_class = " class='no-go'";
-	} else if (decision == 'request additional information') {
-		decision = 'NEED INFO';
+	if (decision) {
+		if (decision == 'accept') {
+			decision = 'GO';
+		} else if (decision.toLowerCase() == "unable to accept") {
+			decision = 'NO-GO';
+			row_class = " class='no-go'";
+		} else if (decision == 'request additional information') {
+			decision = 'NEED INFO';
+		}
+	} else {
+		decision = '';
 	}
 	
 	return {
