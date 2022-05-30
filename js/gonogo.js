@@ -422,6 +422,11 @@ $(document).ready(function() {
 	
 	// replace submit-btn-saverecord onclick event
 	$('button[name="submit-btn-saverecord"]').each(function(i, submit_btn) {
-		$(submit_btn).attr('onclick', 'TINGoNoGo.replacementSubmit(event); return false;');
+		$(submit_btn).attr('onclick', '');
+		$(submit_btn).unbind('click');
+		$(submit_btn).click(function (event) {
+			TINGoNoGo.replacementSubmit(event);
+			return false;
+		});
 	});
 });

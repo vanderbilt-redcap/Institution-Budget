@@ -86,7 +86,7 @@ TINBudget.refreshProceduresBank = function() {
 		});
 		
 		// add to edit_procedure_comments if this procedure is not routine care
-		if (!procedure.routine_care && procedure.added_on_the_fly) {
+		if (procedure.routine_care && procedure.added_on_the_fly) {
 			var this_comment = "";
 			if (procedure.comment) {
 				this_comment = procedure.comment;

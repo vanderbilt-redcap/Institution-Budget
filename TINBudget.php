@@ -1314,14 +1314,13 @@ HEREDOC;
 		// update study name in wb first cell
 		$study_name = $data[$record_id][$Proj->firstEventId][$study_short_name_field] ?? "<study name>";
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
-		
 		// update workbook cells
-		for ($i = 1; $i <= 100; $i++) {
+		for ($i = 0; $i < 100; $i++) {
 			$name = $procedures[$i]->name;
 			$cpt = $procedures[$i]->cpt;
 			
-			$sheet->setCellValue("B" . ($i + 2), $name);
-			$sheet->setCellValue("C" . ($i + 2), $cpt);
+			$sheet->setCellValue("B" . ($i + 3), $name);
+			$sheet->setCellValue("C" . ($i + 3), $cpt);
 		}
 		
 		// download workbook to user

@@ -75,7 +75,7 @@ TINSummary.addProcedureCostsTable = function(parent) {
 	var table_html = "";
 	var data = TINSummary.summary_data;
 	var arms = TINSummary.schedule.arms;
-	
+
 	table_html += "<h4 class='summary-table-header'>PROCEDURE COSTS SUMMARY REVIEW</h4>";
 	table_html += "\
 	<table class='procedure-costs'>\
@@ -165,13 +165,17 @@ TINSummary.getSiteCost = function(arm_index) {
 TINSummary.convertCostDecision = function(decision) {
 	var decision = decision;
 	var row_class = '';
-	if (decision == 'accept') {
-		decision = 'GO';
-	} else if (decision.toLowerCase() == "unable to accept") {
-		decision = 'Unable to Accept';
-		row_class = " class='no-go'";
-	} else if (decision == 'request additional information') {
-		decision = 'NEED INFO';
+	if (decision) {
+		if (decision == 'accept') {
+			decision = 'GO';
+		} else if (decision.toLowerCase() == "unable to accept") {
+			decision = 'Unable to Accept';
+			row_class = " class='no-go'";
+		} else if (decision == 'request additional information') {
+			decision = 'NEED INFO';
+		}
+	} else {
+		decision = '';
 	}
 	
 	return {

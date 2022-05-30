@@ -249,7 +249,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				</button>
 			</div>
 			<div class="modal-body">
-				<p>Update the costs associated with each (non-routine care) procedure in the table below:</p>
+				<p>Enter additional comments associated with this procedure:</p>
 				<table id="edit_procedure_comments">
 					<thead>
 						<tr>
