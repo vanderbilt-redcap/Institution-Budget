@@ -74,7 +74,7 @@ TINBudget.refreshProceduresBank = function() {
 		
 		$("table#edit_procedures tbody tr:last-child td.name input").val(procedure.name);
 		if (procedure.added_on_the_fly) {
-			$("table#edit_procedures tbody tr:last-child td.name input").addClass("added_on_the_fly");
+			$("table#edit_procedures tbody tr:last-child td.name").addClass("added_on_the_fly");
 		}
 		$("table#edit_procedures tbody tr:last-child td.routine-care input").prop('checked', procedure.routine_care);
 		$("table#edit_procedures tbody tr:last-child td.cost input").val(procedure.cost);
@@ -85,7 +85,7 @@ TINBudget.refreshProceduresBank = function() {
 			$(this).data("uiAutocomplete").search($(this).val());
 		});
 		
-		// add to edit_procedure_comments if this procedure is not routine care
+		// add to edit_procedure_comments if this procedure is routine care
 		if (procedure.routine_care && procedure.added_on_the_fly) {
 			var this_comment = "";
 			if (procedure.comment) {
@@ -768,8 +768,12 @@ $(document).ready(function() {
 	TINBudget.registerEvents();
 	TINBudget.states = [];
 	TINBudget.stateIndex = 0;
-	
 	if (TINBudgetSurvey.soe_data) {
+		//reset added_on_the_fly flags
+		// TINBudgetSurvey.soe_data.procedures.forEach(function(procedure, index) {
+		// 	TINBudgetSurvey.soe_data.procedures[index].added_on_the_fly = false;
+		// });
+		console.log(TINBudgetSurvey.soe_data);
 		TINBudget.loadState(TINBudgetSurvey.soe_data);
 		var arm_index = getUrlParameter('arm') ?? 1;
 		TINBudget.showArm(arm_index);

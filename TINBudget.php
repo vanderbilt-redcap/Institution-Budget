@@ -386,7 +386,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 					if (empty($visit)) {
 						echo "<th></th>";
 					} else {
-						echo "<th>Visit " . ($visit_i + 1) . ": " . $visit->name . "</th>";
+						echo "<th>Visit " . ($visit_i) . ": " . $visit->name . "</th>";
 					}
 				}
 				?>
@@ -831,7 +831,9 @@ HEREDOC;
 			<tbody>
 			<?php
 			for ($i = 1; $i <= 5; $i++) {
-				echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>" . $cc_data["fixedcost$i"] . "</a></td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
+                if (trim($cc_data["fixedcost$i"]) !== '') {
+                    echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>" . $cc_data["fixedcost$i"] . "</a></td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
+                }
 			}
 			// add Personnel Costs, non-Personnel Costs, Participant Reimbursement rows
 			echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>Personnel Costs</a></td><td>" . $cc_data["costs_4"] . "</td></tr>";
