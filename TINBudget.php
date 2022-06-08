@@ -211,6 +211,17 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 			$field_list[] = "arm$i" . "_comments";
 		}
 		
+        $field_list = array_merge($field_list, [
+            "costs_4",
+            "personnelcost_pi_decision",
+            "personnelcost_pi_comment",
+            "costs_5",
+            "personlcost_nonpi_decision",
+            "personlcost_nonpi_comment",
+            "costs_6",
+            "personlcost_partic_decision",
+            "personlcost_partic_comment"
+        ]);
 		$rc_data = \REDCap::getData('array', $record, $field_list);
 		
 		// collate field data, prioritizing target instance data set

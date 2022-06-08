@@ -43,14 +43,39 @@ TINSummary.addFixedCostsTable = function(parent) {
 		<tbody>";
 	
 	var i;
-	for (i = 1; i <= 5; i++) {
-		// convert decision to GO or NO-GO or NEED INFO
-		var result = TINSummary.convertCostDecision(data["fixedcost" + i + "_decision"]);
-		var fixed_cost = data["fixedcost" + i] ?? '';
-		var fixed_cost_detail = data["fixedcost" + i + "_detail"] ?? '';
-		var go_no_go_decision = result.decision ?? '';
-		var site_comments = data["fixedcost" + i + "_comments"] ?? '';
-		
+	for (i = 1; i <= 8; i++) {
+		var result = '';
+		var fixed_cost = '';
+		var fixed_cost_detail = '';
+		var go_no_go_decision = '';
+		var site_comments = '';
+		if (i <= 5) {
+			// convert decision to GO or NO-GO or NEED INFO
+			result = TINSummary.convertCostDecision(data["fixedcost" + i + "_decision"]);
+			fixed_cost = data["fixedcost" + i] ?? '';
+			fixed_cost_detail = data["fixedcost" + i + "_detail"] ?? '';
+			go_no_go_decision = result.decision ?? '';
+			site_comments = data["fixedcost" + i + "_comments"] ?? '';
+		} else if(i == 6) {
+			result = TINSummary.convertCostDecision(data["personnelcost_pi_decision"]);
+			fixed_cost = 'Personnel PI Cost';
+			fixed_cost_detail = data["costs_4"] ?? '';
+			go_no_go_decision = result.decision ?? '';
+			site_comments = data["personnelcost_pi_comment"] ?? '';
+		} else if(i == 7) {
+			result = TINSummary.convertCostDecision(data["personlcost_nonpi_decision"]);
+			fixed_cost = 'Personnel Non-PI Cost';
+			fixed_cost_detail = data["costs_5"] ?? '';
+			go_no_go_decision = result.decision ?? '';
+			site_comments = data["personlcost_nonpi_comment"] ?? '';
+		} else if(i == 8) {
+			result = TINSummary.convertCostDecision(data["personlcost_partic_decision"]);
+			fixed_cost = 'Personnel Participant Cost'
+			fixed_cost_detail = data["costs_6"] ?? '';
+			go_no_go_decision = result.decision ?? '';
+			site_comments = data["personlcost_partic_comment"] ?? '';
+		}
+
 		if (fixed_cost || fixed_cost_detail || go_no_go_decision || site_comments) {
 			table_html += "\
 				<tr" + result.row_class + ">\
