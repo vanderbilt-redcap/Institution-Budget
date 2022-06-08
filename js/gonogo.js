@@ -229,19 +229,21 @@ TINGoNoGo.makeArmTable = function(arm, arm_i) {
 
 TINGoNoGo.makeArmSidebar = function(arm_i) {
 	var sidebar = "";
-	
+
 	var color = TINGoNoGo.schedule.arms[arm_i].sidebar_color;
+	var decision = TINGoNoGo.gng_data["arm"+(arm_i+1)+"_decision"];
+	var comments = TINGoNoGo.gng_data["arm"+(arm_i+1)+"_comments"];
 	var div_class = " class='gng_sidebar " + color + "'";
 	var text = color == "green" ? 'DO' : 'DO NOT';
 	
 	sidebar += "\
 		<div" + div_class + " data-arm='" + arm_i + "'>\
 			<span>Procedure Costs at your site <u>" + text + "</u> fall within coordinating center reimbursement amounts.</span><br>\
-			<input class='arm_cbox' type='checkbox'><label>Accept</label><br>\
-			<input class='arm_cbox' type='checkbox'><label>Unable to Accept</label><br>\
-			<input class='arm_cbox' type='checkbox'><label>Request Additional information</label><br>\
+			<input class='arm_cbox' type='checkbox' "+(decision == 1 ? 'checked' : '')+"><label>Accept</label><br>\
+			<input class='arm_cbox' type='checkbox' "+(decision == 2 ? 'checked' : '')+"><label>Unable to Accept</label><br>\
+			<input class='arm_cbox' type='checkbox' "+(decision == 3 ? 'checked' : '')+"><label>Request Additional information</label><br>\
 			<span>Enter Comments:</span><br>\
-			<textarea rows='3'></textarea>\
+			<textarea rows='3'>"+comments+"</textarea>\
 		</div>";
 	
 	return sidebar;
