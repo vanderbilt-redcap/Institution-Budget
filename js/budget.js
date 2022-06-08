@@ -93,7 +93,7 @@ TINBudget.refreshProceduresBank = function() {
 			}
 			$("table#edit_procedure_comments tbody").append("<tr>\
 				<td class='name'>" + procedure.name + "</td>\
-				<td class='comment'><textarea class='comment' row='4' cols='45'>" + this_comment + "</textarea></td>\
+				<td class='comment'><textarea class='comment' rows='4' cols='45'>" + this_comment + "</textarea></td>\
 			</tr>");
 		}
 	});
@@ -624,6 +624,7 @@ TINBudget.registerEvents = function() {
 	$('body').on('click', '.modal .save_proc_changes', function(event) {
 		// update TINBudget.procedures using edit procedures table
 		var proc_table = $('table#edit_procedures');
+		var comments_table = $('table#edit_procedure_comments');
 		TINBudget.procedures = [];
 		proc_table.find('tbody tr').each(function(i, tr) {
 			var proc_name = $(tr).find('td.name input').val();
@@ -639,12 +640,20 @@ TINBudget.registerEvents = function() {
 				proc_cost = "0";
 				$(tr).find('td.cost input').val(proc_cost);
 			}
+			var proc_comment = '';
+			comments_table.find('tbody tr').each(function(j, jtr) {
+				var proc_com_name = $(jtr)[0].cells[0].innerText;
+				if (proc_name == proc_com_name) {
+					proc_comment = $(jtr).find('td.comment textarea').val();
+				}
+			});
 			TINBudget.procedures.push({
 				name: proc_name,
 				routine_care: proc_routine_care,
 				cost: proc_cost,
 				cpt: proc_cpt,
-				added_on_the_fly: proc_added_on_the_fly
+				added_on_the_fly: proc_added_on_the_fly,
+				comment: proc_comment
 			});
 		});
 		
@@ -773,7 +782,6 @@ $(document).ready(function() {
 		// TINBudgetSurvey.soe_data.procedures.forEach(function(procedure, index) {
 		// 	TINBudgetSurvey.soe_data.procedures[index].added_on_the_fly = false;
 		// });
-		console.log(TINBudgetSurvey.soe_data);
 		TINBudget.loadState(TINBudgetSurvey.soe_data);
 		var arm_index = getUrlParameter('arm') ?? 1;
 		TINBudget.showArm(arm_index);
