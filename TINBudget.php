@@ -1763,69 +1763,47 @@ HEREDOC;
 		}
 	}
 	
-//	public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
-//        $debug = new \DebugHelper('redcap_survey_complete', true);
-//        $debug->compare([$record, $instrument, $event_id], ['$record', '$instrument', '$event_id']);
-//		if ($instrument == $this->send_to_sites_instrument) {
-//			$parameters = [
-//				"project_id" => $project_id,
-//				"return_format" => 'json',
-//				"records" => $record,
-//				"fields" => 'send_to_sites'
-//			];
-//
-//			$data = json_decode(\REDCap::getData($parameters));
-//			if ($data[0]->send_to_sites === '1') {
-//				$this->createSiteInstances($record);
-//			}
-//		}
-//
-//		$request_uri = $_SERVER['REQUEST_URI'];
-//        $debug->compare([$request_uri], []);
-//		if (strpos($request_uri, '__gotosurvey=') !== false) {
-//			preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
-//			$next_survey_name = $matches[1];
-//			$surveyLink = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
-//            $debug->compare([$surveyLink], []);//TODO This seems to populate correctly, but still doesn't redirect below if it's a true public survey (no record exists yet) But by the time this hook is called, the record does exist...
-//			// this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
-////			header("Location: $surveyLink");
-//		}
-//
-//		if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
-//			$surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
-//
-////			header("Location: $surveyLink");
-//		}
-//
-//		if ($instrument === "schedule_of_event") {
-//			// overwrite Procedures instrument with procedures information from Schedule of Event table
-//			if (!empty($record)) {
-//				$this->overwriteProceduresOnSOESaved($record);
-//			}
-//		}
-//
-//	}
+	public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance)
+    {
+        if ($instrument == $this->send_to_sites_instrument) {
+            $parameters = [
+                "project_id"    => $project_id,
+                "return_format" => 'json',
+                "records"       => $record,
+                "fields"        => 'send_to_sites'
+            ];
+            
+            $data = json_decode(\REDCap::getData($parameters));
+            if ($data[0]->send_to_sites === '1') {
+                $this->createSiteInstances($record);
+            }
+        }
+    }
+
     
     public function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
         $request_uri = $_SERVER['REQUEST_URI'];
-        if (strpos($request_uri, '__gotosurvey=') !== false) {
-            preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
-            $next_survey_name = $matches[1];
-            $surveyLink = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
-            // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
-			header("Location: $surveyLink");
-        }
+        $isSurvey = !is_null($survey_hash);
+        if ($isSurvey) {
+            if (strpos($request_uri, '__gotosurvey=') !== false) {
+                preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
+                $next_survey_name = $matches[1];
+                $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
+                // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
+                header("Location: $surveyLink");
+            }
     
-        if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
-            $surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
-
-			header("Location: $surveyLink");
-        }
+            if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
+                $surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
+        
+                header("Location: $surveyLink");
+            }
     
-        if ($instrument === "schedule_of_event") {
-            // overwrite Procedures instrument with procedures information from Schedule of Event table
-            if (!empty($record)) {
-                $this->overwriteProceduresOnSOESaved($record);
+            if ($instrument === "schedule_of_event") {
+                // overwrite Procedures instrument with procedures information from Schedule of Event table
+                if (!empty($record)) {
+                    $this->overwriteProceduresOnSOESaved($record);
+                }
             }
         }
     }
