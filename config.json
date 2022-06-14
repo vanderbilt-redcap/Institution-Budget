@@ -19,6 +19,7 @@
 		"redcap_survey_page",
 		"redcap_survey_complete",
 		"redcap_every_page_top",
+		"redcap_save_record",
 		"redcap_email"
 	],
 	
