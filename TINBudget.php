@@ -1706,16 +1706,28 @@ HEREDOC;
 	}
 	
 	public function redcap_every_page_top($project_id) {
-		$request_uri = $_SERVER['REQUEST_URI'];
-		if (strpos($request_uri, '__gotodashboard=1') !== false) {
-			$dashboard_url = $this->getUrl('dashboard.php');
-			// this works but survey queue and survey auto-continue features will rewrite location headers if configured
-			header("Location: $dashboard_url");
-			
-			// this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
-			// redirect($surveyLink);
-		}
-	}
+        $request_uri = $_SERVER['REQUEST_URI'];
+        if ($_GET['page'] == 'study_coordinating_center_information' && $_GET['__endpublicsurvey']) {
+            $record   = $_GET['id'];
+            $event_id = $_GET['event_id'];
+            if (strpos($request_uri, '__gotosurvey=') !== false) {
+                preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
+                $next_survey_name = $matches[1];
+                $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
+                // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
+                header("Location: $surveyLink");
+            }
+        }
+        
+        if (strpos($request_uri, '__gotodashboard=1') !== false) {
+            $dashboard_url = $this->getUrl('dashboard.php');
+            // this works but survey queue and survey auto-continue features will rewrite location headers if configured
+            header("Location: $dashboard_url");
+            
+            // this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
+            // redirect($surveyLink);
+        }
+    }
 	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
 		// replace schedule of event field in survey page with generated table
@@ -1762,9 +1774,8 @@ HEREDOC;
 			$this->changeSurveySubmitButton($record, $event_id, $instrument);
 		}
 	}
-	
-	public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance)
-    {
+    
+    public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
         if ($instrument == $this->send_to_sites_instrument) {
             $parameters = [
                 "project_id"    => $project_id,
@@ -1772,38 +1783,31 @@ HEREDOC;
                 "records"       => $record,
                 "fields"        => 'send_to_sites'
             ];
-            
+        
             $data = json_decode(\REDCap::getData($parameters));
             if ($data[0]->send_to_sites === '1') {
                 $this->createSiteInstances($record);
             }
         }
-    }
-
     
-    public function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
         $request_uri = $_SERVER['REQUEST_URI'];
-        $isSurvey = !is_null($survey_hash);
-        if ($isSurvey) {
-            if (strpos($request_uri, '__gotosurvey=') !== false) {
-                preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
-                $next_survey_name = $matches[1];
-                $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
-                // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
-                header("Location: $surveyLink");
-            }
+        if (strpos($request_uri, '__gotosurvey=') !== false) {
+            preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
+            $next_survey_name = $matches[1];
+            $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
+            // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
+            header("Location: $surveyLink");
+        }
     
-            if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
-                $surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
-        
-                header("Location: $surveyLink");
-            }
+        if (strpos($request_uri, '__gotosummaryreview=1') !== false) {
+            $surveyLink = \REDCap::getSurveyLink($record, 'summary_review_page', $event_id);
+            header("Location: $surveyLink");
+        }
     
-            if ($instrument === "schedule_of_event") {
-                // overwrite Procedures instrument with procedures information from Schedule of Event table
-                if (!empty($record)) {
-                    $this->overwriteProceduresOnSOESaved($record);
-                }
+        if ($instrument === "schedule_of_event") {
+            // overwrite Procedures instrument with procedures information from Schedule of Event table
+            if (!empty($record)) {
+                $this->overwriteProceduresOnSOESaved($record);
             }
         }
     }
