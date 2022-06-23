@@ -356,53 +356,67 @@ TINGoNoGo.getArmFieldsData = function() {
 }
 
 TINGoNoGo.replacementSubmit = function(click_event) {
-	// check arm decision/comments to see if ready to submit
-	var bad_arms = [];
-	TINGoNoGo.schedule.arms.forEach(function(arm, arm_i) {
-		var sidebar = $(".gng_sidebar[data-arm='" + arm_i + "']");
-		var accept_box = sidebar.find('.arm_cbox:eq(0)').prop('checked');
-		var decline_box = sidebar.find('.arm_cbox:eq(1)').prop('checked');
-		var request_box = sidebar.find('.arm_cbox:eq(2)').prop('checked');
-		var comments_box = sidebar.find('textarea').val();
-		if (!accept_box && !decline_box && !(request_box && comments_box !== '')) {
-			ready_to_submit = false;
-			bad_arms.push("<b>Arm " + (arm_i + 1) + ": " + arm.name + "</b>")
+	let submit_btn_html = click_event.currentTarget;
+	let submit_btn = $(submit_btn_html);
+	if (submit_btn.prop('name') == 'submit-btn-saverecord') {
+		// check arm decision/comments to see if ready to submit
+		var bad_arms = [];
+		TINGoNoGo.schedule.arms.forEach(function (arm, arm_i) {
+			var sidebar = $(".gng_sidebar[data-arm='" + arm_i + "']");
+			var accept_box = sidebar.find('.arm_cbox:eq(0)').prop('checked');
+			var decline_box = sidebar.find('.arm_cbox:eq(1)').prop('checked');
+			var request_box = sidebar.find('.arm_cbox:eq(2)').prop('checked');
+			var comments_box = sidebar.find('textarea').val();
+			if (!accept_box && !decline_box && !(request_box && comments_box !== '')) {
+				ready_to_submit = false;
+				bad_arms.push("<b>Arm " + (arm_i + 1) + ": " + arm.name + "</b>")
+			}
+		});
+
+		if (bad_arms.length !== 0) {
+			// prevent survey submission
+			submit_btn.blur();
+			click_event.preventDefault();
+
+			// update and show modal with error message
+			var submission_error = "<p>In order to advance to the next page, you must make a decision for each arm. If you're requesting additional information, please explain in the \"Enter Comments\" text area.</p>\
+				\
+				<p>Please navigate to the arm(s) listed below and provide a response. You have not entered a decision for</p>" + bad_arms.join('<br>');
+			$('.modal-body').html(submission_error);
+			$('.modal').modal('show')
+		} else {
+
+			// save arm decision/comment data
+			TINGoNoGo.saveArmData();
+
+			// submit survey
+			submit_btn.button("disable");
+			dataEntrySubmit(submit_btn);
+			return false;
 		}
-	});
-	
-	var submit_btn = $('button[name="submit-btn-saverecord"]');
-	if (bad_arms.length !== 0) {
-		// prevent survey submission
-		submit_btn.blur();
-		click_event.preventDefault();
-		
-		// update and show modal with error message
-		var submission_error = "<p>In order to advance to the next page, you must make a decision for each arm. If you're requesting additional information, please explain in the \"Enter Comments\" text area.</p>\
-		\
-		<p>Please navigate to the arm(s) listed below and provide a response. You have not entered a decision for</p>" + bad_arms.join('<br>');
-		$('.modal-body').html(submission_error);
-		$('.modal').modal('show')
-	} else {
-		// save arm decision/comment data
-		var arm_field_data = TINGoNoGo.getArmFieldsData();
-		if (typeof arm_field_data == 'object') {
-			$.ajax(TINGoNoGo.save_arm_fields_url, {
-				data: arm_field_data,
-				method: "POST",
-				dataType: "json"
-			});
-		}
-		
-		// submit survey
+	} else if (submit_btn.prop('name') == 'submit-btn-savereturnlater') {
+		TINGoNoGo.saveArmData();
 		submit_btn.button("disable");
 		dataEntrySubmit(submit_btn);
+		return false;
+	}
+}
+
+TINGoNoGo.saveArmData = function() {
+	var arm_field_data = TINGoNoGo.getArmFieldsData();
+	if (typeof arm_field_data == 'object') {
+		$.ajax(TINGoNoGo.save_arm_fields_url, {
+			data: arm_field_data,
+			method: "POST",
+			dataType: "json"
+		});
 	}
 }
 
 $('head').append('<link rel="stylesheet" type="text/css" href="' + TINGoNoGo.css_url + '">');
 $(document).ready(function() {
 	TINGoNoGo.initialize();
-	
+
 	$('body').on('click', 'button.gng_arm', function(event) {
 		var button = $(event.target);
 		var arm_i = button.attr('data-arm');
@@ -430,5 +444,13 @@ $(document).ready(function() {
 			TINGoNoGo.replacementSubmit(event);
 			return false;
 		});
+	});
+
+	$('button[name="submit-btn-savereturnlater"]').click(function (event) {
+		let submit_btn = $(this);
+		submit_btn.attr('onclick', 'return false;');
+		$(submit_btn).unbind('click');
+		TINGoNoGo.replacementSubmit(event);
+		return false;
 	});
 });

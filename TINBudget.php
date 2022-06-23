@@ -1753,12 +1753,10 @@ HEREDOC;
 			$this->proj = new \Project($this->getProjectId());
 		
 		if ($event_id == $this->proj->firstEventId) {
-            if (!is_null($record)) {
-                if ($instrument != 'summary_review_page') {
-                    $this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
-                } else {
-                    $this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
-                }
+            if ($instrument != 'summary_review_page') {
+                $this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
+            } else {
+                $this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
             }
 			$this->convertSaveAndReturnLaterButton();
 			$this->changeSurveySubmitButton($record, $event_id, $instrument);
