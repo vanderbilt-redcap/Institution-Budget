@@ -1,5 +1,7 @@
 <?php
 namespace Vanderbilt\TINBudget;
+use ExternalModules\ExternalModules;
+
 require __DIR__ . '/vendor/autoload.php';
 class TINBudget extends \ExternalModules\AbstractExternalModule {
 	
@@ -581,7 +583,7 @@ HEREDOC;
 		// get tables
 		$data = [];
 		
-		foreach ($records as $record) {
+		foreach ($records as $record_id => $record) {
 			$site_array = $record['repeat_instances'][$event_id_1][''];
 			$table_rows = [];
 			foreach($site_array as $site_i => $site) {
@@ -628,7 +630,7 @@ HEREDOC;
 				$pending_text = " (PENDING)";
 			}
 			
-			$data[] = [
+			$data[$record_id] = [
 				"name" => $record[$event_id_0]['short_name'],
 				"pending" => $pending_text,
 				"table" => $table_rows,
@@ -639,7 +641,9 @@ HEREDOC;
 	}
 	
 	public function renderDashboard() {
-		$user_name = "Michelle Jones";
+        $user = $this->getUser()->getUsername();
+        $userInfo = ExternalModules::getUserInfo($user);
+        $user_name = $userInfo['user_firstname']. ' ' . $userInfo['user_lastname'];
 		$data = $this->getDashboardData();
 		$plus_icon_url = $this->getUrl("icons/plus-solid.svg");
 		$minus_icon_url = $this->getUrl("icons/minus-solid.svg");
@@ -663,72 +667,51 @@ HEREDOC;
 		</div>
 		<div id="study_tables">
 			<div class="blue_bar"></div>
+<!--            <table id='budgetDashboard'>-->
+<!--                <thead>-->
+<!--                <tr>-->
+<!--                    <th>Record ID</th>-->
+<!--                    <th>Study Name</th>-->
+<!--                    <th>Link</th>-->
+<!--                </tr>-->
+<!--                </thead>-->
+<!--                <tbody>-->
 		<?php
 		// Actions column dropdown
-		$action_dropdown = "<div class='dropdown'>
-			<button class='btn btn-primary dropdown-toggle site-action-dd' type='button' id='_id' data-toggle='dropdown' aria-expanded='false'>
-				View
-			</button>
-			<ul class='dropdown-menu' aria-labelledby='_id'>
-				<li><a class='action-item dropdown-item' href='#'>Contact Site</a></li>
-				<li><a class='action-item dropdown-item' href='#'>Accept Decision</a></li>
-				<li><a class='action-item dropdown-item' href='#'>Provide Information</a></li>
-				<li><a class='action-item dropdown-item' href='#'>Create Note</a></li>
-				<li><a class='action-item dropdown-item' href='#'>Send Reminder</a></li>
-			</ul>
-		</div>";
-		
+//		$action_dropdown = "<div class='dropdown'>
+//			<button class='btn btn-primary dropdown-toggle site-action-dd' type='button' id='_id' data-toggle='dropdown' aria-expanded='false'>
+//				View
+//			</button>
+//			<ul class='dropdown-menu' aria-labelledby='_id'>
+//				<li><a class='action-item dropdown-item' href='#'>Contact Site</a></li>
+//				<li><a class='action-item dropdown-item' href='#'>Accept Decision</a></li>
+//				<li><a class='action-item dropdown-item' href='#'>Provide Information</a></li>
+//				<li><a class='action-item dropdown-item' href='#'>Create Note</a></li>
+//				<li><a class='action-item dropdown-item' href='#'>Send Reminder</a></li>
+//			</ul>
+//		</div>";
+
 		// create study rows and tables
 		foreach ($data as $study_i => $study) {
-			$detailed_recon_view_link = "<a class='detailed_recon_view' href='$reconciliiation_page_url'>See detailed reconciliation view</a>";
-			echo "<div class='study_row' data-study-i='$study_i'><span class='study_short_name'>Study Name: {$study['name']}{$study['pending']}</span> <img class='study_toggle' src='$plus_icon_url' alt='study toggle icon'>$detailed_recon_view_link</div>";
-			echo "<div class='study_table_container' data-study-i='$study_i'>
-				<table class='reconciliation'>
-					<thead>
-						<tr>
-							<th>Institution</th>
-							<th>Date of Request</th>
-							<th>Date of Response</th>
-							<th>Decision</th>
-							<th>Decision Comments</th>
-							<th>Action</th>
-						</tr>
-					</thead>
-					<tbody>";
-			foreach ($study['table'] as $row_index => $row) {
-				// determine row color
-				$row_class = "";
-				if (strtoupper($row['decision']) == "NO-GO") {
-					$row_class = " class='red'";
-				} elseif (strtoupper($row['decision']) == "MORE INFO NEEDED") {
-					$row_class = " class='yellow'";
-				}
-				
-				// make action button
-				$action_button = str_replace("_id", "site_action_dd_$dropdown_i", $action_dropdown);
-				$dropdown_i++;
-				
-				echo "
-					<tr$row_class>
-						<td>{$row["name"]}</td>
-						<td>{$row["date_of_request"]}</td>
-						<td>{$row["date_of_response"]}</td>
-						<td>{$row["decision"]}</td>
-						<td>{$row["decision_comments"]}</td>
-						<td class='action_button'>$action_button</td>
-					</tr>";
-			}
-			echo "
-					</tbody>
-				</table>
-				<div>
-					<input class='show_hidden_sites' type='checkbox' data-study-i='$study_i'>
-					<label>Show hidden sites</label>
-				</div>
-			</div>";
+//            $debug->compare([$study], []);
+            $intake_url = \REDCap::getSurveyLink($study_i, $this->study_intake_form_name, $this->event_ids[0]);
+//            $debug->compare([$link], []);
+//			$detailed_recon_view_link = "<a class='detailed_recon_view' href='$reconciliiation_page_url'>See detailed reconciliation view</a>";
+            $survey_link = "<a class='detailed_recon_view' href='$intake_url'>Continue working on budget feasibility request</a>";
+			echo "<div class='study_row' data-study-i='$study_i'>
+                      <span class='study_short_name'>Study Name: {$study['name']}{$study['pending']}</span>
+                      $survey_link
+                  </div>";
+//            echo "
+//                    <tr>
+//                        <td>$study_i</td>
+//                        <td>{$study['name']}{$study['pending']}</td>
+//                        <td>$survey_link</td>
+//                    </tr>";
 		}
 		?>
-		
+<!--                </tbody>-->
+<!--            </table>-->
 		</div>
 		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
@@ -740,56 +723,67 @@ HEREDOC;
 				minus_icon_url: "<?= $minus_icon_url ?>",
 				public_survey_url: "<?= $public_survey_url ?>"
 			};
-			BudgetDashboard.collapseStudyRows = function() {
-				$("div.study_row").each(function(i, study_row) {
-					$(study_row).find('img.study_toggle').attr('src', BudgetDashboard.plus_icon_url);
-					$(study_row).find('a.detailed_recon_view').hide();
-				});
-				$("div.study_table_container").hide();
-			};
+			// BudgetDashboard.collapseStudyRows = function() {
+				// $("div.study_row").each(function(i, study_row) {
+				// 	$(study_row).find('img.study_toggle').attr('src', BudgetDashboard.plus_icon_url);
+					// $(study_row).find('a.detailed_recon_view').hide();
+				// });
+				// $("div.study_table_container").hide();
+			// };
 			$(document).ready(function() {
 				$('head').append("<link rel='stylesheet' href='<?php echo $this->getUrl('css/dashboard.css'); ?>'>")
 				// add bootstrap css
 				$('head').append("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>")
 				$('head').append("<link rel='stylesheet' href='//cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css' crossorigin='anonymous'>")
-				
+
+                // $('#budgetDashboard').DataTable({
+                //     order: [
+                //         [0, 'asc']
+                //     ],
+                //     columnDefs: [
+                //         {
+                //             target: 0,
+                //             visible: false
+                //         }
+                //     ]
+                // });
 				// make each recon table a DataTables table
-				BudgetDashboard.recon_tables = [];
-				var options = {
-					order: [
-						[0, 'desc']
-					],
-					columns: [
-						{orderable: true, searchable: true},
-						{orderable: true, searchable: true},
-						{orderable: true, searchable: true},
-						{orderable: true, searchable: true},
-						{orderable: false, searchable: false},
-						{orderable: false, searchable: false}
-					]
-				};
-				$('.reconciliation').each(function(i, recon_table) {
-					BudgetDashboard.recon_tables.push($(recon_table).DataTable(options));
-				});
+				// BudgetDashboard.recon_tables = [];
+				// var options = {
+				// 	order: [
+				// 		[0, 'desc']
+				// 	],
+				// 	columns: [
+				// 		{orderable: true, searchable: true},
+				// 		{orderable: true, searchable: true},
+				// 		{orderable: true, searchable: true},
+				// 		{orderable: true, searchable: true},
+				// 		{orderable: false, searchable: false},
+				// 		{orderable: false, searchable: false}
+				// 	]
+				// };
+				// $('.reconciliation').each(function(i, recon_table) {
+				// 	BudgetDashboard.recon_tables.push($(recon_table).DataTable(options));
+				// });
 				
-				BudgetDashboard.collapseStudyRows();
+				// BudgetDashboard.collapseStudyRows();
 			});
 			
-			$('body').on('click', 'img.study_toggle', function(event) {
-				var toggle = $(event.target);
-				var study_row = toggle.closest('div.study_row');
-				if (toggle.attr('src') == BudgetDashboard.plus_icon_url) {
-					toggle.attr('src', BudgetDashboard.minus_icon_url);
-					study_row.find('a.detailed_recon_view').show();
-					var study_index = study_row.attr('data-study-i');
-					$("div.study_table_container[data-study-i='" + Number(study_index) + "']").show();
-				} else {
-					toggle.attr('src', BudgetDashboard.plus_icon_url);
-					study_row.find('a.detailed_recon_view').hide();
-					var study_index = study_row.attr('data-study-i');
-					$("div.study_table_container[data-study-i='" + Number(study_index) + "']").hide();
-				}
-			});
+			// $('body').on('click', 'img.study_toggle', function(event) {
+			// 	var toggle = $(event.target);
+			// 	var study_row = toggle.closest('div.study_row');
+			// 	if (toggle.attr('src') == BudgetDashboard.plus_icon_url) {
+			// 		toggle.attr('src', BudgetDashboard.minus_icon_url);
+			// 		study_row.find('a.detailed_recon_view').show();
+			// 		var study_index = study_row.attr('data-study-i');
+			// 		$("div.study_table_container[data-study-i='" + Number(study_index) + "']").show();
+			// 	} else {
+			// 		toggle.attr('src', BudgetDashboard.plus_icon_url);
+			// 		study_row.find('a.detailed_recon_view').hide();
+			// 		var study_index = study_row.attr('data-study-i');
+			// 		$("div.study_table_container[data-study-i='" + Number(study_index) + "']").hide();
+			// 	}
+			// });
 		</script>
 		<?php
 	}

@@ -57,7 +57,7 @@ div.study_row .study_toggle {
 	filter: invert(100%);
 }
 div.study_row a.detailed_recon_view {
-	margin-left: auto;
+	/*margin-left: auto;*/
 	margin-right: 8px;
 	color: white;
 	font-size: 1rem;
