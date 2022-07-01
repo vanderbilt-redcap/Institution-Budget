@@ -1706,26 +1706,46 @@ HEREDOC;
 	}
 	
 	public function redcap_every_page_top($project_id) {
-        $request_uri = $_SERVER['REQUEST_URI'];
-        if ($_GET['page'] == 'study_coordinating_center_information' && $_GET['__endpublicsurvey']) {
-            $record   = $_GET['id'];
-            $event_id = $_GET['event_id'];
-            if (strpos($request_uri, '__gotosurvey=') !== false) {
-                preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
-                $next_survey_name = $matches[1];
-                $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
-                // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
-                header("Location: $surveyLink");
+        $event_id = $_GET['event_id'];
+        $instrument = $_GET['page'];
+        $siteForms = $this->proj->eventsForms[$event_id];
+        if (in_array($instrument, $siteForms) && $_GET['__return'] == 1 && $_POST['submit-action'] == 'submit-btn-savereturnlater'){
+            ?>
+            <script type="text/javascript">
+                $(document).ready(function() {
+                    $('#return_instructions>div:nth-of-type(1)').each(function(item) {console.log($(this).html());})
+                    $('#return_instructions>div:nth-of-type(1)').html("You have chosen to stop the Budget Feasibility survey for now. All the information you have entered so far will be saved. " +
+                        "</br><strong>To return and complete the remainder of the survey, please use the link in your original budget feasibility email.</strong>" +
+                        "</br></br>" +
+                        "Thank you, and have a nice day!");
+                    
+                    $('#return_instructions>div:nth-of-type(2)').remove();
+                    
+                });
+            </script>
+            <?php
+        } else {
+            $request_uri = $_SERVER['REQUEST_URI'];
+            if ($instrument == 'study_coordinating_center_information' && $_GET['__endpublicsurvey']) {
+                $record   = $_GET['id'];
+                $event_id = $_GET['event_id'];
+                if (strpos($request_uri, '__gotosurvey=') !== false) {
+                    preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
+                    $next_survey_name = $matches[1];
+                    $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
+                    // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
+                    header("Location: $surveyLink");
+                }
             }
-        }
+    
+            if (strpos($request_uri, '__gotodashboard=1') !== false) {
+                $dashboard_url = $this->getUrl('dashboard.php');
+                // this works but survey queue and survey auto-continue features will rewrite location headers if configured
+                header("Location: $dashboard_url");
         
-        if (strpos($request_uri, '__gotodashboard=1') !== false) {
-            $dashboard_url = $this->getUrl('dashboard.php');
-            // this works but survey queue and survey auto-continue features will rewrite location headers if configured
-            header("Location: $dashboard_url");
-            
-            // this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
-            // redirect($surveyLink);
+                // this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
+                // redirect($surveyLink);
+            }
         }
     }
 	
