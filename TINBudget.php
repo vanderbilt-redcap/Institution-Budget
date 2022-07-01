@@ -1708,8 +1708,7 @@ HEREDOC;
 	public function redcap_every_page_top($project_id) {
         $event_id = $_GET['event_id'];
         $instrument = $_GET['page'];
-        $siteForms = $this->proj->eventsForms[$event_id];
-        if (in_array($instrument, $siteForms) && $_GET['__return'] == 1 && $_POST['submit-action'] == 'submit-btn-savereturnlater'){
+        if (in_array($instrument, $this->event_2_forms) && $_GET['__return'] == 1 && $_POST['submit-action'] == 'submit-btn-savereturnlater'){
             ?>
             <script type="text/javascript">
                 $(document).ready(function() {
