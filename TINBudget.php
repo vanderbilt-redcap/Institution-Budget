@@ -1776,7 +1776,6 @@ HEREDOC;
 		}
 		
 		$site_event_forms_to_convert_submit_button = [
-			"budget_review_and_feasibility",
 			"review_fixed_costs",
 			"enter_cost_to_run_procedure",
 			"gonogo_table"
