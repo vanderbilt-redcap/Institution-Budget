@@ -1100,8 +1100,30 @@ HEREDOC;
 			</script>
 			<?php
 			return;
-		}
-		
+		} else if (
+            $event_id == $event_ids[1]
+            &&
+            $current_survey_name == reset($form_sequence)
+        ) {
+            
+            ?>
+            <script>
+                if ($('input[name=\"consideration___radio\"]:checked').val() == '0') {
+                    $('button[name=\"submit-btn-saverecord\"').text('Submit');
+                } else {
+                    $('button[name=\"submit-btn-saverecord\"').text('Next');
+                }
+                $('input[name=\"consideration___radio\"]').on('change', function () {
+                    if ($('input[name=\"consideration___radio\"]:checked').val() == '0') {
+                        $('button[name=\"submit-btn-saverecord\"').text('Submit');
+                    } else {
+                        $('button[name=\"submit-btn-saverecord\"').text('Next');
+                    }
+                });
+            </script>
+            <?php
+            return;
+        }
 		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
@@ -1776,7 +1798,8 @@ HEREDOC;
 		}
 		
 		$site_event_forms_to_convert_submit_button = [
-			"review_fixed_costs",
+            "budget_review_and_feasibility",
+            "review_fixed_costs",
 			"enter_cost_to_run_procedure",
 			"gonogo_table"
 		];
