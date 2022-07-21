@@ -988,7 +988,10 @@ HEREDOC;
 	public function replaceSummaryReviewField($record, $instance) {
 		// get budget table data
 		$budget_table = $this->getBudgetTableData($record);
-		
+        //If there's no data then create an empty JS object so it doesn't error out and display nothing.
+        if (empty($budget_table)){
+            $budget_table = json_encode([]);
+        }
 		// get Go/No-Go table data and field name
 		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record, $instance));
 		
