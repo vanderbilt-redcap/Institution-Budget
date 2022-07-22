@@ -1902,6 +1902,12 @@ HEREDOC;
 		// prevent intercepted email from sending (it doesn't have the Study Intake Form attached)
 		return false;
 	}
+    
+    public function redcap_module_link_check_display($project_id, $link) {
+        if(!empty($project_id)) {
+            return $link;
+        }
+    }
 	
 	private function log_email_event($to, $from, $subject, $log_message) {
 		\REDCap::logEvent("TIN Budget Module", "Found 'Identify Site' email from TIN Budget project Alert:
