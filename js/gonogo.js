@@ -383,7 +383,7 @@ TINGoNoGo.replacementSubmit = function(click_event) {
 				\
 				<p>Please navigate to the arm(s) listed below and provide a response. You have not entered a decision for</p>" + bad_arms.join('<br>');
 			$('.modal-body').html(submission_error);
-			$('.modal').modal('show')
+			$('.modal').modal('show');
 		} else {
 
 			// save arm decision/comment data

@@ -39,7 +39,12 @@
 		],
 		"control-center": []
 	},
-	
+
+	"no-auth-pages": [
+		"php/downloadProceduresWorkbook",
+		"php/saveArmFields"
+	],
+
 	"system-settings": [],
 	
 	"project-settings": [

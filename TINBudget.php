@@ -968,15 +968,15 @@ HEREDOC;
 		// get Go/No-Go table data and field name
 		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record, $instance));
 		$gonogo_table_field = $this->getProjectSetting('gonogo_table_field');
-		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
+		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php', true);
 		?>
 		<script type="text/javascript">
 			TINGoNoGo = {
 				record_id: '<?= $record; ?>',
 				instance: '<?= $instance; ?>',
 				gng_field: '<?= $gonogo_table_field; ?>',
-				schedule: JSON.parse('<?= $budget_table; ?>'),
-				gng_data: JSON.parse('<?= $gonogo_table_data; ?>'),
+				schedule: <?= $budget_table; ?>,
+				gng_data: <?= $gonogo_table_data; ?>,
 				css_url: "<?= $this->getUrl('css/gonogo.css'); ?>",
 				save_arm_fields_url: '<?= $save_arm_fields_url; ?>'
 			}
@@ -999,19 +999,18 @@ HEREDOC;
 		
 		$summary_review_data = $this->getSummaryReviewData($record, $instance);
 		$summary_review_data = json_encode($summary_review_data, JSON_HEX_APOS);
-		$summary_review_data = addslashes($summary_review_data);
 		
-		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
-		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
+//		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
+//		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
 		?>
 		<script type="text/javascript">
 			TINSummary = {
 				record_id: '<?= $record; ?>',
 				instance: '<?= $instance; ?>',
 				summary_review_field: '<?= $summary_review_field; ?>',
-				summary_data: JSON.parse('<?= $summary_review_data; ?>'),
-				schedule: JSON.parse('<?= $budget_table; ?>'),
-				gng_data: JSON.parse('<?= $gonogo_table_data; ?>'),
+				summary_data:<?= $summary_review_data; ?>,
+				schedule: <?= $budget_table; ?>,
+				gng_data: <?= $gonogo_table_data; ?>,
 				css_url: "<?= $this->getUrl('css/summary.css'); ?>"
 			}
 		</script>
@@ -1154,7 +1153,7 @@ HEREDOC;
 	}
 	
 	private function addDownloadProcedureResourceButton($record, $event_id, $repeat_instance) {
-		$dl_proc_wb_url = $this->getUrl("php/downloadProceduresWorkbook.php") . "&record=$record&event_id=$event_id&instance=$repeat_instance";
+		$dl_proc_wb_url = $this->getUrl("php/downloadProceduresWorkbook.php", true) . "&record=$record&event_id=$event_id&instance=$repeat_instance";
 		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
