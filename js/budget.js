@@ -215,7 +215,7 @@ TINBudget.createArm = function() {
 	
 	var visit_1_th = "<th>\
 	<div class='dropdown visit' data-visit='1'>\
-		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit1' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit1' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
 			Visit 1: New Visit\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit1'>\
@@ -249,7 +249,7 @@ TINBudget.createArm = function() {
 		</tbody>\
 	</table>";
 	var new_arm_dropdown = "<div class='dropdown arm' data-arm='" + new_arm_i + "'>\
-		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownMenuButton" + new_arm_i + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownMenuButton" + new_arm_i + "' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
 			Arm " + new_arm_i + ": New Arm\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownMenuButton" + new_arm_i + "'>\
@@ -298,7 +298,7 @@ TINBudget.createVisit = function() {
 	var visit_j = visit_count + 1;
 	var visit_dd = "<th>\
 	<div class='dropdown visit' data-visit='" + visit_j + "'>\
-		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit" + visit_j + "' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit" + visit_j + "' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
 			Visit " + visit_j + ": New Visit\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit" + visit_j + "'>\

@@ -34,7 +34,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	?><div id='arm_dropdowns' class='mb-3'><?php
 	foreach ($arms as $i => $arm) { ?>
 		<div class="dropdown arm" data-arm="<?= $i+1 ?>">
-			<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownArm<?= $i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+			<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownArm<?= $i+1 ?>" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 				<?= "Arm " . ($i+1) . ": {$arm->name}" ?>
 			</button>
 			<div class="dropdown-menu" aria-labelledby="dropdownArm<?= $i+1 ?>">
@@ -62,7 +62,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 							?>
 							<th>
 							<div class="dropdown visit" data-visit="<?= $visit_i+1 ?>">
-								<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownVisit<?= $visit_i+1 ?>" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownVisit<?= $visit_i+1 ?>" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 									<?= "Visit " . ($visit_i+1) . ": $visit_name" ?>
 								</button>
 								<div class="dropdown-menu" aria-labelledby="dropdownVisit<?= $visit_i+1 ?>">
@@ -134,7 +134,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<div id="tinbudget_rename_arm" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Rename Arm</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -143,8 +143,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				<input class="w-100" type="text">
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary rename_arm" data-dismiss="modal">Rename Arm</button>
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary rename_arm" data-bs-dismiss="modal">Rename Arm</button>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 		
@@ -152,7 +152,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<div id="tinbudget_copy_arm" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Copy Arm</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -163,8 +163,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary overwrite_arms" data-dismiss="modal">Overwrite Arm(s)</button>
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary overwrite_arms" data-bs-dismiss="modal">Overwrite Arm(s)</button>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 		
@@ -172,7 +172,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<div id="tinbudget_rename_visit" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Rename Visit</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -181,8 +181,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				<input class="w-100" type="text">
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary rename_visit" data-dismiss="modal">Rename Visit</button>
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary rename_visit" data-bs-dismiss="modal">Rename Visit</button>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 		
@@ -190,7 +190,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<div id="tinbudget_copy_visit" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Copy Visit</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -202,8 +202,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary copy_visit_counts" data-dismiss="modal">Overwrite Counts</button>
-				<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary copy_visit_counts" data-bs-dismiss="modal">Overwrite Counts</button>
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 		
@@ -211,7 +211,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<div id="tinbudget_edit_procedures" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Edit Procedures</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -235,8 +235,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				</div>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary save_proc_changes" data-dismiss="modal">Save Changes</button>
-				<button type="button" class="btn btn-secondary cancel_proc_changes" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary save_proc_changes" data-bs-dismiss="modal">Save Changes</button>
+				<button type="button" class="btn btn-secondary cancel_proc_changes" data-bs-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 		
@@ -244,7 +244,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<div id="tinbudget_procedure_comments" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Edit Procedure Comments</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -262,8 +262,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				</table>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary save_proc_comment_changes" data-dismiss="modal">Save Changes</button>
-				<button type="button" class="btn btn-secondary cancel_proc_comment_changes" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary save_proc_comment_changes" data-bs-dismiss="modal">Save Changes</button>
+				<button type="button" class="btn btn-secondary cancel_proc_comment_changes" data-bs-dismiss="modal">Cancel</button>
 			</div>
 		</div>
 		
@@ -271,7 +271,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		<div id="tinbudget_confirm_delete" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Confirm Delete</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
@@ -279,8 +279,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				<p></p>
 			</div>
 			<div class="modal-footer">
-				<button type="button" class="btn btn-primary confirm_delete" data-dismiss="modal">Yes, Delete</button>
-				<button type="button" class="btn btn-secondary cancel_delete" data-dismiss="modal">No, Keep</button>
+				<button type="button" class="btn btn-primary confirm_delete" data-bs-dismiss="modal">Yes, Delete</button>
+				<button type="button" class="btn btn-secondary cancel_delete" data-bs-dismiss="modal">No, Keep</button>
 			</div>
 		</div>
 	</div>

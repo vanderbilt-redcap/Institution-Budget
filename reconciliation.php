@@ -26,7 +26,7 @@ if (gettype($table_data) == 'string') {
 
 // tabulate site data
 $action_dropdown = "<div class='dropdown'>
-	<button class='btn btn-primary dropdown-toggle site-action-dd' type='button' id='_id' data-toggle='dropdown' aria-expanded='false'>
+	<button class='btn btn-primary dropdown-toggle site-action-dd' type='button' id='_id' data-bs-toggle='dropdown' aria-expanded='false'>
 		View
 	</button>
 	<ul class='dropdown-menu' aria-labelledby='_id'>
