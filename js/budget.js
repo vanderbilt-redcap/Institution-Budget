@@ -116,7 +116,11 @@ TINBudget.refreshProcedureRows = function(schedule) {	// also refreshes proc cos
 		arm_table.find('tbody').empty();
 		for (var proc_index in TINBudget.procedures) {
 			var procedure = TINBudget.procedures[proc_index];
-			var new_row = "<tr><td class='procedure'>" + procedure.name + "</td>";
+			var proc_name = procedure.name;
+			if (procedure.routine_care) {
+				proc_name = proc_name + ' <span title="Standard of Care"> [SoC]</span>';
+			}
+			var new_row = "<tr><td class='procedure'>" + proc_name + "</td>";
 			
 			// add proc_count cells to new row, preserving old procedure counts if applicable
 			for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
@@ -777,7 +781,7 @@ $(document).ready(function() {
 	TINBudget.registerEvents();
 	TINBudget.states = [];
 	TINBudget.stateIndex = 0;
-	if (TINBudgetSurvey.soe_data) {
+	if (TINBudgetSurvey.soe_data && Object.keys(TINBudgetSurvey.soe_data).length !== 0) {
 		//reset added_on_the_fly flags
 		// TINBudgetSurvey.soe_data.procedures.forEach(function(procedure, index) {
 		// 	TINBudgetSurvey.soe_data.procedures[index].added_on_the_fly = false;
@@ -861,6 +865,9 @@ TINBudget.pushState = function() {
 	TINBudget.states = TINBudget.states.slice(0, TINBudget.stateIndex + 1);
 	// push new state on top
 	TINBudget.states.push(TINBudget.getState());
+	if (TINBudget.states.length >= TINBudget.MAX_STATES) {
+		TINBudget.states.shift(); //Pop first state off array
+	}
 	TINBudget.stateIndex = TINBudget.states.length - 1;
 	// enforce size
 	TINBudget.states = TINBudget.states.slice(-TINBudget.MAX_STATES);

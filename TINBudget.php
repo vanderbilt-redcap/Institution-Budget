@@ -136,6 +136,7 @@ class TINBudget extends \ExternalModules\AbstractExternalModule {
 		// get Schedule of Event (CC Budget table) data
 		$budget_table_field = $this->getProjectSetting('budget_table_field');
 		$params = [
+            "project_id" => $this->getProjectId(),
 			"records" => $record,
 			"fields" => $budget_table_field,
 			"return_format" => 'json'
@@ -918,12 +919,17 @@ HEREDOC;
 			"fields" => $schedule_field
 		];
 		$soe_data = \REDCap::getData($data_params)[$record];
-		$soe_data = reset($soe_data);
-		if (!empty($soe_data[$schedule_field])) {
-			$soe_data = $soe_data[$schedule_field];
-		} else {
-			unset($soe_data);
-		}
+        if (!empty($soe_data)) {
+            $soe_data = reset($soe_data);
+            if (!empty($soe_data[$schedule_field])) {
+                $soe_data = $soe_data[$schedule_field];
+            } else {
+                unset($soe_data);
+            }
+        }
+        if (empty($soe_data)) {
+            $soe_data = '{}';
+        }
 		
 		$cpt_endpoint_url = $this->getProjectSetting('cpt_endpoint_url');
 		
@@ -932,13 +938,13 @@ HEREDOC;
 			TINBudget = {
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
 				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
-				procedures_json: '<?= json_encode($procedures) ?>'
+				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
 			}
 			
 			TINBudgetSurvey = {
 				schedule_field: "<?= $schedule_field; ?>",
 				budget_table: "<?=$budget_table;?>",
-				soe_json: '<?=$soe_data;?>',
+				soe_data: <?=$soe_data;?>,
 				updateScheduleField: function(scheduleString) {
 					var field_name = TINBudgetSurvey.schedule_field;
 					$("textarea[name='" + field_name + "']").val(scheduleString);
@@ -946,12 +952,12 @@ HEREDOC;
 			}
 			
 			$(document).ready(function() {
-				if (TINBudget.procedures_json.length > 0) {
-					TINBudget.procedures = JSON.parse(TINBudget.procedures_json);
-				}
-				if (TINBudgetSurvey.soe_json.length > 0) {
-					TINBudgetSurvey.soe_data = JSON.parse(TINBudgetSurvey.soe_json);
-				}
+				// if (TINBudget.procedures_json.length > 0) {
+				// 	TINBudget.procedures = JSON.parse(TINBudget.procedures_json);
+				// }
+				// if (TINBudgetSurvey.soe_json.length > 0) {
+				// 	TINBudgetSurvey.soe_data = JSON.parse(TINBudgetSurvey.soe_json);
+				// }
 				var fieldname = TINBudgetSurvey.schedule_field;
 				$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
 				$('#' + fieldname + '-tr').hide();
@@ -1347,8 +1353,8 @@ HEREDOC;
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
 		// update workbook cells
 		for ($i = 0; $i < 100; $i++) {
-			$name = $procedures[$i]->name;
-			$cpt = $procedures[$i]->cpt;
+			$name = $procedures[$i-1]->name;
+			$cpt = $procedures[$i-1]->cpt;
 			
 			$sheet->setCellValue("B" . ($i + 3), $name);
 			$sheet->setCellValue("C" . ($i + 3), $cpt);

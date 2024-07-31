@@ -89,7 +89,7 @@ td.procedure, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
 /* #edit_procedures td.cpt input { */
 	/* width: 650px; */
 /* } */
-.ui-autocomplete { z-index:2147483647; }	/* prevent autocomplete from being hidden behind modal */
+.ui-autocomplete { z-index:2147483647; !important; }	/* prevent autocomplete from being hidden behind modal */
 #edit_procedure_buttons {
 	display: flex;
 	width: 100%;

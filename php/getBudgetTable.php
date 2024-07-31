@@ -10,7 +10,10 @@ try {
 	}
 	$arms = $module->getArms();
 	$procedures = $module->getProcedures();
-	
+    foreach ($procedures as $proc_i => $procedure) {
+        $proc_name = $procedure->name;
+        $proc_cost = $procedure->cost;
+    }
 	$rid = htmlentities($_GET['rid'], ENT_QUOTES);
 	$rid = preg_replace("/\D/", '', $rid);
 } catch (\Exception $e) {
@@ -86,6 +89,9 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 					foreach ($procedures as $proc_i => $procedure) {
 						$proc_name = $procedure->name;
 						$proc_cost = $procedure->cost;
+                        if ($procedure->routine_care_procedure_form) {
+                            $proc_name .= ' <span title="Standard of Care">[SoC]</span>';
+                        }
 						echo "<tr>";
 						
 						// add procedure cell
