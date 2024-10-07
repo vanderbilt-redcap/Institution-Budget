@@ -70,7 +70,7 @@ td.procedure, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
 	border: 1px solid gray;
 }
 
-#tinbudget_edit_procedures .modal-body {
+#instituteBudget_edit_procedures .modal-body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;

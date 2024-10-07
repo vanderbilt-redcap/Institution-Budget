@@ -1,7 +1,7 @@
 {
-	"name": "TIN Budget",
+	"name": "Institutional Budget",
 	
-	"namespace": "Vanderbilt\\TINBudget",
+	"namespace": "Vanderbilt\\InstituteBudget",
 	
 	"description": "This module was designed to facilitate budget creation and evaluation for coordinating centers and external sites.",
 
@@ -23,20 +23,7 @@
 	],
 	
 	"links": {
-		"project": [
-			{
-				"name": "Coordinating Center Reconciliation",
-				"icon": "fas fa-table",
-				"url": "reconciliation",
-				"show-header-and-footer": true
-			},
-			{
-				"name": "TIN Budget Tool Dashboard",
-				"icon": "fas fa-table",
-				"url": "dashboard",
-				"show-header-and-footer": false
-			}
-		],
+		"project": [],
 		"control-center": []
 	},
 
@@ -65,11 +52,6 @@
 			"name": "Field to be replaced with Summary Review report",
 			"required": true,
 			"type": "field-list"
-		},
-		{
-			"key": "cpt_endpoint_url",
-			"name": "CPT Selector module code lookup endpoint",
-			"type": "text"
 		},
 		{
 			"key": "enable_email_logging",

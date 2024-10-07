@@ -4,7 +4,7 @@
 ob_start();
 echo "<div id='budget_table'>";
 try {
-	if (get_class($this) == 'Vanderbilt\TINBudget\TINBudget') {
+	if (get_class($this) == 'Vanderbilt\InstituteBudget\InstituteBudget') {
 		// survey page shim, may eventually want to convert $module to $this everywhere in this file (although that will break including this php script into stand-alone module pages)
 		$module = $this;
 	}
@@ -127,17 +127,15 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	<div style="margin-left: 32px; margin-top: 8px;">
 		<button id="tin_budget_undo" type="button" class="btn btn-outline-primary button_bank" disabled>Undo</button>
 		<button id="tin_budget_redo" type="button" class="btn btn-outline-primary button_bank" disabled>Redo</button>
-		<button id="tin_budget_edit_procedures" type="button" class="btn btn-outline-primary button_bank">Edit Procedures</button>
-		<button id="tin_budget_procedure_comments" type="button" class="btn btn-outline-primary button_bank">Procedure Comments</button>
 	</div>
 	<?php
 }
 ?>
 
-<div id="tinbudget_modal" class="modal" tabindex="-1" role="dialog">
+<div id="instituteBudget_modal" class="modal" tabindex="-1" role="dialog">
 	<div class="modal-dialog" role="document">
 		<!-- rename arm -->
-		<div id="tinbudget_rename_arm" class="modal-content">
+		<div id="instituteBudget_rename_arm" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Rename Arm</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -155,7 +153,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- copy arm -->
-		<div id="tinbudget_copy_arm" class="modal-content">
+		<div id="instituteBudget_copy_arm" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Copy Arm</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -175,7 +173,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- rename visit -->
-		<div id="tinbudget_rename_visit" class="modal-content">
+		<div id="instituteBudget_rename_visit" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Rename Visit</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -193,7 +191,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- copy visit -->
-		<div id="tinbudget_copy_visit" class="modal-content">
+		<div id="instituteBudget_copy_visit" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Copy Visit</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -214,7 +212,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- edit procedures -->
-		<div id="tinbudget_edit_procedures" class="modal-content">
+		<div id="instituteBudget_edit_procedures" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Edit Procedures</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -247,7 +245,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- edit procedure comments (only for non-routine care procedures) -->
-		<div id="tinbudget_procedure_comments" class="modal-content">
+		<div id="instituteBudget_procedure_comments" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Edit Procedure Comments</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -274,7 +272,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- confirm delete -->
-		<div id="tinbudget_confirm_delete" class="modal-content">
+		<div id="instituteBudget_confirm_delete" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Confirm Delete</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">

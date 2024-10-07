@@ -1,9 +1,9 @@
 <?php
-namespace Vanderbilt\TINBudget;
+namespace Vanderbilt\InstituteBudget;
 use ExternalModules\ExternalModules;
 
 require __DIR__ . '/vendor/autoload.php';
-class TINBudget extends \ExternalModules\AbstractExternalModule {
+class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	
 	public function __construct() {
 		parent::__construct();
@@ -935,31 +935,31 @@ HEREDOC;
 		
 		?>
 		<script type="text/javascript">
-			TINBudget = {
+			InstituteBudget = {
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
 				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
 				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
 			}
 			
-			TINBudgetSurvey = {
+			InstituteBudgetSurvey = {
 				schedule_field: "<?= $schedule_field; ?>",
 				budget_table: "<?=$budget_table;?>",
 				soe_data: <?=$soe_data;?>,
 				updateScheduleField: function(scheduleString) {
-					var field_name = TINBudgetSurvey.schedule_field;
+					var field_name = InstituteBudgetSurvey.schedule_field;
 					$("textarea[name='" + field_name + "']").val(scheduleString);
 				}
 			}
 			
 			$(document).ready(function() {
-				// if (TINBudget.procedures_json.length > 0) {
+				// if (InstituteBudget.procedures_json.length > 0) {
 				// 	TINBudget.procedures = JSON.parse(TINBudget.procedures_json);
 				// }
 				// if (TINBudgetSurvey.soe_json.length > 0) {
 				// 	TINBudgetSurvey.soe_data = JSON.parse(TINBudgetSurvey.soe_json);
 				// }
-				var fieldname = TINBudgetSurvey.schedule_field;
-				$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + TINBudgetSurvey.budget_table + "</div>")
+				var fieldname = InstituteBudgetSurvey.schedule_field;
+				$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + InstituteBudgetSurvey.budget_table + "</div>")
 				$('#' + fieldname + '-tr').hide();
 			});
 		</script>
@@ -1884,7 +1884,7 @@ HEREDOC;
 		$dompdf = $this->packageStudyIntakeFormAndConvertToPDF($intake_form);
 		$pdf_output_string = $dompdf->output();
 		
-		$temp_file_name = tempnam(APP_PATH_TEMP, 'TINBUDGET_ATTACHMENT');
+		$temp_file_name = tempnam(APP_PATH_TEMP, 'INSTITUTEBUDGET_ATTACHMENT');
 		$temp_file = fopen($temp_file_name, "w");
 		fwrite($temp_file, $pdf_output_string);
 		fclose($temp_file);

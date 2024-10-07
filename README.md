@@ -1,4 +1,4 @@
-# TIN Budget Module
+# VUMC Institutional Budget Module
 This module was designed to facilitate budget creation and evaluation for coordinating centers and external sites.
 
 #### Schedule of Events Table
