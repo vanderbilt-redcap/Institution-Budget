@@ -9,17 +9,13 @@
 	
 	"authors": [
 		{
-			"name": "Carl Reed",
-			"email": "carl.w.reed@vumc.org",
+			"name": "Hannah Tompkins",
+			"email": "datacore.vumc.org",
 			"institution": "Vanderbilt University Medical Center"
 		}
 	],
 	
 	"permissions": [
-		"redcap_survey_page",
-		"redcap_survey_complete",
-		"redcap_every_page_top",
-		"redcap_email"
 	],
 	
 	"links": {

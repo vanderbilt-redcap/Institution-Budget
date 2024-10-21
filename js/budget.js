@@ -435,16 +435,16 @@ InstituteBudget.updateAllVisitCosts = function() {
 }
 
 // modal functions
-InstituteBudget.editProcedures = function() {
-	$('.modal-content').hide()
-	$('#instituteBudget_edit_procedures').show()
-	$("#instituteBudget_modal").modal('show');
-}
-InstituteBudget.procedureComments = function() {
-	$('.modal-content').hide()
-	$('#instituteBudget_procedure_comments').show()
-	$("#instituteBudget_modal").modal('show');
-}
+// InstituteBudget.editProcedures = function() {
+// 	$('.modal-content').hide()
+// 	$('#instituteBudget_edit_procedures').show()
+// 	$("#instituteBudget_modal").modal('show');
+// }
+// InstituteBudget.procedureComments = function() {
+// 	$('.modal-content').hide()
+// 	$('#instituteBudget_procedure_comments').show()
+// 	$("#instituteBudget_modal").modal('show');
+// }
 
 // event registration
 InstituteBudget.registerEvents = function() {
@@ -616,13 +616,13 @@ InstituteBudget.registerEvents = function() {
 		TINBudget.pushState();
 	});
 	
-	$('body').on('click', 'button#tin_budget_edit_procedures', function(event) {
-		TINBudget.editProcedures();
-	});
+	// $('body').on('click', 'button#tin_budget_edit_procedures', function(event) {
+	// 	TINBudget.editProcedures();
+	// });
 	
-	$('body').on('click', 'button#tin_budget_procedure_comments', function(event) {
-		TINBudget.procedureComments();
-	});
+	// $('body').on('click', 'button#tin_budget_procedure_comments', function(event) {
+	// 	TINBudget.procedureComments();
+	// });
 	
 	// edit procedures table's modal events (save, cancel, add row, remove row)
 	$('body').on('click', '.modal .save_proc_changes', function(event) {
