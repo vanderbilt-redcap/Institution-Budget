@@ -1012,9 +1012,9 @@ HEREDOC;
 			}
 			
 			$(document).ready(function() {
-				// if (Budget.procedures_json.length > 0) {
-				// 	Budget.procedures = JSON.parse(Budget.procedures_json);
-				// }
+				if (Budget.procedures_json.length > 0) {
+					Budget.procedures = JSON.parse(Budget.procedures_json);
+				}
 				// if (BudgetSurvey.soe_json.length > 0) {
 				// 	BudgetSurvey.soe_data = JSON.parse(BudgetSurvey.soe_json);
 				// }
@@ -1860,7 +1860,7 @@ HEREDOC;
             } else {
                 $this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
             }
-			$this->convertSaveAndReturnLaterButton();
+			//$this->convertSaveAndReturnLaterButton();
 			$this->changeSurveySubmitButton($record, $event_id, $instrument);
 		}
 		
