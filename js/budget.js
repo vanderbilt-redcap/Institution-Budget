@@ -1,8 +1,8 @@
 
-InstituteBudget.MAX_STATES = 100;
-// InstituteBudget.autocompSettings = {
+Budget.MAX_STATES = 100;
+// Budget.autocompSettings = {
 // 	source: function(request, response) {
-// 		$.ajax(InstituteBudget.cpt_endpoint_url, {
+// 		$.ajax(Budget.cpt_endpoint_url, {
 // 			data: {"query": request.term},
 // 			method: "POST",
 // 			dataType: "json"
@@ -13,17 +13,17 @@ InstituteBudget.MAX_STATES = 100;
 // 	minLength: 0
 // }
 
-InstituteBudget.refreshSchedule = function() {
+Budget.refreshSchedule = function() {
 	// highlight dropdown for active arm
 	$('.arm button').removeClass('active-arm')
-	$('.arm[data-arm="' + InstituteBudget.active_arm_index + '"] button').addClass('active-arm')
+	$('.arm[data-arm="' + Budget.active_arm_index + '"] button').addClass('active-arm')
 	
 	// update data-arm and data-visit attributes for elements that have them
 	$('[data-arm]').each(function(i, e) {
 		var arm_i = Number($(e).index()) + 1;
 		$(e).attr('data-arm', arm_i);
 	});
-	var active_arm_table = $(".arm_table[data-arm='" + InstituteBudget.active_arm_index + "']");
+	var active_arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
 	active_arm_table.find('.visit').each(function(i, e) {
 		var visit_i = i + 1;
 		$(e).attr('data-visit', visit_i);
@@ -46,16 +46,16 @@ InstituteBudget.refreshSchedule = function() {
 	});
 	
 	// refresh procedures, costs, and sums
-	InstituteBudget.refreshProceduresBank();
-	InstituteBudget.refreshProcedureRows();
+	Budget.refreshProceduresBank();
+	Budget.refreshProcedureRows();
 }
-InstituteBudget.refreshProceduresBank = function() {
+Budget.refreshProceduresBank = function() {
 	// remove all rows from edit_procedures and edit_procedure_comments tables
 	$("table#edit_procedures tbody").empty()
 	$("table#edit_procedure_comments tbody").empty()
 	
-	// add rows to edit_procedures and edit_procedure_comments tables using InstituteBudget.procedures data
-	InstituteBudget.procedures.forEach(function(procedure, i) {
+	// add rows to edit_procedures and edit_procedure_comments tables using Budget.procedures data
+	Budget.procedures.forEach(function(procedure, i) {
 		// add to edit_procedures
 		$("table#edit_procedures tbody").append("<tr>\
 			<td><button type='button' class='btn btn-outline-danger delete_this_row'><i class='fas fa-trash-alt'></i></button></td>\
@@ -81,7 +81,7 @@ InstituteBudget.refreshProceduresBank = function() {
 		$("table#edit_procedures tbody tr:last-child td.cost input").prop('disabled', procedure.routine_care);
 		$("table#edit_procedures tbody tr:last-child td.cpt input").val(procedure.cpt);
 		
-		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(InstituteBudget.autocompSettings).focus(function(){
+		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(Budget.autocompSettings).focus(function(){
 			$(this).data("uiAutocomplete").search($(this).val());
 		});
 		
@@ -98,13 +98,13 @@ InstituteBudget.refreshProceduresBank = function() {
 		}
 	});
 }
-InstituteBudget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs and visit costs
+Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs and visit costs
 	// to be called when procedures have changed
 	
 	// determine which state/schedule to pull arm/visit/procedure count information from
 	var state = schedule;
-	if (!state && InstituteBudget.states && typeof InstituteBudget.stateIndex != 'undefined') {
-		state = InstituteBudget.states[InstituteBudget.stateIndex];
+	if (!state && Budget.states && typeof Budget.stateIndex != 'undefined') {
+		state = Budget.states[Budget.stateIndex];
 	}
 	
 	// iterate over all arms, updating the rows of the arm tables to match new set of procedures
@@ -114,8 +114,8 @@ InstituteBudget.refreshProcedureRows = function(schedule) {	// also refreshes pr
 		var arm_table = $('.arm_table[data-arm="' + arm_i + '"]');
 		visit_count = Number(arm_table.find('.visit').length);
 		arm_table.find('tbody').empty();
-		for (var proc_index in InstituteBudget.procedures) {
-			var procedure = InstituteBudget.procedures[proc_index];
+		for (var proc_index in Budget.procedures) {
+			var procedure = Budget.procedures[proc_index];
 			var proc_name = procedure.name;
 			if (procedure.routine_care) {
 				proc_name = proc_name + ' <span title="Standard of Care"> [SoC]</span>';
@@ -156,15 +156,15 @@ InstituteBudget.refreshProcedureRows = function(schedule) {	// also refreshes pr
 		arm_table.find('tbody').append(new_row);
 	}
 	
-	InstituteBudget.refreshProcedureCosts();
-	InstituteBudget.updateAllVisitCosts();
+	Budget.refreshProcedureCosts();
+	Budget.updateAllVisitCosts();
 }
-InstituteBudget.refreshProcedureCosts = function() {
+Budget.refreshProcedureCosts = function() {
 	// update all .proc_cell data-cost attributes based on the row's procedure (name)
 	$('.procedure').each(function(i, td) {
 		var proc_name = $(td).html().trim();
 		var proc_cost = 0;
-		for (var procedure of InstituteBudget.procedures) {
+		for (var procedure of Budget.procedures) {
 			if (procedure.name == proc_name) {
 				proc_cost = procedure.cost;
 				break;
@@ -178,17 +178,17 @@ InstituteBudget.refreshProcedureCosts = function() {
 }
 
 // arm dropdown button functions
-InstituteBudget.showArm = function(arm_index) {
+Budget.showArm = function(arm_index) {
 	$('.arm_table').hide();
 	$('.arm_table[data-arm="' + arm_index + '"]').css('display', 'table');
 	
 	// set active_arm_index and highlight active arm dd button
-	InstituteBudget.active_arm_index = arm_index;
+	Budget.active_arm_index = arm_index;
 }
-InstituteBudget.copyArm = function(arm_index) {
+Budget.copyArm = function(arm_index) {
 	// show a modal asking which arm(s) to copy to
 	// (and replace all visits or copy to matching vists and procedures
-	InstituteBudget.copy_source_arm_index = arm_index;
+	Budget.copy_source_arm_index = arm_index;
 	
 	// reset visit options based on which visit we're copying from
 	$("#select_arms").empty();
@@ -198,7 +198,7 @@ InstituteBudget.copyArm = function(arm_index) {
 		arm_name = arm_name.substring(arm_name.search(':')+1).trim();
 		
 		var arm_select_button = "<button type='button' data-arm-index='" + arm_i + "' class='btn btn-outline-primary arm_select'>" + arm_name + "</button>";
-		if (arm_i == InstituteBudget.copy_source_arm_index) {
+		if (arm_i == Budget.copy_source_arm_index) {
 			arm_select_button = "<button type='button' data-arm-index='" + arm_i + "' class='btn btn-outline-secondary arm_select' disabled'>" + arm_name + "</button>"
 		}
 		$("#select_arms").append(arm_select_button);
@@ -209,7 +209,7 @@ InstituteBudget.copyArm = function(arm_index) {
 	$('#instituteBudget_copy_arm').show()
 	$("#instituteBudget_modal").modal('show');
 }
-InstituteBudget.createArm = function() {
+Budget.createArm = function() {
 	if ($('.arm_table').length > 9) {
 		alert("Can't create a new arm when more than 9 arms already exist");
 		return;
@@ -272,27 +272,27 @@ InstituteBudget.createArm = function() {
 	
 	return new_arm_i;
 }
-InstituteBudget.renameArm = function(arm_index) {
+Budget.renameArm = function(arm_index) {
 	// modal asking for new name
 	$('.modal-content').hide()
 	$('#instituteBudget_rename_arm').show()
 	$("#instituteBudget_modal").modal('show');
 }
-InstituteBudget.clearArm = function(arm_index) {
+Budget.clearArm = function(arm_index) {
 	var table = $('.arm_table[data-arm="' + arm_index + '"]')
 	table.find('span.proc_count, td.visit_total').each(function(i, element) {
 		$(element).text(0)
 	});
 }
-InstituteBudget.deleteArm = function(arm_index) {
+Budget.deleteArm = function(arm_index) {
 	if ($('.arm').length > 1) {
 		$('[data-arm="' + arm_index + '"]').remove()
 	}
 }
 
 // visit dropdown buttons
-InstituteBudget.createVisit = function() {
-	var arm_table = $(".arm_table[data-arm='" + InstituteBudget.active_arm_index + "']");
+Budget.createVisit = function() {
+	var arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
 	var visit_count = arm_table.find('.visit').length;
 	if (visit_count > 9) {
 		alert("Can't create a new visit when more than 9 visits already exist");
@@ -329,14 +329,14 @@ InstituteBudget.createVisit = function() {
 	arm_table.find('tbody tr:last-child').append(visit_total_cell);
 	
 	// add procedure_counts for new visit to this arm in schedule (if they don't already exist)
-	var state = InstituteBudget.states[InstituteBudget.stateIndex];
+	var state = Budget.states[Budget.stateIndex];
 	if (state) {
-		var arm = state.arms[InstituteBudget.active_arm_index - 1];
+		var arm = state.arms[Budget.active_arm_index - 1];
 		if (arm) {
 			
 			// add 0 counts for all procedures
 			var zero_proc_counts = [];
-			InstituteBudget.procedures.forEach(function(procedure, proc_i) {
+			Budget.procedures.forEach(function(procedure, proc_i) {
 				zero_proc_counts.push({
 					name: procedure.name,
 					count: 0,
@@ -354,20 +354,20 @@ InstituteBudget.createVisit = function() {
 		}
 	}
 }
-InstituteBudget.renameVisit = function(visit_index) {
+Budget.renameVisit = function(visit_index) {
 	$('.modal-content').hide()
 	$('#instituteBudget_rename_visit').show()
 	$("#instituteBudget_modal").modal('show');
 }
-InstituteBudget.copyVisit = function(visit_index) {
-	InstituteBudget.copy_source_visit_index = visit_index;
-	InstituteBudget.copy_destination_visits = {};
+Budget.copyVisit = function(visit_index) {
+	Budget.copy_source_visit_index = visit_index;
+	Budget.copy_destination_visits = {};
 	
 	// reset visit options based on which visit we're copying from
 	$("#select_visits").empty();
-	var visit_count = $('.arm_table[data-arm="' + InstituteBudget.active_arm_index + '"] .visit').length;
+	var visit_count = $('.arm_table[data-arm="' + Budget.active_arm_index + '"] .visit').length;
 	for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
-		var visit_name = $(".arm_table[data-arm=" + InstituteBudget.active_arm_index + "] .visit[data-visit='" + visit_i + "']").find('button').text();
+		var visit_name = $(".arm_table[data-arm=" + Budget.active_arm_index + "] .visit[data-visit='" + visit_i + "']").find('button').text();
 		var visit_select_button = "<button type='button' class='btn btn-outline-primary visit_select' data-visit-index='" + visit_i + "'>" + visit_name + "</button>";
 		if (visit_i == visit_index) {
 			visit_select_button = "<button type='button' class='btn btn-outline-secondary visit_select' disabled data-visit-index='" + visit_i + "'>" + visit_name + "</button>"
@@ -381,22 +381,22 @@ InstituteBudget.copyVisit = function(visit_index) {
 	$('#instituteBudget_copy_visit').show()
 	$("#instituteBudget_modal").modal('show');
 }
-InstituteBudget.clearVisit = function(visit_index) {
-	var arm_table = $(".arm_table[data-arm='" + InstituteBudget.active_arm_index + "']");
+Budget.clearVisit = function(visit_index) {
+	var arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
 	arm_table.find('.proc_cell:nth-child(' + (visit_index + 1) + ') span, .visit_total:nth-child(' + (visit_index + 1) + ')').text(0)
 }
-InstituteBudget.deleteVisit = function(visit_index) {
-	var arm_index = InstituteBudget.active_arm_index;
+Budget.deleteVisit = function(visit_index) {
+	var arm_index = Budget.active_arm_index;
 	var arm_table = $(".arm_table[data-arm='" + arm_index + "']");
 	
-	InstituteBudget.arm_table = arm_table;
+	Budget.arm_table = arm_table;
 	if (arm_table.find('th').length > 2) {
 		arm_table.find('th:nth-child(' + (visit_index + 1) + '), td:nth-child(' + (visit_index + 1) + ')').remove()
 	}
 	
-	var state = InstituteBudget.states[InstituteBudget.stateIndex];
+	var state = Budget.states[Budget.stateIndex];
 	if (state) {
-		var arm = state.arms[InstituteBudget.active_arm_index - 1];
+		var arm = state.arms[Budget.active_arm_index - 1];
 		if (arm) {
 			arm.visits.splice(visit_index, 1);
 		}
@@ -404,7 +404,7 @@ InstituteBudget.deleteVisit = function(visit_index) {
 }
 
 // visit level helper functions
-InstituteBudget.updateVisitCost = function(arm, visit) {
+Budget.updateVisitCost = function(arm, visit) {
 	// sum costs across all procedures
 	var sum = 0
 	$(".arm_table[data-arm='" + arm + "'] .proc_cell[data-visit='" + visit +"'] .proc_count").each(function(i, e) {
@@ -425,59 +425,59 @@ InstituteBudget.updateVisitCost = function(arm, visit) {
 	// update visit total in Total $$ row
 	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text(sum);
 }
-InstituteBudget.updateAllVisitCosts = function() {
+Budget.updateAllVisitCosts = function() {
 	for (var arm_i = 1; arm_i <= $('.arm').length; arm_i++) {
 		var visit_count = $('.arm_table[data-arm="' + arm_i + '"] .visit').length;
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
-			InstituteBudget.updateVisitCost(arm_i, visit_i);
+			Budget.updateVisitCost(arm_i, visit_i);
 		}
 	};
 }
 
 // modal functions
-// InstituteBudget.editProcedures = function() {
+// Budget.editProcedures = function() {
 // 	$('.modal-content').hide()
 // 	$('#instituteBudget_edit_procedures').show()
 // 	$("#instituteBudget_modal").modal('show');
 // }
-// InstituteBudget.procedureComments = function() {
+// Budget.procedureComments = function() {
 // 	$('.modal-content').hide()
 // 	$('#instituteBudget_procedure_comments').show()
 // 	$("#instituteBudget_modal").modal('show');
 // }
 
 // event registration
-InstituteBudget.registerEvents = function() {
+Budget.registerEvents = function() {
 	// register arm dropdown button click events
 	$('body').on('click', 'a.show_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
-		InstituteBudget.showArm(arm_index);
-		InstituteBudget.refreshSchedule();
-		InstituteBudget.pushState();
+		Budget.showArm(arm_index);
+		Budget.refreshSchedule();
+		Budget.pushState();
 	});
 	$('body').on('click', 'a.copy_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
-		InstituteBudget.copyArm(arm_index);
+		Budget.copyArm(arm_index);
 	});
 	$('body').on('click', 'a.create_arm', function(event) {
-		var new_arm_index = InstituteBudget.createArm();
+		var new_arm_index = Budget.createArm();
 		var this_arm_table = $('.arm_table[data-arm="' + new_arm_index + '"]');
 		
-		InstituteBudget.refreshProceduresBank();
-		InstituteBudget.refreshProcedureRows();
-		InstituteBudget.showArm(new_arm_index);
-		InstituteBudget.refreshSchedule();
-		InstituteBudget.pushState();
+		Budget.refreshProceduresBank();
+		Budget.refreshProcedureRows();
+		Budget.showArm(new_arm_index);
+		Budget.refreshSchedule();
+		Budget.pushState();
 	});
 	$('body').on('click', '.arm .rename_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
-		InstituteBudget.target_arm = arm_index;
-		InstituteBudget.renameArm(arm_index);
+		Budget.target_arm = arm_index;
+		Budget.renameArm(arm_index);
 	});
 	$('body').on('click', 'a.clear_arm', function(event) {
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
-		InstituteBudget.clearArm(arm_index);
-		InstituteBudget.pushState();
+		Budget.clearArm(arm_index);
+		Budget.pushState();
 	});
 	$('body').on('click', 'a.delete_arm', function(event) {
 		// hide other modal content, show copy_visit section
@@ -487,11 +487,11 @@ InstituteBudget.registerEvents = function() {
 		$("#instituteBudget_modal").modal('show');
 		
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
-		InstituteBudget.confirmDelete = function() {
-			InstituteBudget.deleteArm(arm_index);
-			InstituteBudget.showArm(Math.max(1, arm_index - 1));
-			InstituteBudget.refreshSchedule();
-			InstituteBudget.pushState();
+		Budget.confirmDelete = function() {
+			Budget.deleteArm(arm_index);
+			Budget.showArm(Math.max(1, arm_index - 1));
+			Budget.refreshSchedule();
+			Budget.pushState();
 		}
 	});
 	$('body').on('click', '.modal .rename_arm', function(event) {
@@ -500,9 +500,9 @@ InstituteBudget.registerEvents = function() {
 		$("#instituteBudget_rename_arm input").val("");
 		
 		// update target arm and clear target_arm
-		$('.arm[data-arm="' + InstituteBudget.target_arm + '"] button').text("Arm " + InstituteBudget.target_arm + ": " + new_arm_name);
-		InstituteBudget.target_arm = null;
-		TINBudget.pushState();
+		$('.arm[data-arm="' + Budget.target_arm + '"] button').text("Arm " + Budget.target_arm + ": " + new_arm_name);
+		Budget.target_arm = null;
+		Budget.pushState();
 	});
 	$('body').on('click', '.modal .arm_select', function(event) {
 		var btn = $(event.target);
@@ -517,7 +517,7 @@ InstituteBudget.registerEvents = function() {
 	});
 	$('body').on('click', '.modal .overwrite_arms', function(event) {
 		var visible_table_index = $('.arm_table:visible').attr('data-arm');
-		var src_arm_table_clone = $(".arm_table[data-arm='" + TINBudget.copy_source_arm_index + "']").clone();
+		var src_arm_table_clone = $(".arm_table[data-arm='" + Budget.copy_source_arm_index + "']").clone();
 		$("#select_arms button").each(function(i, btn) {
 			if ($(btn).hasClass('btn-primary')) {
 				var dest_arm_index = $(btn).attr('data-arm-index');
@@ -525,34 +525,34 @@ InstituteBudget.registerEvents = function() {
 				$(".arm_table[data-arm='" + dest_arm_index + "']").replaceWith(src_arm_table_clone.prop('outerHTML'));
 			}
 		});
-		TINBudget.copy_source_arm_index = null;
-		TINBudget.pushState();
-		TINBudget.showArm(visible_table_index);
+		Budget.copy_source_arm_index = null;
+		Budget.pushState();
+		Budget.showArm(visible_table_index);
 	});
 	
 	// register visit dropdown buttons
 	$('body').on('click', 'a.create_visit', function(event) {
 		// we actually push state because we're about to make changes to the 'current' state by calling createVisit
 		// so pushing early preserves state that we want to preserve
-		TINBudget.pushState();
-		TINBudget.createVisit();
-		TINBudget.refreshProcedureRows();
+		Budget.pushState();
+		Budget.createVisit();
+		Budget.refreshProcedureRows();
 	});
 	$('body').on('click', 'a.copy_visit', function(event) {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
 		// open modal
-		TINBudget.copyVisit(visit_index);
+		Budget.copyVisit(visit_index);
 	});
 	$('body').on('click', 'a.rename_visit', function(event) {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
-		TINBudget.target_visit = visit_index;
+		Budget.target_visit = visit_index;
 		// open modal
-		TINBudget.renameVisit(visit_index);
+		Budget.renameVisit(visit_index);
 	});
 	$('body').on('click', 'a.clear_visit', function(event) {
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
-		TINBudget.clearVisit(visit_index);
-		TINBudget.pushState();
+		Budget.clearVisit(visit_index);
+		Budget.pushState();
 	});
 	$('body').on('click', 'a.delete_visit', function(event) {
 		// hide other modal content, show copy_visit section
@@ -562,23 +562,23 @@ InstituteBudget.registerEvents = function() {
 		$("#tinbudget_modal").modal('show');
 		
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
-		TINBudget.confirmDelete = function() {
-			TINBudget.deleteVisit(visit_index);
-			TINBudget.refreshSchedule();
-			TINBudget.pushState();
+		Budget.confirmDelete = function() {
+			Budget.deleteVisit(visit_index);
+			Budget.refreshSchedule();
+			Budget.pushState();
 		}
 	});
 	$('body').on('click', '.modal .rename_visit', function(event) {
 		// get new name, clear input element
 		var new_visit_name = $("#tinbudget_rename_visit input").val();
-		var new_visit_text = "Visit " + TINBudget.target_visit + ": " + new_visit_name;
+		var new_visit_text = "Visit " + Budget.target_visit + ": " + new_visit_name;
 		$("#tinbudget_rename_visit input").val("");
 		
 		// update target visit and clear target_visit
-		var active_arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
-		active_arm_table.find('.visit[data-visit="' + TINBudget.target_visit + '"] button').text(new_visit_text);
-		TINBudget.target_visit = null;
-		TINBudget.pushState();
+		var active_arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
+		active_arm_table.find('.visit[data-visit="' + Budget.target_visit + '"] button').text(new_visit_text);
+		Budget.target_visit = null;
+		Budget.pushState();
 	});
 	$('body').on('click', '.modal .visit_select', function(event) {
 		var btn = $(event.target);
@@ -586,50 +586,50 @@ InstituteBudget.registerEvents = function() {
 		if (btn.hasClass('btn-outline-primary')) {
 			btn.removeClass('btn-outline-primary');
 			btn.addClass('btn-primary');
-			TINBudget.copy_destination_visits[visit_index] = true;
+			Budget.copy_destination_visits[visit_index] = true;
 		} else {
 			btn.removeClass('btn-primary');
 			btn.addClass('btn-outline-primary');
-			delete TINBudget.copy_destination_visits[visit_index];
+			delete Budget.copy_destination_visits[visit_index];
 		}
 	});
 	$('body').on('click', '.modal .copy_visit_counts', function(event) {
 		// didn't select any visits
-		if (jQuery.isEmptyObject(TINBudget.copy_destination_visits)) {
+		if (jQuery.isEmptyObject(Budget.copy_destination_visits)) {
 			return;
 		}
 		
 		// copy counts
-		var active_arm_table = $(".arm_table[data-arm='" + TINBudget.active_arm_index + "']");
+		var active_arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
 		active_arm_table.find('tbody tr:not(:last-child)').each(function(i, tr) {
-			for (var dest_index in TINBudget.copy_destination_visits) {
+			for (var dest_index in Budget.copy_destination_visits) {
 				var dest_span = $(tr).find('.proc_cell[data-visit="' + dest_index + '"] span');
-				var src_span = $(tr).find('.proc_cell[data-visit="' + TINBudget.copy_source_visit_index + '"] span');
+				var src_span = $(tr).find('.proc_cell[data-visit="' + Budget.copy_source_visit_index + '"] span');
 				dest_span.text(src_span.text().trim());
 			}
 		});
 		
 		// clean up
-		TINBudget.copy_destination_visits = null;
-		TINBudget.copy_source_visit_index = null;
-		TINBudget.updateAllVisitCosts();
-		TINBudget.pushState();
+		Budget.copy_destination_visits = null;
+		Budget.copy_source_visit_index = null;
+		Budget.updateAllVisitCosts();
+		Budget.pushState();
 	});
 	
 	// $('body').on('click', 'button#tin_budget_edit_procedures', function(event) {
-	// 	TINBudget.editProcedures();
+	// 	Budget.editProcedures();
 	// });
 	
 	// $('body').on('click', 'button#tin_budget_procedure_comments', function(event) {
-	// 	TINBudget.procedureComments();
+	// 	Budget.procedureComments();
 	// });
 	
 	// edit procedures table's modal events (save, cancel, add row, remove row)
 	$('body').on('click', '.modal .save_proc_changes', function(event) {
-		// update TINBudget.procedures using edit procedures table
+		// update Budget.procedures using edit procedures table
 		var proc_table = $('table#edit_procedures');
 		var comments_table = $('table#edit_procedure_comments');
-		TINBudget.procedures = [];
+		Budget.procedures = [];
 		proc_table.find('tbody tr').each(function(i, tr) {
 			var proc_name = $(tr).find('td.name input').val();
 			var proc_routine_care = $(tr).find('td.routine-care input').prop('checked');
@@ -651,7 +651,7 @@ InstituteBudget.registerEvents = function() {
 					proc_comment = $(jtr).find('td.comment textarea').val();
 				}
 			});
-			TINBudget.procedures.push({
+			Budget.procedures.push({
 				name: proc_name,
 				routine_care: proc_routine_care,
 				cost: proc_cost,
@@ -661,12 +661,12 @@ InstituteBudget.registerEvents = function() {
 			});
 		});
 		
-		TINBudget.refreshSchedule();
-		TINBudget.pushState();
+		Budget.refreshSchedule();
+		Budget.pushState();
 	});
 	$('body').on('click', '.modal .cancel_proc_changes', function(event) {
-		TINBudget.refreshProceduresBank();
-		TINBudget.refreshProcedureRows();
+		Budget.refreshProceduresBank();
+		Budget.refreshProcedureRows();
 	});
 	$('body').on('click', 'button#add_proc_table_row', function(event) {
 		$("table#edit_procedures tbody").append("<tr>\
@@ -678,7 +678,7 @@ InstituteBudget.registerEvents = function() {
 		</tr>");
 		
 		// add autocomplete for CPT code lookup
-		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(TINBudget.autocompSettings).focus(function(){
+		$("table#edit_procedures tbody tr:last-child td.cpt input").autocomplete(Budget.autocompSettings).focus(function(){
 			$(this).data("uiAutocomplete").search($(this).val());
 		});
 	});
@@ -688,32 +688,32 @@ InstituteBudget.registerEvents = function() {
 	
 	// edit PROCEDURE COMMENTS table's modal events (save, cancel)
 	$('body').on('click', '.modal .save_proc_comment_changes', function(event) {
-		// update TINBudget.procedures using textarea input from user
+		// update Budget.procedures using textarea input from user
 		var comments_table = $('table#edit_procedure_comments');
 		comments_table.find('tbody tr').each(function(i, tr) {
-			TINBudget.my_tr = $(tr);
+			Budget.my_tr = $(tr);
 			var proc_name = $(tr)[0].cells[0].innerText;
 			var proc_comment = $(tr).find('td.comment textarea').val();
-			TINBudget.procedures.forEach(function(procedure, proc_i) {
+			Budget.procedures.forEach(function(procedure, proc_i) {
 				if (procedure.name == proc_name) {
-					TINBudget.procedures[proc_i].comment = proc_comment;
+					Budget.procedures[proc_i].comment = proc_comment;
 				}
 			})
 		});
 		
-		TINBudget.refreshSchedule();
-		TINBudget.pushState();
+		Budget.refreshSchedule();
+		Budget.pushState();
 	});
 	$('body').on('click', '.modal .cancel_proc_comment_changes', function(event) {
-		TINBudget.refreshProceduresBank();
+		Budget.refreshProceduresBank();
 	});
 	
 	// -- end modal section
 	
 	// confirm/cancel delete via modal for arms/visits/procedures
 	$('body').on('click', '#tinbudget_confirm_delete .confirm_delete', function(event) {
-		if (TINBudget.confirmDelete) {
-			TINBudget.confirmDelete();
+		if (Budget.confirmDelete) {
+			Budget.confirmDelete();
 		}
 	});
 	
@@ -732,8 +732,8 @@ InstituteBudget.registerEvents = function() {
 		// update sum
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = proc_cell.attr('data-visit');
-		TINBudget.updateVisitCost(arm_index, visit_index);
-		TINBudget.pushState();
+		Budget.updateVisitCost(arm_index, visit_index);
+		Budget.pushState();
 	});
 	
 	// hide/show buttons automatically
@@ -748,14 +748,14 @@ InstituteBudget.registerEvents = function() {
 	// allow undo/redo
 	$('body').on('keydown', function(event) {
 		if (event.ctrlKey && event.key === 'z') {
-			TINBudget.undo();
+			Budget.undo();
 		} else if (event.ctrlKey && event.key === 'y') {
-			TINBudget.redo();
+			Budget.redo();
 		}
 	});
 	// register undo/redo button click events
-	$('body').on('click', '#tin_budget_undo', TINBudget.undo);
-	$('body').on('click', '#tin_budget_redo', TINBudget.redo);
+	$('body').on('click', '#tin_budget_undo', Budget.undo);
+	$('body').on('click', '#tin_budget_redo', Budget.redo);
 	
 	// register event to disable/enable cost field when routine care checkbox is changed
 	$('body').on('change', '.routine-care input', function(event) {
@@ -774,34 +774,34 @@ InstituteBudget.registerEvents = function() {
 }
 
 // initialization/registration
-$('head').append('<link rel="stylesheet" type="text/css" href="' + TINBudget.budget_css_url + '">');
+$('head').append('<link rel="stylesheet" type="text/css" href="' + Budget.budget_css_url + '">');
 $('body').append($('#tinbudget_modal').remove());
 $(document).ready(function() {
 	// initialization
-	TINBudget.registerEvents();
-	TINBudget.states = [];
-	TINBudget.stateIndex = 0;
-	if (TINBudgetSurvey.soe_data && Object.keys(TINBudgetSurvey.soe_data).length !== 0) {
+	Budget.registerEvents();
+	Budget.states = [];
+	Budget.stateIndex = 0;
+	if (BudgetSurvey.soe_data && Object.keys(BudgetSurvey.soe_data).length !== 0) {
 		//reset added_on_the_fly flags
-		// TINBudgetSurvey.soe_data.procedures.forEach(function(procedure, index) {
-		// 	TINBudgetSurvey.soe_data.procedures[index].added_on_the_fly = false;
+		// BudgetSurvey.soe_data.procedures.forEach(function(procedure, index) {
+		// 	BudgetSurvey.soe_data.procedures[index].added_on_the_fly = false;
 		// });
-		TINBudget.loadState(TINBudgetSurvey.soe_data);
+		Budget.loadState(BudgetSurvey.soe_data);
 		var arm_index = getUrlParameter('arm') ?? 1;
-		TINBudget.showArm(arm_index);
+		Budget.showArm(arm_index);
 	} else {
-		TINBudget.refreshSchedule();
-		TINBudget.showArm(1);
+		Budget.refreshSchedule();
+		Budget.showArm(1);
 	}
-	TINBudget.pushState();
+	Budget.pushState();
 });
 
 // saving/loading
-TINBudget.getState = function() {
+Budget.getState = function() {
 	var schedule = {
-		active_arm_index: Number(TINBudget.active_arm_index),
+		active_arm_index: Number(Budget.active_arm_index),
 		arms: [],
-		procedures: TINBudget.procedures
+		procedures: Budget.procedures
 	};
 	var arm_count = $('.arm_table').length;
 	for (var arm_i = 1; arm_i <= arm_count; arm_i++) {
@@ -837,7 +837,7 @@ TINBudget.getState = function() {
 			});
 			
 			// add 0 counts for any procedures that are still missing
-			TINBudget.procedures.forEach(function(procedure, proc_i) {
+			Budget.procedures.forEach(function(procedure, proc_i) {
 				if (!procedures_added.includes(procedure.name)) {
 					procedure_counts.push({
 						name: procedure.name,
@@ -860,36 +860,36 @@ TINBudget.getState = function() {
 	return schedule
 }
 
-TINBudget.pushState = function() {
+Budget.pushState = function() {
 	// prune invalid future states
-	TINBudget.states = TINBudget.states.slice(0, TINBudget.stateIndex + 1);
+	Budget.states = Budget.states.slice(0, Budget.stateIndex + 1);
 	// push new state on top
-	TINBudget.states.push(TINBudget.getState());
-	if (TINBudget.states.length >= TINBudget.MAX_STATES) {
-		TINBudget.states.shift(); //Pop first state off array
+	Budget.states.push(Budget.getState());
+	if (Budget.states.length >= Budget.MAX_STATES) {
+		Budget.states.shift(); //Pop first state off array
 	}
-	TINBudget.stateIndex = TINBudget.states.length - 1;
+	Budget.stateIndex = Budget.states.length - 1;
 	// enforce size
-	TINBudget.states = TINBudget.states.slice(-TINBudget.MAX_STATES);
+	Budget.states = Budget.states.slice(-Budget.MAX_STATES);
 	
-	TINBudget.refreshStateButtons()
+	Budget.refreshStateButtons()
 	
-	if (TINBudgetSurvey) {
-		TINBudgetSurvey.updateScheduleField(JSON.stringify(TINBudget.states[TINBudget.stateIndex]));
+	if (BudgetSurvey) {
+		BudgetSurvey.updateScheduleField(JSON.stringify(Budget.states[Budget.stateIndex]));
 	}
 }
 
-TINBudget.loadState = function(schedule) {
+Budget.loadState = function(schedule) {
 	$('#arm_dropdowns').empty();
 	$('#arm_tables').empty();
-	TINBudget.procedures = schedule.procedures;
+	Budget.procedures = schedule.procedures;
 	for (var arm_i in schedule.arms) {
 		var arm = schedule.arms[arm_i];
-		TINBudget.createArm();
+		Budget.createArm();
 		
 		// set arm name
 		var arm_label_index = Number(arm_i) + 1;
-		TINBudget.active_arm_index = arm_label_index;
+		Budget.active_arm_index = arm_label_index;
 		var arm_button = $("[data-arm='" + Number(arm_label_index) + "'] button");
 		arm_button.text("Arm " + arm_label_index + ": " + arm.name);
 		var this_arm_table = $('.arm_table[data-arm="' + arm_label_index + '"]');
@@ -902,50 +902,50 @@ TINBudget.loadState = function(schedule) {
 			}
 			
 			// make, rename, set counts
-			TINBudget.createVisit();
+			Budget.createVisit();
 			this_arm_table.find('.visit').last().find('button').text("Visit " + visit_i + ": " + visit.name);
 			visit.procedure_counts.forEach(function(count_obj, count_i) {
 				this_arm_table.find('tbody tr:eq(' + count_i + ') td:last-child span.proc_count').text(count_obj.count);
 			});
 		});
 	}
-	TINBudget.refreshProceduresBank();
-	TINBudget.refreshProcedureRows(schedule);
+	Budget.refreshProceduresBank();
+	Budget.refreshProcedureRows(schedule);
 	
-	TINBudget.showArm(schedule.active_arm_index);
+	Budget.showArm(schedule.active_arm_index);
 	
-	TINBudget.refreshStateButtons()
+	Budget.refreshStateButtons()
 	
-	if (TINBudgetSurvey) {
-		TINBudgetSurvey.updateScheduleField(JSON.stringify(schedule));
+	if (BudgetSurvey) {
+		BudgetSurvey.updateScheduleField(JSON.stringify(schedule));
 	}
 }
 
-TINBudget.undo = function() {
-	if (TINBudget.stateIndex > 0) {
-		TINBudget.stateIndex--;
-		TINBudget.loadState(TINBudget.states[TINBudget.stateIndex]);
+Budget.undo = function() {
+	if (Budget.stateIndex > 0) {
+		Budget.stateIndex--;
+		Budget.loadState(Budget.states[Budget.stateIndex]);
 	}
 }
 
-TINBudget.redo = function() {
-	var lastIndex = TINBudget.states.length - 1;
-	if (TINBudget.stateIndex < lastIndex) {
-		TINBudget.stateIndex++;
-		TINBudget.loadState(TINBudget.states[TINBudget.stateIndex]);
+Budget.redo = function() {
+	var lastIndex = Budget.states.length - 1;
+	if (Budget.stateIndex < lastIndex) {
+		Budget.stateIndex++;
+		Budget.loadState(Budget.states[Budget.stateIndex]);
 	}
 }
 
-TINBudget.refreshStateButtons = function() {
+Budget.refreshStateButtons = function() {
 	// disable/enable undo/redo buttons based on state stack
 	var undo = $("#tin_budget_undo");
 	var redo = $("#tin_budget_redo");
-	if ((TINBudget.states.length - 1) > TINBudget.stateIndex) {	// is there a state to go forward to?
+	if ((Budget.states.length - 1) > Budget.stateIndex) {	// is there a state to go forward to?
 		redo.removeAttr('disabled');
 	} else {
 		redo.attr('disabled', 'disabled');
 	}
-	if (TINBudget.stateIndex > 0) {	// is there a state to go back to?
+	if (Budget.stateIndex > 0) {	// is there a state to go back to?
 		undo.removeAttr('disabled');
 	} else {
 		undo.attr('disabled', 'disabled');
