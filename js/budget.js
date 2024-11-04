@@ -294,7 +294,7 @@ Budget.deleteArm = function(arm_index) {
 Budget.createVisit = function() {
 	var arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
 	var visit_count = arm_table.find('.visit').length;
-	if (visit_count > 9) {
+	if (visit_count > 9) { //TODO make this configurable at the module level
 		alert("Can't create a new visit when more than 9 visits already exist");
 		return;
 	}

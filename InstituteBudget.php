@@ -1,7 +1,6 @@
 <?php
 namespace Vanderbilt\InstituteBudget;
 use ExternalModules\ExternalModules;
-use function GuzzleHttp\Promise\some;
 
 require __DIR__ . '/vendor/autoload.php';
 class InstituteBudget extends \ExternalModules\AbstractExternalModule {
@@ -14,21 +13,6 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		global $Proj;
 		if (gettype($Proj) == 'object') {
 			$this->proj = $Proj;
-			// collect instruments that hold schedule, gng, summary fields
-			//foreach ($Proj->metadata as $field) {
-			//	if ($field['field_name'] === $budget_field) {
-			//		$this->budget_table_instrument = $field['form_name'];
-			//	}
-			//	if ($field['field_name'] === $gng_field) {
-			//		$this->gonogo_table_instrument = $field['form_name'];
-			//	}
-			//	if ($field['field_name'] === $summary_field) {
-			//		$this->summary_review_instrument = $field['form_name'];
-			//	}
-			//	if ($field['field_name'] === 'send_to_sites') {
-			//		$this->send_to_sites_instrument = $field['form_name'];
-			//	}
-			//}
 	
             //TODO cache these in separate function
 			// cache event_ids (in order)
