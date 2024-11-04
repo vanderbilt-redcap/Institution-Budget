@@ -11,10 +11,6 @@ try {
 	}
 	$arms = $module->getArms();
 	$procedures = $module->getProcedures();
-    //foreach ($procedures as $proc_i => $procedure) {
-    //    $proc_name = $procedure['name'];
-    //    $proc_cost = $procedure['cost'];
-    //}
 	$rid = htmlentities($_GET['rid'], ENT_QUOTES);
 	$rid = preg_replace("/\D/", '', $rid);
 } catch (\Exception $e) {

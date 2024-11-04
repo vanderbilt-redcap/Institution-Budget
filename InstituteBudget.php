@@ -4,35 +4,23 @@ use ExternalModules\ExternalModules;
 
 require __DIR__ . '/vendor/autoload.php';
 class InstituteBudget extends \ExternalModules\AbstractExternalModule {
-	
+    
+    
+    private $moduleName = 'Budget Module';
+    // determine name of study intake form instrument
+    private $study_intake_form_name = 'study_coordinating_center_information';
+    
+    // set label pattern (to convert raw values to label values)
+    private $label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
+    
+    
     //TODO Remove this constructor since external modules don't always play nice with them
 	public function __construct() {
 		parent::__construct();
 		
-		
-		global $Proj;
-		if (gettype($Proj) == 'object') {
-			$this->proj = $Proj;
-	
-            //TODO cache these in separate function
-			// cache event_ids (in order)
-			$this->event_ids = [];
-			foreach ($Proj->eventsForms as $eid => $formList) {
-				$this->event_ids[] = $eid;
-			}
-	
-			// cache list of 2nd event's forms
-			$this->event_2_forms = $Proj->eventsForms[$this->event_ids[1]];
-	
-			// determine name of study intake form instrument
-			$this->study_intake_form_name = 'study_coordinating_center_information';
-	
-			// set label pattern (to convert raw values to label values)
-			$this->label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
-		}
 	}
 	
-    public function initVars() {
+    public function initialize() {
         
         $pid = $this->getProjectId();
         if (empty($pid)) {
@@ -52,12 +40,6 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
             
             // cache list of 2nd event's forms
             $this->event_2_forms = $Proj->eventsForms[$this->event_ids[1]];
-            
-            // determine name of study intake form instrument
-            $this->study_intake_form_name = 'study_coordinating_center_information';
-            
-            // set label pattern (to convert raw values to label values)
-            $this->label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
         }
     }
     
@@ -128,7 +110,7 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 			$fields = $this->getScheduleDataFields();
 			$this->sched_record_data = json_decode(\REDCap::getData('json', $rid, $fields), true)[0];
 		} else {
-			throw new \Exception("The Budget module couldn't determine the record ID to fetch record data with");
+			throw new \Exception("The ".$this->moduleName." couldn't determine the record ID to fetch record data with");
 		}
 		return $this->sched_record_data;
 	}
@@ -194,13 +176,14 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		
 		return $data[0][$budget_table_field];
 	}
-	
+    
+    //TODO Remove or update once we figure out if this feature is staying
 	//public function getGoNoGoTableData($record, $instance) {
 	//	// get event ID
 	//	$event_ids = \REDCap::getEventNames();
 	//	$event_id = array_search('Event 1', $event_ids);
 	//	if (empty($event_id)) {
-	//		throw new \Exception("The Budget module couldn't retrieve Go/No-Go data (empty event_id -- is there an 'Event 1' event for this project?)");
+	//		throw new \Exception("The ".$this->moduleName." couldn't retrieve Go/No-Go data (empty event_id -- is there an 'Event 1' event for this project?)");
 	//	}
 	//
 	//	$fields = [];
@@ -221,27 +204,27 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	//		$data = \REDCap::getData($get_data_params);
 	//
 	//		if (empty($data[$record]['repeat_instances'])) {
-	//			throw new \Exception("The Budget module couldn't extract Go/No-Go table data from retrieved record data (repeat_instances empty)");
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data (repeat_instances empty)");
 	//		}
 	//
 	//		$data = $data[$record]['repeat_instances'];
 	//		if (empty($data[$event_id])) {
-	//			throw new \Exception("The Budget module couldn't extract Go/No-Go table data from retrieved record data (repeat_instances[event_id] empty)");
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data (repeat_instances[event_id] empty)");
 	//		}
 	//		$data = $data[$event_id][""];
 	//		if (empty($data)) {
-	//			throw new \Exception("The Budget module couldn't extract Go/No-Go table data from retrieved record data ([event_id][\"\"] missing)");
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data ([event_id][\"\"] missing)");
 	//		}
 	//
 	//		$data = $data[$instance];
 	//
 	//		if (empty($data)) {
-	//			throw new \Exception("The Budget module couldn't extract Go/No-Go table data from retrieved record data (no instance data found)");
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data (no instance data found)");
 	//		}
 	//
 	//		return $data;
 	//	} else {
-	//		throw new \Exception("The Budget module couldn't determine the record ID to fetch Go/No-Go table data with");
+	//		throw new \Exception("The ".$this->moduleName." couldn't determine the record ID to fetch Go/No-Go table data with");
 	//	}
 	//}
 	
@@ -685,8 +668,11 @@ HEREDOC;
 		
 		return $data;
 	}
-	
+    
+    
+    //TODO Remove or update once we figure out if this feature is staying
 	public function renderDashboard() {
+        $this->initialize();
         $user = $this->getUser()->getUsername();
         $userInfo = ExternalModules::getUserInfo($user);
         $user_name = $userInfo['user_firstname']. ' ' . $userInfo['user_lastname'];
@@ -1305,7 +1291,7 @@ HEREDOC;
 	
 	public function overwriteProceduresOnSOESaved($record) {
 		if (empty($record)) {
-			\REDCap::logEvent("Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event due to empty \$record value.");
+			\REDCap::logEvent($this->moduleName, "Failed to overwrite Procedures instrument data upon saving Schedule of Event due to empty \$record value.");
 			return false;
 		}
 		
@@ -1353,9 +1339,9 @@ HEREDOC;
 		];
 		$result = \REDCap::saveData($save_params);
 		if (gettype($result) == 'string') {
-			\REDCap::logEvent("Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData error: $result");
+			\REDCap::logEvent($this->moduleName, "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData error: $result");
 		} elseif (!empty($result['errors'])) {
-			\REDCap::logEvent("Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData errors: " . implode("\n", $result['errors']));
+			\REDCap::logEvent($this->moduleName, "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData errors: " . implode("\n", $result['errors']));
 		}
 	}
 	
@@ -1554,7 +1540,7 @@ HEREDOC;
 			$log_message .= "FAILURE\nThe [eoi] field for record '$record_id' is not > 0.";
 		}
 		
-		\REDCap::logEvent("Budget Module", $log_message);
+		\REDCap::logEvent($this->moduleName, $log_message);
 	}
 	
 	public function determineRecordIdFromMessage($email_message) {
@@ -1774,7 +1760,7 @@ HEREDOC;
 	}
 	
 	public function redcap_every_page_top($project_id) {
-        $this->initVars();
+        $this->initialize();
         $event_id = $_GET['event_id'];
         $instrument = $_GET['page'];
         if (in_array($instrument, $this->event_2_forms) && $_GET['__return'] == 1 && $_POST['submit-action'] == 'submit-btn-savereturnlater'){
@@ -1818,12 +1804,13 @@ HEREDOC;
     }
 	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
-        $this->initVars();
+        $this->initialize();
 		// replace schedule of event field in survey page with generated table
 		if ($instrument == $this->getBudgetForm()) {
 			$this->replaceScheduleFields($record);
 		}
 		
+        //TODO Remove or update once we figure out if this feature is staying
 		// replace Go/No-Go field in survey page with generated table
 		//if ($instrument == $this->gonogo_table_instrument) {
 		//	$this->replaceGoNoGoFields($record, $repeat_instance);
@@ -1833,7 +1820,8 @@ HEREDOC;
 		if ($instrument == $this->getSummaryForm()) {
 			$this->replaceSummaryReviewField($record, $repeat_instance);
 		}
-		
+        
+        //TODO Remove or update once we figure out if this feature is staying
 		//if ($instrument == 'enter_cost_to_run_procedure') {
 		//	$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
 		//}
@@ -1860,7 +1848,7 @@ HEREDOC;
 	}
     
     public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
-        $this->initVars();
+        $this->initialize();
         if ($instrument == $this->send_to_sites_instrument) {
             $parameters = [
                 "project_id"    => $project_id,
@@ -1914,7 +1902,7 @@ HEREDOC;
 		// determine the record this email is associated with (always log failure to determine record ID)
 		$rid = $this->determineRecordIdFromMessage($message);
 		if (empty($rid)) {
-			$log_msg = "The Budget module will not send this email -- can't determine record ID to fetch Study Intake Form!";
+			$log_msg = "The ".$this->moduleName." will not send this email -- can't determine record ID to fetch Study Intake Form!";
 			$this->log_email_event($to, $from, $subject, $log_msg);
 			return false;
 		}
@@ -1941,10 +1929,10 @@ HEREDOC;
 		// determine whether we should log successful attachment/resends or not
 		$log_successful_sends = $this->getProjectSetting('enable_email_logging');
 		if ($email_sent && $log_successful_sends) {
-			$log_msg = "The Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.";
+			$log_msg = "The ".$this->moduleName." is capturing this email, attaching a Study Intake Form, and re-sending the email.";
 			$this->log_email_event($to, $from, $subject, $log_msg);
 		} else {
-			$log_msg = "The Budget module attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
+			$log_msg = "The ".$this->moduleName." attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
 			$this->log_email_event($to, $from, $subject, $log_msg);
 		}
 		
@@ -1959,7 +1947,7 @@ HEREDOC;
     }
 	
 	private function log_email_event($to, $from, $subject, $log_message) {
-		\REDCap::logEvent("Budget Module", "Found 'Identify Site' email from Budget project Alert:
+		\REDCap::logEvent($this->moduleName, "Found 'Identify Site' email from Budget project Alert:
 		to: " . db_escape($to) . "
 		from: " . db_escape($from) . "
 		subject: " . db_escape($subject) . "
