@@ -206,8 +206,8 @@ Budget.copyArm = function(arm_index) {
 	
 	// hide other modal content, show copy_visit section
 	$('.modal-content').hide()
-	$('#instituteBudget_copy_arm').show()
-	$("#instituteBudget_modal").modal('show');
+	$('#budget_copy_arm').show()
+	$("#budget_modal").modal('show');
 }
 Budget.createArm = function() {
 	if ($('.arm_table').length > 9) {
@@ -275,8 +275,8 @@ Budget.createArm = function() {
 Budget.renameArm = function(arm_index) {
 	// modal asking for new name
 	$('.modal-content').hide()
-	$('#instituteBudget_rename_arm').show()
-	$("#instituteBudget_modal").modal('show');
+	$('#budget_rename_arm').show()
+	$("#budget_modal").modal('show');
 }
 Budget.clearArm = function(arm_index) {
 	var table = $('.arm_table[data-arm="' + arm_index + '"]')
@@ -356,8 +356,8 @@ Budget.createVisit = function() {
 }
 Budget.renameVisit = function(visit_index) {
 	$('.modal-content').hide()
-	$('#instituteBudget_rename_visit').show()
-	$("#instituteBudget_modal").modal('show');
+	$('#budget_rename_visit').show()
+	$("#budget_modal").modal('show');
 }
 Budget.copyVisit = function(visit_index) {
 	Budget.copy_source_visit_index = visit_index;
@@ -378,8 +378,8 @@ Budget.copyVisit = function(visit_index) {
 	
 	// hide other modal content, show copy_visit section
 	$('.modal-content').hide()
-	$('#instituteBudget_copy_visit').show()
-	$("#instituteBudget_modal").modal('show');
+	$('#budget_copy_visit').show()
+	$("#budget_modal").modal('show');
 }
 Budget.clearVisit = function(visit_index) {
 	var arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
@@ -437,13 +437,13 @@ Budget.updateAllVisitCosts = function() {
 // modal functions
 // Budget.editProcedures = function() {
 // 	$('.modal-content').hide()
-// 	$('#instituteBudget_edit_procedures').show()
-// 	$("#instituteBudget_modal").modal('show');
+// 	$('#budget_edit_procedures').show()
+// 	$("#budget_modal").modal('show');
 // }
 // Budget.procedureComments = function() {
 // 	$('.modal-content').hide()
-// 	$('#instituteBudget_procedure_comments').show()
-// 	$("#instituteBudget_modal").modal('show');
+// 	$('#budget_procedure_comments').show()
+// 	$("#budget_modal").modal('show');
 // }
 
 // event registration
@@ -482,9 +482,9 @@ Budget.registerEvents = function() {
 	$('body').on('click', 'a.delete_arm', function(event) {
 		// hide other modal content, show copy_visit section
 		$('.modal-content').hide()
-		$('#instituteBudget_confirm_delete').show()
-		$('#instituteBudget_confirm_delete').find('p').text("Are you sure you want to delete this arm?")
-		$("#instituteBudget_modal").modal('show');
+		$('#budget_confirm_delete').show()
+		$('#budget_confirm_delete').find('p').text("Are you sure you want to delete this arm?")
+		$("#budget_modal").modal('show');
 		
 		var arm_index = $(event.target).closest('div.arm').attr('data-arm');
 		Budget.confirmDelete = function() {
@@ -496,8 +496,8 @@ Budget.registerEvents = function() {
 	});
 	$('body').on('click', '.modal .rename_arm', function(event) {
 		// get new name, clear input element
-		var new_arm_name = $("#instituteBudget_rename_arm input").val();
-		$("#instituteBudget_rename_arm input").val("");
+		var new_arm_name = $("#budget_rename_arm input").val();
+		$("#budget_rename_arm input").val("");
 		
 		// update target arm and clear target_arm
 		$('.arm[data-arm="' + Budget.target_arm + '"] button').text("Arm " + Budget.target_arm + ": " + new_arm_name);
@@ -557,9 +557,9 @@ Budget.registerEvents = function() {
 	$('body').on('click', 'a.delete_visit', function(event) {
 		// hide other modal content, show copy_visit section
 		$('.modal-content').hide()
-		$('#tinbudget_confirm_delete').show()
-		$('#tinbudget_confirm_delete').find('p').text("Are you sure you want to delete this visit?")
-		$("#tinbudget_modal").modal('show');
+		$('#budget_confirm_delete').show()
+		$('#budget_confirm_delete').find('p').text("Are you sure you want to delete this visit?")
+		$("#budget_modal").modal('show');
 		
 		var visit_index = Number($(event.target).closest('.visit').attr('data-visit'));
 		Budget.confirmDelete = function() {
@@ -616,11 +616,11 @@ Budget.registerEvents = function() {
 		Budget.pushState();
 	});
 	
-	// $('body').on('click', 'button#tin_budget_edit_procedures', function(event) {
+	// $('body').on('click', 'button#budget_edit_procedures', function(event) {
 	// 	Budget.editProcedures();
 	// });
 	
-	// $('body').on('click', 'button#tin_budget_procedure_comments', function(event) {
+	// $('body').on('click', 'button#budget_procedure_comments', function(event) {
 	// 	Budget.procedureComments();
 	// });
 	
@@ -711,7 +711,7 @@ Budget.registerEvents = function() {
 	// -- end modal section
 	
 	// confirm/cancel delete via modal for arms/visits/procedures
-	$('body').on('click', '#tinbudget_confirm_delete .confirm_delete', function(event) {
+	$('body').on('click', '#budget_confirm_delete .confirm_delete', function(event) {
 		if (Budget.confirmDelete) {
 			Budget.confirmDelete();
 		}
@@ -754,8 +754,8 @@ Budget.registerEvents = function() {
 		}
 	});
 	// register undo/redo button click events
-	$('body').on('click', '#tin_budget_undo', Budget.undo);
-	$('body').on('click', '#tin_budget_redo', Budget.redo);
+	$('body').on('click', '#budget_undo', Budget.undo);
+	$('body').on('click', '#budget_redo', Budget.redo);
 	
 	// register event to disable/enable cost field when routine care checkbox is changed
 	$('body').on('change', '.routine-care input', function(event) {
@@ -775,7 +775,7 @@ Budget.registerEvents = function() {
 
 // initialization/registration
 $('head').append('<link rel="stylesheet" type="text/css" href="' + Budget.budget_css_url + '">');
-$('body').append($('#tinbudget_modal').remove());
+$('body').append($('#budget_modal').remove());
 $(document).ready(function() {
 	// initialization
 	Budget.registerEvents();
@@ -938,8 +938,8 @@ Budget.redo = function() {
 
 Budget.refreshStateButtons = function() {
 	// disable/enable undo/redo buttons based on state stack
-	var undo = $("#tin_budget_undo");
-	var redo = $("#tin_budget_redo");
+	var undo = $("#budget_undo");
+	var redo = $("#budget_redo");
 	if ((Budget.states.length - 1) > Budget.stateIndex) {	// is there a state to go forward to?
 		redo.removeAttr('disabled');
 	} else {
