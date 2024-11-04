@@ -402,11 +402,14 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		$fields_to_labelize = ['study_population', 'funding_mechanism', 'funding_source', 'institute_center'];
 		foreach($fields_to_labelize as $field_name) {
 			unset($labels, $matches, $raw_value);
-			preg_match_all($this->label_pattern, $this->getMetadataCache()[$field_name]["element_enum"], $matches);
-			$labels = array_map("trim", $matches[2]);
-			$raw_value = intval($study_intake_data[$record][$this->proj->firstEventId][$field_name]) - 1;
-			// actually replace raw value
-			$study_intake_data[$record][$this->proj->firstEventId][$field_name] = $labels[$raw_value];
+            $metadata = $this->getMetadataCache();
+            if (array_key_exists($field_name, $metadata)) {
+                preg_match_all($this->label_pattern, $metadata[$field_name]["element_enum"], $matches);
+                $labels    = array_map("trim", $matches[2]);
+                $raw_value = intval($study_intake_data[$record][$this->proj->firstEventId][$field_name]) - 1;
+                // actually replace raw value
+                $study_intake_data[$record][$this->proj->firstEventId][$field_name] = $labels[$raw_value];
+            }
 		}
 		
 		$data = reset($study_intake_data[$record]);
