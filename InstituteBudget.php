@@ -24,7 +24,8 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
         
         $pid = $this->getProjectId();
         if (empty($pid)) {
-            return;
+            $this->log('Error: Institute Budget Module can\'t be initialized without a project ID');
+            exit(1);
         }
         
         $this->getBudgetForm();
