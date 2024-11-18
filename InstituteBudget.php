@@ -4,54 +4,82 @@ use ExternalModules\ExternalModules;
 
 require __DIR__ . '/vendor/autoload.php';
 class InstituteBudget extends \ExternalModules\AbstractExternalModule {
-	
+    
+    
+    private $moduleName = 'Budget Module';
+    // determine name of study intake form instrument
+    private $study_intake_form_name = 'study_coordinating_center_information';
+    
+    // set label pattern (to convert raw values to label values)
+    private $label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
+    
+    
+    //TODO Remove this constructor since external modules don't always play nice with them
 	public function __construct() {
 		parent::__construct();
 		
-		$pid = $this->getProjectId();
-		if (empty($pid)) {
-			return;
-		}
-		$budget_field = $this->getProjectSetting('budget_table_field');
-		$gng_field = $this->getProjectSetting('gonogo_table_field');
-		$summary_field = $this->getProjectSetting('summary_review_field');
-		
-		global $Proj;
-		if (gettype($Proj) == 'object') {
-			$this->proj = $Proj;
-			// collect instruments that hold schedule, gng, summary fields
-			foreach ($Proj->metadata as $field) {
-				if ($field['field_name'] === $budget_field) {
-					$this->budget_table_instrument = $field['form_name'];
-				}
-				if ($field['field_name'] === $gng_field) {
-					$this->gonogo_table_instrument = $field['form_name'];
-				}
-				if ($field['field_name'] === $summary_field) {
-					$this->summary_review_instrument = $field['form_name'];
-				}
-				if ($field['field_name'] === 'send_to_sites') {
-					$this->send_to_sites_instrument = $field['form_name'];
-				}
-			}
-			
-			// cache event_ids (in order)
-			$this->event_ids = [];
-			foreach ($Proj->eventsForms as $eid => $formList) {
-				$this->event_ids[] = $eid;
-			}
-			
-			// cache list of 2nd event's forms
-			$this->event_2_forms = $Proj->eventsForms[$this->event_ids[1]];
-			
-			// determine name of study intake form instrument
-			$this->study_intake_form_name = 'study_coordinating_center_information';
-			
-			// set label pattern (to convert raw values to label values)
-			$this->label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
-		}
 	}
 	
+    public function initialize() {
+        
+        $pid = $this->getProjectId();
+        if (empty($pid)) {
+            $this->log('Error: Institute Budget Module can\'t be initialized without a project ID');
+            exit(1);
+        }
+        
+        $this->getBudgetForm();
+        $this->getSummaryForm();
+        global $Proj;
+        if (gettype($Proj) == 'object') {
+            $this->proj = $Proj;
+            
+            $this->event_ids = [];
+            foreach ($Proj->eventsForms as $eid => $formList) {
+                $this->event_ids[] = $eid;
+            }
+            
+            // cache list of 2nd event's forms
+            $this->event_2_forms = $Proj->eventsForms[$this->event_ids[1]];
+        }
+    }
+    
+    public function getMetadataCache() {
+        if (empty($this->metadata)) {
+            $pid            = $this->getProjectId();
+            $this->metadata = $this->getMetadata($pid);
+        }
+        
+        return $this->metadata;
+    }
+    
+    public function getSettingFieldForm($fieldSetting) {
+        $form = '';
+        $field = $this->getProjectSetting($fieldSetting);
+        $this->getMetadataCache();
+        if (isset($this->metadata[$field])) {
+            $form = $this->metadata[$field]['form_name'];
+        }
+        
+        return $form;
+    }
+    
+    public function getBudgetForm() {
+        if (empty($this->budget_table_instrument)){
+            $this->budget_table_instrument = $this->getSettingFieldForm('budget_table_field');
+        }
+        
+        return $this->budget_table_instrument;
+    }
+    
+    public function getSummaryForm() {
+        if (empty($this->summary_review_instrument)){
+            $this->summary_review_instrument = $this->getSettingFieldForm('summary_review_field');
+        }
+        
+        return $this->summary_review_instrument;
+    }
+    
 	public function getScheduleDataFields() {
 		if (!$this->scheduleDataFields) {
 			$fields = ['arms', 'proc'];
@@ -81,9 +109,9 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		} elseif ($rid = is_numeric($_GET['rid']) ? $_GET['rid'] : null) {
 			// fetch, cache, return record data
 			$fields = $this->getScheduleDataFields();
-			$this->sched_record_data = json_decode(\REDCap::getData('json', $rid, $fields))[0];
+			$this->sched_record_data = json_decode(\REDCap::getData('json', $rid, $fields), true)[0];
 		} else {
-			throw new \Exception("The TIN Budget module couldn't determine the record ID to fetch record data with");
+			throw new \Exception("The ".$this->moduleName." couldn't determine the record ID to fetch record data with");
 		}
 		return $this->sched_record_data;
 	}
@@ -91,18 +119,18 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	public function getArms() {
 		$data = $this->getScheduleRecordData();
 		$arms = [];
-		if ($arm_count = $data->arms) {
+		if ($arm_count = $data['arms']) {
 			for ($arm_i = 1; $arm_i <= $arm_count; $arm_i++) {
-				$arm = (object) [
-					"name" => $data->{"arm_name_$arm_i"},
+				$arm = [
+					"name" => $data["arm_name_$arm_i"],
 					"visits" => []
 				];
 				
-				$visit_count = $data->{"visits_in_arm_$arm_i"};
+				$visit_count = $data["visits_in_arm_$arm_i"];
 				for ($visit_i = 1; $visit_i <= $visit_count; $visit_i++) {
 					$suffix = $arm_i == 1 ? "" : "_$arm_i";
-					$arm->visits[] = (object) [
-						"name" => $data->{"visit" . $visit_i . $suffix}
+					$arm['visits'][] = [
+						"name" => $data["visit" . $visit_i . $suffix]
 					];
 				}
 				
@@ -115,16 +143,16 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	public function getProcedures() {
 		$data = $this->getScheduleRecordData();
 		$procedures = [];
-		if ($proc_count = $data->proc) {
+		if ($proc_count = $data['proc']) {
 			for ($proc_i = 1; $proc_i <= $proc_count; $proc_i++) {
 				$proc_field_name = "procedure$proc_i";
-				$proc_name = $data->$proc_field_name;
-				$procedures[] = (object) [
+				$proc_name = $data[$proc_field_name];
+				$procedures[] = [
 					"name" => $proc_name,
-					"cost" => $data->{"cost$proc_i"},
-					"cpt" => $data->{"cpt$proc_i"},
-					"routine_care_procedure_form" => $data->{"rtc_$proc_i"},
-					"comment" => $data->{"rtc_comments_$proc_i"}
+					"cost" => $data["cost$proc_i"],
+					"cpt" => $data["cpt$proc_i"],
+					"routine_care_procedure_form" => $data["rtc_$proc_i"],
+					"comment" => $data["rtc_comments_$proc_i"]
 				];
 			}
 		}
@@ -141,69 +169,70 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 			"fields" => $budget_table_field,
 			"return_format" => 'json'
 		];
-		$data = json_decode(\REDCap::getData($params));
+		$data = json_decode(\REDCap::getData($params), true);
 		
 		if (empty($data)) {
-			return new \stdClass();
+			return [];
 		}
 		
-		return $data[0]->$budget_table_field;
+		return $data[0][$budget_table_field];
 	}
-	
-	public function getGoNoGoTableData($record, $instance) {
-		// get event ID
-		$event_ids = \REDCap::getEventNames();
-		$event_id = array_search('Event 1', $event_ids);
-		if (empty($event_id)) {
-			throw new \Exception("The TIN Budget module couldn't retrieve Go/No-Go data (empty event_id -- is there an 'Event 1' event for this project?)");
-		}
-		
-		$fields = [];
-		for ($i = 1; $i <= 100; $i++) {
-			$fields[] = "procedure" . $i . "_sc";
-			$fields[] = "cost" . $i . "_sc";
-		}
-		for ($i = 1; $i <= 5; $i++) {
-			$fields[] = "arm" . $i . "_decision";
-			$fields[] = "arm" . $i . "_comments";
-		}
-		if (!empty($record)) {
-			$get_data_params = [
-				"return_format" => 'array',
-				"records" => $record,
-				"fields" => $fields
-			];
-			$data = \REDCap::getData($get_data_params);
-			
-			if (empty($data[$record]['repeat_instances'])) {
-				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (repeat_instances empty)");
-			}
-			
-			$data = $data[$record]['repeat_instances'];
-			if (empty($data[$event_id])) {
-				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (repeat_instances[event_id] empty)");
-			}
-			$data = $data[$event_id][""];
-			if (empty($data)) {
-				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data ([event_id][\"\"] missing)");
-			}
-			
-			$data = $data[$instance];
-			
-			if (empty($data)) {
-				throw new \Exception("The TIN Budget module couldn't extract Go/No-Go table data from retrieved record data (no instance data found)");
-			}
-			
-			return $data;
-		} else {
-			throw new \Exception("The TIN Budget module couldn't determine the record ID to fetch Go/No-Go table data with");
-		}
-	}
+    
+    //TODO Remove or update once we figure out if this feature is staying
+	//public function getGoNoGoTableData($record, $instance) {
+	//	// get event ID
+	//	$event_ids = \REDCap::getEventNames();
+	//	$event_id = array_search('Event 1', $event_ids);
+	//	if (empty($event_id)) {
+	//		throw new \Exception("The ".$this->moduleName." couldn't retrieve Go/No-Go data (empty event_id -- is there an 'Event 1' event for this project?)");
+	//	}
+	//
+	//	$fields = [];
+	//	for ($i = 1; $i <= 100; $i++) {
+	//		$fields[] = "procedure" . $i . "_sc";
+	//		$fields[] = "cost" . $i . "_sc";
+	//	}
+	//	for ($i = 1; $i <= 5; $i++) {
+	//		$fields[] = "arm" . $i . "_decision";
+	//		$fields[] = "arm" . $i . "_comments";
+	//	}
+	//	if (!empty($record)) {
+	//		$get_data_params = [
+	//			"return_format" => 'array',
+	//			"records" => $record,
+	//			"fields" => $fields
+	//		];
+	//		$data = \REDCap::getData($get_data_params);
+	//
+	//		if (empty($data[$record]['repeat_instances'])) {
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data (repeat_instances empty)");
+	//		}
+	//
+	//		$data = $data[$record]['repeat_instances'];
+	//		if (empty($data[$event_id])) {
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data (repeat_instances[event_id] empty)");
+	//		}
+	//		$data = $data[$event_id][""];
+	//		if (empty($data)) {
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data ([event_id][\"\"] missing)");
+	//		}
+	//
+	//		$data = $data[$instance];
+	//
+	//		if (empty($data)) {
+	//			throw new \Exception("The ".$this->moduleName." couldn't extract Go/No-Go table data from retrieved record data (no instance data found)");
+	//		}
+	//
+	//		return $data;
+	//	} else {
+	//		throw new \Exception("The ".$this->moduleName." couldn't determine the record ID to fetch Go/No-Go table data with");
+	//	}
+	//}
 	
 	public function getSummaryReviewData($record, $instance) {
 		if (empty($instance))
 			$instance = 1;
-		$data = new \stdClass();
+		$data = [];
 		$field_list = ['institution'];
 		for ($i = 1; $i <= 5; $i++) {
 			$field_list[] = "fixedcost$i";
@@ -236,10 +265,10 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		$instance_data = $instance_data[$instance];
 		foreach ($field_list as $i => $field_name) {
 			if (!empty($base_data[$field_name])) {
-				$data->$field_name = $base_data[$field_name];
+				$data[$field_name] = $base_data[$field_name];
 			}
 			if (!empty($instance_data[$field_name])) {
-				$data->$field_name = $instance_data[$field_name];
+				$data[$field_name] = $instance_data[$field_name];
 			}
 		}
 		
@@ -247,7 +276,7 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		foreach ($data as $name => $value) {
 			if (strpos($name, '_decision') !== false) {
 				$labels = $this->getChoiceLabels($name);
-				$data->$name = $labels[$value];
+				$data[$name] = $labels[$value];
 			}
 		}
 		
@@ -374,11 +403,14 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		$fields_to_labelize = ['study_population', 'funding_mechanism', 'funding_source', 'institute_center'];
 		foreach($fields_to_labelize as $field_name) {
 			unset($labels, $matches, $raw_value);
-			preg_match_all($this->label_pattern, $this->proj->metadata[$field_name]["element_enum"], $matches);
-			$labels = array_map("trim", $matches[2]);
-			$raw_value = intval($study_intake_data[$record][$this->proj->firstEventId][$field_name]) - 1;
-			// actually replace raw value
-			$study_intake_data[$record][$this->proj->firstEventId][$field_name] = $labels[$raw_value];
+            $metadata = $this->getMetadataCache();
+            if (array_key_exists($field_name, $metadata)) {
+                preg_match_all($this->label_pattern, $metadata[$field_name]["element_enum"], $matches);
+                $labels    = array_map("trim", $matches[2]);
+                $raw_value = intval($study_intake_data[$record][$this->proj->firstEventId][$field_name]) - 1;
+                // actually replace raw value
+                $study_intake_data[$record][$this->proj->firstEventId][$field_name] = $labels[$raw_value];
+            }
 		}
 		
 		$data = reset($study_intake_data[$record]);
@@ -387,20 +419,20 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	}
 	
 	public function showStaticScheduleArms($budget_data, $arms_and_visits_survey_link) {
-		foreach($budget_data->arms as $arm_i => $arm) {
+		foreach($budget_data['arms'] as $arm_i => $arm) {
 		$link_arm_index = $arm_i + 1;
 		?>
 		<div class="budget_container">
-		<a href="<?= $arms_and_visits_survey_link . "&arm=$link_arm_index" ?>"><h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm->name ?? "") ?></h6></a>
+		<a href="<?= $arms_and_visits_survey_link . "&arm=$link_arm_index" ?>"><h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm['name'] ?? "") ?></h6></a>
 		<table>
 			<thead>
 				<tr>
 				<?php
-				foreach ($arm->visits as $visit_i => $visit) {
+				foreach ($arm['visits'] as $visit_i => $visit) {
 					if (empty($visit)) {
 						echo "<th></th>";
 					} else {
-						echo "<th>Visit " . ($visit_i) . ": " . $visit->name . "</th>";
+						echo "<th>Visit " . ($visit_i) . ": " . $visit['name'] . "</th>";
 					}
 				}
 				?>
@@ -408,22 +440,22 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 			</thead>
 			<tbody>
 			<?php
-			$visit1 = $arm->visits[1];
-			$row_count = count($budget_data->procedures);
+			$visit1 = $arm['visits'][1];
+			$row_count = count($budget_data['procedures']);
 			for ($row_i = 1; $row_i <= $row_count; $row_i++) {
 				$row_i_0 = $row_i - 1;
 				?>
 				<tr>
-					<td><?= $budget_data->procedures[$row_i_0]->name ?></td>
+					<td><?= $budget_data['procedures'][$row_i_0]['name'] ?></td>
 					<?php
-					foreach ($arm->visits as $visit_i => $visit) {
+					foreach ($arm['visits'] as $visit_i => $visit) {
 						if (!empty($visit)) {
-							if ($visit->procedure_counts[$row_i_0]->count != 0) {
+							if ($visit['procedure_counts'][$row_i_0]['count'] != 0) {
 								$class = " class='nonzero'";
 							} else {
 								$class = "";
 							}
-							echo "<td$class>" . $visit->procedure_counts[$row_i_0]->count . "</td>";
+							echo "<td$class>" . $visit['procedure_counts'][$row_i_0]['count'] . "</td>";
 						}
 					}
 					?>
@@ -433,9 +465,9 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 			
 			// add Total $$ row
 			echo "<tr><td class='no-border'>Total $$</td>";
-			foreach ($arm->visits as $visit_i => $visit) {
+			foreach ($arm['visits'] as $visit_i => $visit) {
 				if (!empty($visit)) {
-					echo "<td>" . $visit->total . "</td>";
+					echo "<td>" . $visit['total'] . "</td>";
 				}
 			}
 			echo "</tr>";
@@ -640,8 +672,11 @@ HEREDOC;
 		
 		return $data;
 	}
-	
+    
+    
+    //TODO Remove or update once we figure out if this feature is staying
 	public function renderDashboard() {
+        $this->initialize();
         $user = $this->getUser()->getUsername();
         $userInfo = ExternalModules::getUserInfo($user);
         $user_name = $userInfo['user_firstname']. ' ' . $userInfo['user_lastname'];
@@ -802,9 +837,9 @@ HEREDOC;
 		$budget_data = $this->getBudgetTableData($record);
 		if (empty($budget_data)) {
 			// throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
-			$budget_data = new \stdClass();
+			$budget_data = [];
 		} else {
-			$budget_data = json_decode($budget_data);
+			$budget_data = json_decode($budget_data, true);
 		}
 		
 		// the study intake form that gets attached to email should not have hyperlinks in first column
@@ -863,11 +898,11 @@ HEREDOC;
 			</thead>
 			<tbody>
 			<?php
-			foreach($budget_data->procedures as $i => $info) {
-				if ($info->routine_care === true) {
-					$info->cost = "Routine Care";
+			foreach($budget_data['procedures'] as $i => $info) {
+				if ($info['routine_care'] === true) {
+					$info['cost'] = "Routine Care";
 				}
-				echo "<tr><td>" . $info->name . "</td><td>" . $info->cpt . "</td><td>" . $info->cost . "</td></tr>";
+				echo "<tr><td>" . $info['name'] . "</td><td>" . $info['cpt'] . "</td><td>" . $info['cost'] . "</td></tr>";
 			}
 			?>
 			</tbody>
@@ -897,10 +932,10 @@ HEREDOC;
 	
 	public function replaceScheduleFields($record) {
 		$_GET['rid'] = $record;
-		
+  
 		// retrieve name of configured budget table field
 		$schedule_field = $this->getProjectSetting('budget_table_field');
-		
+  
 		// start buffering to catch getBudgetTable output (html)
 		ob_start();
 		include('php/getBudgetTable.php');
@@ -930,36 +965,35 @@ HEREDOC;
         if (empty($soe_data)) {
             $soe_data = '{}';
         }
-		
 		$cpt_endpoint_url = $this->getProjectSetting('cpt_endpoint_url');
 		
 		?>
 		<script type="text/javascript">
-			InstituteBudget = {
+			Budget = {
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
 				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
 				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
 			}
 			
-			InstituteBudgetSurvey = {
+			BudgetSurvey = {
 				schedule_field: "<?= $schedule_field; ?>",
 				budget_table: "<?=$budget_table;?>",
 				soe_data: <?=$soe_data;?>,
 				updateScheduleField: function(scheduleString) {
-					var field_name = InstituteBudgetSurvey.schedule_field;
+					var field_name = BudgetSurvey.schedule_field;
 					$("textarea[name='" + field_name + "']").val(scheduleString);
 				}
 			}
 			
 			$(document).ready(function() {
-				// if (InstituteBudget.procedures_json.length > 0) {
-				// 	TINBudget.procedures = JSON.parse(TINBudget.procedures_json);
+				if (Budget.procedures_json.length > 0) {
+					Budget.procedures = JSON.parse(Budget.procedures_json);
+				}
+				// if (BudgetSurvey.soe_json.length > 0) {
+				// 	BudgetSurvey.soe_data = JSON.parse(BudgetSurvey.soe_json);
 				// }
-				// if (TINBudgetSurvey.soe_json.length > 0) {
-				// 	TINBudgetSurvey.soe_data = JSON.parse(TINBudgetSurvey.soe_json);
-				// }
-				var fieldname = InstituteBudgetSurvey.schedule_field;
-				$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + InstituteBudgetSurvey.budget_table + "</div>")
+				var fieldname = BudgetSurvey.schedule_field;
+				$('#' + fieldname + '-tr').before("<div id='budgetTable'>" + BudgetSurvey.budget_table + "</div>")
 				$('#' + fieldname + '-tr').hide();
 			});
 		</script>
@@ -1010,7 +1044,7 @@ HEREDOC;
 //		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
 		?>
 		<script type="text/javascript">
-			TINSummary = {
+			BudgetSummary = {
 				record_id: '<?= $record; ?>',
 				instance: '<?= $instance; ?>',
 				summary_review_field: '<?= $summary_review_field; ?>',
@@ -1029,7 +1063,7 @@ HEREDOC;
 		$cc_replace_field = "summary_review_upload";
 		?>
 		<script type="text/javascript">
-			TINSummary = {
+			BudgetSummary = {
 				record_id: '<?= $record; ?>',
 				event_id: '<?= $event_id; ?>',
 				instance: '<?= $instance; ?>',
@@ -1037,11 +1071,11 @@ HEREDOC;
 				cc_html_url: '<?= $cc_html_url; ?>'
 			}
 			$(document).ready(function() {
-				if (typeof TINSummary.cc_summary_review_field == 'string') {
-					$('#' + TINSummary.cc_summary_review_field + '-tr').hide();
+				if (typeof BudgetSummary.cc_summary_review_field == 'string') {
+					$('#' + BudgetSummary.cc_summary_review_field + '-tr').hide();
 					$('#surveyinstructions').after("<div id='cc_summary_review'></div>");
 					// $("#cc_summary_review_td").append("<div id='cc_summary_review'></div>");
-					var ajax_url = TINSummary.cc_html_url + "&record_id=" + encodeURI(TINSummary.record_id) + "&event_id=" + encodeURI(TINSummary.event_id);
+					var ajax_url = BudgetSummary.cc_html_url + "&record_id=" + encodeURI(BudgetSummary.record_id) + "&event_id=" + encodeURI(BudgetSummary.event_id);
 					$.ajax(ajax_url).done(function(data) {
 						var div = $("div#cc_summary_review");
 						div.html(data);
@@ -1179,8 +1213,8 @@ HEREDOC;
 			"fields" => $form_name,
 			"events" => $event_id
 		];
-		$data = json_decode(\REDCap::getData($params));
-		return $data[0]->$form_name;
+		$data = json_decode(\REDCap::getData($params), true);
+		return $data[0][$form_name];
 	}
 	
 	private function addSummaryReviewLinkToSurvey($rid, $inst, $eid) {
@@ -1261,22 +1295,22 @@ HEREDOC;
 	
 	public function overwriteProceduresOnSOESaved($record) {
 		if (empty($record)) {
-			\REDCap::logEvent("TIN Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event due to empty \$record value.");
+			\REDCap::logEvent($this->moduleName, "Failed to overwrite Procedures instrument data upon saving Schedule of Event due to empty \$record value.");
 			return false;
 		}
 		
 		// get precursor data
 		$soe_data = $this->getBudgetTableData($record);
-		$soe_data = json_decode($soe_data);
-		$procedures = $soe_data->procedures;
+		$soe_data = json_decode($soe_data, true);
+		$procedures = $soe_data['procedures'];
 		
 		// make data object
-		$data_to_save = new \stdClass();
+		$data_to_save = [];
 		
 		// start settings data to be saved
 		$rid_field = $this->getRecordIdField();
-		$data_to_save->$rid_field = $record;
-		$data_to_save->proc = count($procedures);
+		$data_to_save[$rid_field] = $record;
+		$data_to_save['proc'] = count($procedures);
 		
 		foreach ($procedures as $index => $procedure) {
 			unset($cost, $i1);
@@ -1285,19 +1319,19 @@ HEREDOC;
 			$i1 = $index+1;
 			
 			// formatting -- cost1, cost2, etc require number_2d validation (REDCap enforced)
-			$cost = number_format((float) $procedure->cost, 2);
+			$cost = number_format((float) $procedure['cost'], 2);
 			
 			// remove non-numeric, non-period characters (commas were causing number_2d validation failure)
 			$cost = preg_replace("/[^0-9.]/", "", $cost);
 			
-			$data_to_save->{"procedure$i1"} = $procedure->name;
-			$data_to_save->{"cost$i1"} = $cost;
-			$data_to_save->{"cpt$i1"} = $procedure->cpt;
-			$data_to_save->{"rtc_comments_$i1"} = $procedure->comment;
-			if ($procedure->routine_care != "1") {
-				$data_to_save->{"rtc_$i1"} = '0';
+			$data_to_save["procedure$i1"] = $procedure['name'];
+			$data_to_save["cost$i1"] = $cost;
+			$data_to_save["cpt$i1"] = $procedure['cpt'];
+			$data_to_save["rtc_comments_$i1"] = $procedure['comment'];
+			if ($procedure['routine_care'] != "1") {
+				$data_to_save["rtc_$i1"] = '0';
 			} else {
-				$data_to_save->{"rtc_$i1"} = '1';
+				$data_to_save["rtc_$i1"] = '1';
 			}
 		}
 		
@@ -1309,9 +1343,9 @@ HEREDOC;
 		];
 		$result = \REDCap::saveData($save_params);
 		if (gettype($result) == 'string') {
-			\REDCap::logEvent("TIN Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData error: $result");
+			\REDCap::logEvent($this->moduleName, "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData error: $result");
 		} elseif (!empty($result['errors'])) {
-			\REDCap::logEvent("TIN Budget Module", "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData errors: " . implode("\n", $result['errors']));
+			\REDCap::logEvent($this->moduleName, "Failed to overwrite Procedures instrument data upon saving Schedule of Event.\r\nREDCap::saveData errors: " . implode("\n", $result['errors']));
 		}
 	}
 	
@@ -1331,8 +1365,8 @@ HEREDOC;
 			];
 			$data = \REDCap::getData($params);
 			global $Proj;
-			$budget_data = json_decode($data[$record_id][$Proj->firstEventId][$budget_field]);
-			$procedures = $budget_data->procedures;
+			$budget_data = json_decode($data[$record_id][$Proj->firstEventId][$budget_field], true);
+			$procedures = $budget_data['procedures'];
 		} catch (\Exception $e) {
 			return;
 		}
@@ -1353,8 +1387,8 @@ HEREDOC;
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
 		// update workbook cells
 		for ($i = 0; $i < 100; $i++) {
-			$name = $procedures[$i-1]->name;
-			$cpt = $procedures[$i-1]->cpt;
+			$name = $procedures[$i-1]['name'];
+			$cpt = $procedures[$i-1]['cpt'];
 			
 			$sheet->setCellValue("B" . ($i + 3), $name);
 			$sheet->setCellValue("C" . ($i + 3), $cpt);
@@ -1389,11 +1423,11 @@ HEREDOC;
 			"records" => $record_id,
 			"fields" => $fields
 		];
-		$data = json_decode(\REDCap::getData($parameters));
+		$data = json_decode(\REDCap::getData($parameters), true);
 		
 		// remove non event 2 instance objects
 		foreach($data as $index => $obj) {
-			if (empty($obj->redcap_repeat_instance))
+			if (empty($obj['redcap_repeat_instance']))
 				unset($data[$index]);
 		}
 		
@@ -1417,10 +1451,10 @@ HEREDOC;
 			"records" => $record_id,
 			"fields" => $fields
 		];
-		$data = json_decode(\REDCap::getData($parameters))[0];
+		$data = json_decode(\REDCap::getData($parameters), true)[0];
 		
 		foreach ($fields as $i => $name) {
-			$names[$i+1] = $data->$name;
+			$names[$i+1] = $data[$name];
 		}
 		return $names;
 	}
@@ -1446,19 +1480,19 @@ HEREDOC;
 			for ($site_index = 1; $site_index <= $eoi_count; $site_index++) {
 				$found = false;
 				foreach($instances as $instance) {
-					if ($instance->redcap_repeat_instance == $site_index) {
+					if ($instance['redcap_repeat_instance'] == $site_index) {
 						$found = true;
 						break;
 					}
 				}
 				
 				if (!$found) {
-					$missing_instance = new \stdClass();
+					$missing_instance = [];
 					$primary_key_name = $this->getRecordIdField();
-					$missing_instance->$primary_key_name = "$record_id";
-					$missing_instance->redcap_repeat_instance = $site_index;
-					$missing_instance->redcap_event_name = "event_1_arm_1";
-					$missing_instance->institution = $site_names[$site_index];
+					$missing_instance[$primary_key_name] = "$record_id";
+					$missing_instance['redcap_repeat_instance'] = $site_index;
+					$missing_instance['redcap_event_name'] = "event_1_arm_1";
+					$missing_instance['institution'] = $site_names[$site_index];
 					$instances[] = $missing_instance;
 				}
 			}
@@ -1468,12 +1502,12 @@ HEREDOC;
 			foreach ($instances as $instance) {
 				foreach ($this->event_2_forms as $formName) {
 					$field = $formName . "_complete";
-					if ($instance->$field == '')
-						$instance->$field = '0';
+					if ($instance[$field] == '')
+						$instance[$field] = '0';
 				}
 				
-				if (empty($instance->institution))
-					$instance->institution = $site_names[$instance->redcap_repeat_instance];
+				if (empty($instance['institution']))
+					$instance['institution'] = $site_names[$instance['redcap_repeat_instance']];
 			}
 			
 			// save all instances
@@ -1497,7 +1531,7 @@ HEREDOC;
 				// count instances of second event
 				$sum = 0;
 				foreach ($instances as $instance) {
-					if ($instance->redcap_event_name == 'event_1_arm_1')
+					if ($instance['redcap_event_name'] == 'event_1_arm_1')
 						$sum++;
 				}
 				if ($sum >= $eoi_count) {
@@ -1510,7 +1544,7 @@ HEREDOC;
 			$log_message .= "FAILURE\nThe [eoi] field for record '$record_id' is not > 0.";
 		}
 		
-		\REDCap::logEvent("TIN Budget Module", $log_message);
+		\REDCap::logEvent($this->moduleName, $log_message);
 	}
 	
 	public function determineRecordIdFromMessage($email_message) {
@@ -1532,8 +1566,8 @@ HEREDOC;
 			"fields" => $rid_field
 		];
 		try {
-			$data = json_decode(\REDCap::getData($parameters));
-			$rid = $data[0]->$rid_field;
+			$data = json_decode(\REDCap::getData($parameters), true);
+			$rid = $data[0][$rid_field];
 			if (empty($rid)) {
 				throw new \Exception("Couldn't determine record ID from the given email message");
 			}
@@ -1584,55 +1618,55 @@ HEREDOC;
 			$protocol_link = "<small style='font-weight: bold; color: #777;'>(No protocol synopsis file attached)</small>";
 		}
 		
-		$styles = new \stdClass();
-		$styles->title = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
-		$styles->table = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
-		$styles->th = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
-		$styles->td = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		$styles = [];
+		$styles['title'] = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
+		$styles['table'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		$styles['th'] = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
+		$styles['td'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
 		
 		return <<<HEREDOC
 		<!--STUDY INTAKE FORM-->
 		<div>
-		<h5 class="table_title" {$styles->title}><u>STUDY INTAKE FORM</u></h5>
-		<table class="cc_rev_table blue_table_headers" {$styles->table}>
+		<h5 class="table_title" {$styles['title']}><u>STUDY INTAKE FORM</u></h5>
+		<table class="cc_rev_table blue_table_headers" {$styles['table']}>
 			<thead>
 				<tr>
-					<th {$styles->th}>COORDINATING CENTER/STUDY INFORMATION</th>
-					<th {$styles->th}>INFORMATION PROVIDED</th>
+					<th {$styles['th']}>COORDINATING CENTER/STUDY INFORMATION</th>
+					<th {$styles['th']}>INFORMATION PROVIDED</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Coordinating Center Contact Information</a></td>
-					<td {$styles->td}>$td1</td>
+					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Coordinating Center Contact Information</a></td>
+					<td {$styles['td']}>$td1</td>
 				</tr>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Short Study Name</a></td>
-					<td {$styles->td}>{$cc_data['short_name']}</td>
+					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Short Study Name</a></td>
+					<td {$styles['td']}>{$cc_data['short_name']}</td>
 				</tr>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Protocol Synopsis</a></td>
-					<td {$styles->td}>$protocol_link</td>
+					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Protocol Synopsis</a></td>
+					<td {$styles['td']}>$protocol_link</td>
 				</tr>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Brief Study Description</a></td>
-					<td {$styles->td}>{$cc_data['brief_stud_description']}</td>
+					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Brief Study Description</a></td>
+					<td {$styles['td']}>{$cc_data['brief_stud_description']}</td>
 				</tr>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Description of Study Intervention</a></td>
-					<td {$styles->td}>{$cc_data['prop_summary_describe2_5f5']}</td>
+					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Description of Study Intervention</a></td>
+					<td {$styles['td']}>{$cc_data['prop_summary_describe2_5f5']}</td>
 				</tr>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Enrollment Goals</a></td>
-					<td {$styles->td}>
+					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Enrollment Goals</a></td>
+					<td {$styles['td']}>
 						Estimated number of subjects: {$cc_data['number_subjects']}<br>
 						Study Population: {$cc_data['study_population']}<br>
 						Estimated number of sites: {$cc_data['number_sites']}
 					</td>
 				</tr>
 				<tr>
-					<td {$styles->td}><a href="$survey_link" style="font-size: 1rem;">Funding/Support for the Proposal</a></td>
-					<td {$styles->td}>Current funding source: {$cc_data['funding_source']}<br>
+					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Funding/Support for the Proposal</a></td>
+					<td {$styles['td']}>Current funding source: {$cc_data['funding_source']}<br>
 						Funding mechanism: $funding_mechanism<br>
 						Identified I/C: {$cc_data['institute_center']}<br>
 						Grant/application number: {$cc_data['grant_app_no']}<br>
@@ -1667,46 +1701,46 @@ HEREDOC;
 		}
 		
 		$styles = new \stdClass();
-		$styles->title = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
-		$styles->table = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
-		$styles->th = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
-		$styles->td = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		$styles['title'] = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
+		$styles['table'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		$styles['th'] = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
+		$styles['td'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
 		
 		return <<<HEREDOC
 		<!--STUDY INTAKE FORM-->
 		<div>
-		<h5 class="table_title" {$styles->title}><u>STUDY INTAKE FORM</u></h5>
-		<table class="cc_rev_table blue_table_headers" {$styles->table}>
+		<h5 class="table_title" {$styles['title']}><u>STUDY INTAKE FORM</u></h5>
+		<table class="cc_rev_table blue_table_headers" {$styles['table']}>
 			<thead>
 				<tr>
-					<th {$styles->th}>COORDINATING CENTER/STUDY INFORMATION</th>
-					<th {$styles->th}>INFORMATION PROVIDED</th>
+					<th {$styles['th']}>COORDINATING CENTER/STUDY INFORMATION</th>
+					<th {$styles['th']}>INFORMATION PROVIDED</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr>
 					<td>Coordinating Center Contact Information</td>
-					<td {$styles->td}>$td1</td>
+					<td {$styles['td']}>$td1</td>
 				</tr>
 				<tr>
 					<td>Short Study Name</td>
-					<td {$styles->td}>{$cc_data['short_name']}</td>
+					<td {$styles['td']}>{$cc_data['short_name']}</td>
 				</tr>
 				<tr>
 					<td>Protocol Synopsis</td>
-					<td {$styles->td}>$protocol_link</td>
+					<td {$styles['td']}>$protocol_link</td>
 				</tr>
 				<tr>
 					<td>Brief Study Description</td>
-					<td {$styles->td}>{$cc_data['brief_stud_description']}</td>
+					<td {$styles['td']}>{$cc_data['brief_stud_description']}</td>
 				</tr>
 				<tr>
 					<td>Description of Study Intervention</td>
-					<td {$styles->td}>{$cc_data['prop_summary_describe2_5f5']}</td>
+					<td {$styles['td']}>{$cc_data['prop_summary_describe2_5f5']}</td>
 				</tr>
 				<tr>
 					<td>Enrollment Goals</td>
-					<td {$styles->td}>
+					<td {$styles['td']}>
 						Estimated number of subjects: {$cc_data['number_subjects']}<br>
 						Study Population: {$cc_data['study_population']}<br>
 						Estimated number of sites: {$cc_data['number_sites']}
@@ -1714,7 +1748,7 @@ HEREDOC;
 				</tr>
 				<tr>
 					<td>Funding/Support for the Proposal</td>
-					<td {$styles->td}>Current funding source: {$cc_data['funding_source']}<br>
+					<td {$styles['td']}>Current funding source: {$cc_data['funding_source']}<br>
 						Funding mechanism: $funding_mechanism<br>
 						Identified I/C: {$cc_data['institute_center']}<br>
 						Grant/application number: {$cc_data['grant_app_no']}<br>
@@ -1730,6 +1764,7 @@ HEREDOC;
 	}
 	
 	public function redcap_every_page_top($project_id) {
+        $this->initialize();
         $event_id = $_GET['event_id'];
         $instrument = $_GET['page'];
         if (in_array($instrument, $this->event_2_forms) && $_GET['__return'] == 1 && $_POST['submit-action'] == 'submit-btn-savereturnlater'){
@@ -1773,35 +1808,35 @@ HEREDOC;
     }
 	
 	public function redcap_survey_page($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
+        $this->initialize();
 		// replace schedule of event field in survey page with generated table
-		if ($instrument == $this->budget_table_instrument) {
+		if ($instrument == $this->getBudgetForm()) {
 			$this->replaceScheduleFields($record);
 		}
 		
+        //TODO Remove or update once we figure out if this feature is staying
 		// replace Go/No-Go field in survey page with generated table
-		if ($instrument == $this->gonogo_table_instrument) {
-			$this->replaceGoNoGoFields($record, $repeat_instance);
-		} 
+		//if ($instrument == $this->gonogo_table_instrument) {
+		//	$this->replaceGoNoGoFields($record, $repeat_instance);
+		//}
 		
 		// replace Summary Review field in survey page with interface
-		if ($instrument == $this->summary_review_instrument) {
+		if ($instrument == $this->getSummaryForm()) {
 			$this->replaceSummaryReviewField($record, $repeat_instance);
 		}
+        
+        //TODO Remove or update once we figure out if this feature is staying
+		//if ($instrument == 'enter_cost_to_run_procedure') {
+		//	$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
+		//}
 		
-		if ($instrument == 'enter_cost_to_run_procedure') {
-			$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
-		}
-		
-		if (gettype($this->proj) != 'object')
-			$this->proj = new \Project($this->getProjectId());
-		
-		if ($event_id == $this->proj->firstEventId) {
-            if ($instrument != 'summary_review_page') {
+		if ($event_id == $this->getFirstEventId()) {
+            if ($instrument != $this->getSummaryForm()) {
                 $this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
             } else {
                 $this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
             }
-			$this->convertSaveAndReturnLaterButton();
+			//$this->convertSaveAndReturnLaterButton();
 			$this->changeSurveySubmitButton($record, $event_id, $instrument);
 		}
 		
@@ -1817,6 +1852,7 @@ HEREDOC;
 	}
     
     public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
+        $this->initialize();
         if ($instrument == $this->send_to_sites_instrument) {
             $parameters = [
                 "project_id"    => $project_id,
@@ -1825,8 +1861,8 @@ HEREDOC;
                 "fields"        => 'send_to_sites'
             ];
         
-            $data = json_decode(\REDCap::getData($parameters));
-            if ($data[0]->send_to_sites === '1') {
+            $data = json_decode(\REDCap::getData($parameters), true);
+            if ($data[0]['send_to_sites'] === '1') {
                 $this->createSiteInstances($record);
             }
         }
@@ -1870,7 +1906,7 @@ HEREDOC;
 		// determine the record this email is associated with (always log failure to determine record ID)
 		$rid = $this->determineRecordIdFromMessage($message);
 		if (empty($rid)) {
-			$log_msg = "The TIN Budget module will not send this email -- can't determine record ID to fetch Study Intake Form!";
+			$log_msg = "The ".$this->moduleName." will not send this email -- can't determine record ID to fetch Study Intake Form!";
 			$this->log_email_event($to, $from, $subject, $log_msg);
 			return false;
 		}
@@ -1897,10 +1933,10 @@ HEREDOC;
 		// determine whether we should log successful attachment/resends or not
 		$log_successful_sends = $this->getProjectSetting('enable_email_logging');
 		if ($email_sent && $log_successful_sends) {
-			$log_msg = "The TIN Budget module is capturing this email, attaching a Study Intake Form, and re-sending the email.";
+			$log_msg = "The ".$this->moduleName." is capturing this email, attaching a Study Intake Form, and re-sending the email.";
 			$this->log_email_event($to, $from, $subject, $log_msg);
 		} else {
-			$log_msg = "The TIN Budget module attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
+			$log_msg = "The ".$this->moduleName." attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
 			$this->log_email_event($to, $from, $subject, $log_msg);
 		}
 		
@@ -1915,7 +1951,7 @@ HEREDOC;
     }
 	
 	private function log_email_event($to, $from, $subject, $log_message) {
-		\REDCap::logEvent("TIN Budget Module", "Found 'Identify Site' email from TIN Budget project Alert:
+		\REDCap::logEvent($this->moduleName, "Found 'Identify Site' email from Budget project Alert:
 		to: " . db_escape($to) . "
 		from: " . db_escape($from) . "
 		subject: " . db_escape($subject) . "

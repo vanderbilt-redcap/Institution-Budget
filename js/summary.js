@@ -1,7 +1,7 @@
-TINSummary.initialize = function() {
-	if (typeof TINSummary.summary_review_field == 'string') {
-		$('#' + TINSummary.summary_review_field + '-tr').hide();
-		$('#' + TINSummary.summary_review_field + '-tr').before("\
+BudgetSummary.initialize = function() {
+	if (typeof BudgetSummary.summary_review_field == 'string') {
+		$('#' + BudgetSummary.summary_review_field + '-tr').hide();
+		$('#' + BudgetSummary.summary_review_field + '-tr').before("\
 		<tr id='summary_review_tr'><td colspan='3' id='summary_review_td'></td></tr>");
 		$("#summary_review_td").append("<div id='summary_review'></div>");
 	} else {
@@ -11,23 +11,23 @@ TINSummary.initialize = function() {
 	var parent = $("#summary_review");
 	
 	// add review headers
-	var site_name = TINSummary.summary_data.institution || "[SITE NAME]";
+	var site_name = BudgetSummary.summary_data.institution || "[SITE NAME]";
 	parent.append("\
 		<h3>BUDGET FEASIBILITY SUMMARY PAGE</h3>\
 		<h3>MY SITE: " + site_name + "</h3><br>");
 	
-	TINSummary.addFixedCostsTable(parent);
-	TINSummary.addProcedureCostsTable(parent);
+	BudgetSummary.addFixedCostsTable(parent);
+	BudgetSummary.addProcedureCostsTable(parent);
 	
-	TINSummary.replaceHereWithLinkToPrint();
-	TINSummary.addDownloadSummaryReviewButton();
+	BudgetSummary.replaceHereWithLinkToPrint();
+	BudgetSummary.addDownloadSummaryReviewButton();
 }
 
-TINSummary.addFixedCostsTable = function(parent) {
+BudgetSummary.addFixedCostsTable = function(parent) {
 	if (!(parent instanceof jQuery))
 		return;
 	var table_html = "";
-	var data = TINSummary.summary_data;
+	var data = BudgetSummary.summary_data;
 	
 	table_html += "<h4 class='summary-table-header'>FIXED COSTS SUMMARY REVIEW</h4>";
 	table_html += "\
@@ -51,25 +51,25 @@ TINSummary.addFixedCostsTable = function(parent) {
 		var site_comments = '';
 		if (i <= 5) {
 			// convert decision to GO or NO-GO or NEED INFO
-			result = TINSummary.convertCostDecision(data["fixedcost" + i + "_decision"]);
+			result = BudgetSummary.convertCostDecision(data["fixedcost" + i + "_decision"]);
 			fixed_cost = data["fixedcost" + i] ?? '';
 			fixed_cost_detail = data["fixedcost" + i + "_detail"] ?? '';
 			go_no_go_decision = result.decision ?? '';
 			site_comments = data["fixedcost" + i + "_comments"] ?? '';
 		} else if(i == 6) {
-			result = TINSummary.convertCostDecision(data["personnelcost_pi_decision"]);
+			result = BudgetSummary.convertCostDecision(data["personnelcost_pi_decision"]);
 			fixed_cost = 'Personnel PI Cost';
 			fixed_cost_detail = data["costs_4"] ?? '';
 			go_no_go_decision = result.decision ?? '';
 			site_comments = data["personnelcost_pi_comment"] ?? '';
 		} else if(i == 7) {
-			result = TINSummary.convertCostDecision(data["personlcost_nonpi_decision"]);
+			result = BudgetSummary.convertCostDecision(data["personlcost_nonpi_decision"]);
 			fixed_cost = 'Personnel Non-PI Cost';
 			fixed_cost_detail = data["costs_5"] ?? '';
 			go_no_go_decision = result.decision ?? '';
 			site_comments = data["personlcost_nonpi_comment"] ?? '';
 		} else if(i == 8) {
-			result = TINSummary.convertCostDecision(data["personlcost_partic_decision"]);
+			result = BudgetSummary.convertCostDecision(data["personlcost_partic_decision"]);
 			fixed_cost = 'Personnel Participant Cost'
 			fixed_cost_detail = data["costs_6"] ?? '';
 			go_no_go_decision = result.decision ?? '';
@@ -94,12 +94,12 @@ TINSummary.addFixedCostsTable = function(parent) {
 	parent.append(table_html);
 }
 
-TINSummary.addProcedureCostsTable = function(parent) {
+BudgetSummary.addProcedureCostsTable = function(parent) {
 	if (!(parent instanceof jQuery))
 		return;
 	var table_html = "";
-	var data = TINSummary.summary_data;
-	var arms = TINSummary.schedule.arms;
+	var data = BudgetSummary.summary_data;
+	var arms = BudgetSummary.schedule.arms;
 
 	table_html += "<h4 class='summary-table-header'>PROCEDURE COSTS SUMMARY REVIEW</h4>";
 	table_html += "\
@@ -120,15 +120,15 @@ TINSummary.addProcedureCostsTable = function(parent) {
 	var site_total = 0;
 	for (i = 1; i <= arms.length; i++) {
 		var arm_name = "Arm " + i + ": " + arms[i-1].name;
-		var cc_cost = TINSummary.getCoordCenterCost(i);
-		var site_cost = TINSummary.getSiteCost(i);
+		var cc_cost = BudgetSummary.getCoordCenterCost(i);
+		var site_cost = BudgetSummary.getSiteCost(i);
 		
 		// add costs to cc/site totals
 		cc_total += cc_cost;
 		site_total += site_cost;
 		
 		// convert decision to GO or NO-GO or NEED INFO
-		var result = TINSummary.convertArmDecision(data["arm" + i + "_decision"]);
+		var result = BudgetSummary.convertArmDecision(data["arm" + i + "_decision"]);
 		table_html += "\
 			<tr" + result.row_class + ">\
 				<td>" + arm_name + "</td>\
@@ -156,9 +156,9 @@ TINSummary.addProcedureCostsTable = function(parent) {
 	parent.append(table_html);
 }
 
-TINSummary.getCoordCenterCost = function(arm_index) {
+BudgetSummary.getCoordCenterCost = function(arm_index) {
 	var total = 0;
-	var arms = TINSummary.schedule.arms;
+	var arms = BudgetSummary.schedule.arms;
 	var arm = arms[arm_index - 1];
 	
 	var i;
@@ -168,9 +168,9 @@ TINSummary.getCoordCenterCost = function(arm_index) {
 	return total;
 }
 
-TINSummary.getSiteCost = function(arm_index) {
+BudgetSummary.getSiteCost = function(arm_index) {
 	var total = 0;
-	var arms = TINSummary.schedule.arms;
+	var arms = BudgetSummary.schedule.arms;
 	var arm = arms[arm_index - 1];
 	
 	var i, j, visit, site_visit_cost, procedure_cost;
@@ -180,14 +180,14 @@ TINSummary.getSiteCost = function(arm_index) {
 		
 		// iterate over procedure counts, multiplying by site cost for visit total
 		for (j = 0; j < visit.procedure_counts.length; j++) {
-			procedure_cost = TINSummary.gng_data["cost" + (j+1) + "_sc"] || "0";
+			procedure_cost = BudgetSummary.gng_data["cost" + (j+1) + "_sc"] || "0";
 			total += visit.procedure_counts[j].count * procedure_cost;
 		}
 	}
 	return total;
 }
 
-TINSummary.convertCostDecision = function(decision) {
+BudgetSummary.convertCostDecision = function(decision) {
 	var decision = decision;
 	var row_class = '';
 	if (decision) {
@@ -209,7 +209,7 @@ TINSummary.convertCostDecision = function(decision) {
 	};
 }
 
-TINSummary.convertArmDecision = function(decision) {
+BudgetSummary.convertArmDecision = function(decision) {
 	var decision = decision;
 	var row_class = '';
 	if (decision) {
@@ -231,7 +231,7 @@ TINSummary.convertArmDecision = function(decision) {
 	};
 }
 
-TINSummary.replaceHereWithLinkToPrint = function() {
+BudgetSummary.replaceHereWithLinkToPrint = function() {
 	var text = $("#surveyinstructions").find(":contains('here')").first();
 	var link = "<h5 class='open_print'>here</h5>";
 	text.html(text.html().replace("here", link));
@@ -240,12 +240,12 @@ TINSummary.replaceHereWithLinkToPrint = function() {
 	});
 }
 
-TINSummary.addDownloadSummaryReviewButton = function() {
+BudgetSummary.addDownloadSummaryReviewButton = function() {
 	var new_button_row = "<tr><td colspan='2' style='text-align:center;padding:15px 0;'><button type='button' class='jqbutton nowrap ui-button ui-corner-all ui-widget' style='color:#000000; margin-top: -10px;' onclick='window.print();return false;'>Download Summary Review</button></td></tr>";
 	$(".formtbody tr.surveysubmit table tbody").append(new_button_row);
 }
 
-$('head').append('<link rel="stylesheet" type="text/css" href="' + TINSummary.css_url + '">');
+$('head').append('<link rel="stylesheet" type="text/css" href="' + BudgetSummary.css_url + '">');
 $(document).ready(function() {
-	TINSummary.initialize();
+	BudgetSummary.initialize();
 });

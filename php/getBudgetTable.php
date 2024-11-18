@@ -6,20 +6,17 @@ echo "<div id='budget_table'>";
 try {
 	if (get_class($this) == 'Vanderbilt\InstituteBudget\InstituteBudget') {
 		// survey page shim, may eventually want to convert $module to $this everywhere in this file (although that will break including this php script into stand-alone module pages)
+        /** @var \Vanderbilt\InstituteBudget\InstituteBudget $module */
 		$module = $this;
 	}
 	$arms = $module->getArms();
 	$procedures = $module->getProcedures();
-    foreach ($procedures as $proc_i => $procedure) {
-        $proc_name = $procedure->name;
-        $proc_cost = $procedure->cost;
-    }
 	$rid = htmlentities($_GET['rid'], ENT_QUOTES);
 	$rid = preg_replace("/\D/", '', $rid);
 } catch (\Exception $e) {
 	?>
 	<div class="alert alert-warning col-md-6 col-sm-9" style="border-color: #ffcca9 !important;">
-		<p>The TIN Budget module was unable to determine which record ID to use when fetching schedule data. Please set a 'rid' query argument for this URL.</p>
+		<p>The Budget module was unable to determine which record ID to use when fetching schedule data. Please set a 'rid' query argument for this URL.</p>
 	</div>
 	<?php
 }
@@ -27,7 +24,7 @@ try {
 if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	?>
 	<div class="alert alert-warning col-md-6 col-sm-9" style="border-color: #ffcca9 !important;">
-		<p>The TIN Budget module was able to retrieve record data, but either the arms or the procedures are undefined. Please complete the "Budget" and "Procedures" forms for record <b><?= $rid ?></b>.</p>
+		<p>The Budget module was able to retrieve record data, but either the arms or the procedures are undefined. Please complete the "Budget" and "Procedures" forms for record <b><?= $rid ?></b>.</p>
 	</div>
 	<?php
 } else {
@@ -38,7 +35,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	foreach ($arms as $i => $arm) { ?>
 		<div class="dropdown arm" data-arm="<?= $i+1 ?>">
 			<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownArm<?= $i+1 ?>" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-				<?= "Arm " . ($i+1) . ": {$arm->name}" ?>
+				<?= "Arm " . ($i+1) . ": {$arm['name']}" ?>
 			</button>
 			<div class="dropdown-menu" aria-labelledby="dropdownArm<?= $i+1 ?>">
 				<a class="dropdown-item show_arm" href="#">Show this arm's table</a>
@@ -60,8 +57,8 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 					<th></th>
 					<?php
 						// add visit rows
-						foreach ($arm->visits as $visit_i => $visit) {
-							$visit_name = $visit->name;
+						foreach ($arm['visits'] as $visit_i => $visit) {
+							$visit_name = $visit['name'];
 							?>
 							<th>
 							<div class="dropdown visit" data-visit="<?= $visit_i+1 ?>">
@@ -85,13 +82,13 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 			<tbody>
 				<?php
 					// add procedure rows
-					$columns = count($arm->visits);
+					$columns = count($arm['visits']);
 					foreach ($procedures as $proc_i => $procedure) {
-						$proc_name = $procedure->name;
-						$proc_cost = $procedure->cost;
-                        if ($procedure->routine_care_procedure_form) {
-                            $proc_name .= ' <span title="Standard of Care">[SoC]</span>';
-                        }
+						$proc_name = $procedure['name'];
+						$proc_cost = $procedure['cost'];
+                        //if ($procedure['routine_care_procedure_form']) {
+                        //    $proc_name .= ' <span title="Standard of Care">[SoC]</span>';
+                        //}
 						echo "<tr>";
 						
 						// add procedure cell
@@ -125,17 +122,17 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	?>
 	</div>
 	<div style="margin-left: 32px; margin-top: 8px;">
-		<button id="tin_budget_undo" type="button" class="btn btn-outline-primary button_bank" disabled>Undo</button>
-		<button id="tin_budget_redo" type="button" class="btn btn-outline-primary button_bank" disabled>Redo</button>
+		<button id="budget_undo" type="button" class="btn btn-outline-primary button_bank" disabled>Undo</button>
+		<button id="budget_redo" type="button" class="btn btn-outline-primary button_bank" disabled>Redo</button>
 	</div>
 	<?php
 }
 ?>
 
-<div id="instituteBudget_modal" class="modal" tabindex="-1" role="dialog">
+<div id="budget_modal" class="modal" tabindex="-1" role="dialog">
 	<div class="modal-dialog" role="document">
 		<!-- rename arm -->
-		<div id="instituteBudget_rename_arm" class="modal-content">
+		<div id="budget_rename_arm" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Rename Arm</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -153,7 +150,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- copy arm -->
-		<div id="instituteBudget_copy_arm" class="modal-content">
+		<div id="budget_copy_arm" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Copy Arm</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -173,7 +170,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- rename visit -->
-		<div id="instituteBudget_rename_visit" class="modal-content">
+		<div id="budget_rename_visit" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Rename Visit</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -191,7 +188,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- copy visit -->
-		<div id="instituteBudget_copy_visit" class="modal-content">
+		<div id="budget_copy_visit" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Copy Visit</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -212,7 +209,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- edit procedures -->
-		<div id="instituteBudget_edit_procedures" class="modal-content">
+		<div id="budget_edit_procedures" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Edit Procedures</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -245,7 +242,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- edit procedure comments (only for non-routine care procedures) -->
-		<div id="instituteBudget_procedure_comments" class="modal-content">
+		<div id="budget_procedure_comments" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Edit Procedure Comments</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
@@ -272,7 +269,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		</div>
 		
 		<!-- confirm delete -->
-		<div id="instituteBudget_confirm_delete" class="modal-content">
+		<div id="budget_confirm_delete" class="modal-content">
 			<div class="modal-header">
 				<h5 class="modal-title">Confirm Delete</h5>
 				<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">

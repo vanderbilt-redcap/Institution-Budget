@@ -11,13 +11,13 @@ TINGoNoGo.initialize = function() {
 	
 	if (typeof schedule != 'object') {
 		$("div#gonogo").append("<div class='alert alert-secondary w-50' role='alert'>\
-			The TIN Budget module couldn't find schedule data to create the Go/No-Go table.\
+			The Budget module couldn't find schedule data to create the Go/No-Go table.\
 		</div>");
 	} else {
 		// make arm buttons
 		if (schedule.arms.length == 0) {
 			$("div#gonogo").append("<div class='alert alert-secondary w-50' role='alert'>\
-				The TIN Budget module found schedule data but no arms were listed.\
+				The Budget module found schedule data but no arms were listed.\
 			</div>");
 			return;
 		} else {
