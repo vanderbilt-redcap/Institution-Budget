@@ -86,11 +86,14 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 			for ($arm = 1; $arm <= 5; $arm++) {
 				$fields[] = "arm_name_$arm";
 				$fields[] = "visits_in_arm_$arm";
-				for ($visit = 1; $visit <= 10; $visit++) {
+				for ($visit = 1; $visit <= 100; $visit++) {
 					$suffix = $arm == 1 ? "" : "_$arm";
 					$fields[] = "visit$visit$suffix";
 				}
 			}
+            for ($personCost = 1; $personCost <= 4; $personCost++) {
+                $fields[] = "cost_pc_$personCost";
+            }
 			for ($proc = 1; $proc <= 100; $proc++) {
 				$fields[] = "procedure$proc";
 				$fields[] = "cost$proc";
@@ -159,6 +162,21 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		
 		return $procedures;
 	}
+    
+    public function getEffortCosts() {
+        $data = $this->getScheduleRecordData();
+        $efforts = [];
+        for ($effort = 1; $effort <= 4; $effort++) {
+            $effort_field_name = "cost_pc_$effort";
+            $effort_name = $this->getFieldLabel($effort_field_name);
+            $efforts[] = [
+                "name" => $effort_name,
+                "cost" => $data[$effort_field_name]
+            ];
+        }
+        
+        return $efforts;
+    }
 	
 	public function getBudgetTableData($record) {
 		// get Schedule of Event (CC Budget table) data
@@ -938,6 +956,8 @@ HEREDOC;
   
 		// start buffering to catch getBudgetTable output (html)
 		ob_start();
+        // TODO refactor when converting to twig
+        //$procedures, $arms, and $efforts are defined in this include.
 		include('php/getBudgetTable.php');
 		// escape quotation marks
 		$budget_table = addslashes(ob_get_contents());
@@ -972,7 +992,8 @@ HEREDOC;
 			Budget = {
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
 				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
-				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
+				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
+				efforts_json: '<?= json_encode($efforts, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
 			}
 			
 			BudgetSurvey = {
@@ -989,6 +1010,9 @@ HEREDOC;
 				if (Budget.procedures_json.length > 0) {
 					Budget.procedures = JSON.parse(Budget.procedures_json);
 				}
+                if (Budget.efforts_json.length > 0) {
+                    Budget.efforts = JSON.parse(Budget.efforts_json);
+                }
 				// if (BudgetSurvey.soe_json.length > 0) {
 				// 	BudgetSurvey.soe_data = JSON.parse(BudgetSurvey.soe_json);
 				// }
