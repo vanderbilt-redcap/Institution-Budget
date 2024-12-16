@@ -1078,6 +1078,9 @@ Budget.loadState = function(schedule) {
 			visit.procedure_counts.forEach(function(count_obj, count_i) {
 				this_arm_table.find('tbody tr:eq(' + count_i + ') td:last-child span.proc_count').text(count_obj.count);
 			});
+			visit.effort_counts.forEach(function(count_obj, count_i) {
+				this_arm_table.find('tbody tr:eq(' + count_i + ') td:last-child span.effort_count').text(count_obj.count);
+			});
 		});
 	}
 	Budget.refreshProceduresBank();
