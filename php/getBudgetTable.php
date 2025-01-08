@@ -11,6 +11,7 @@ try {
 	}
 	$arms = $module->getArms();
 	$procedures = $module->getProcedures();
+	$efforts = $module->getEffortCosts();
 	$rid = htmlentities($_GET['rid'], ENT_QUOTES);
 	$rid = preg_replace("/\D/", '', $rid);
 } catch (\Exception $e) {
@@ -54,7 +55,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 		?><table class="arm_table" data-arm="<?= $i + 1 ?>">
 			<thead>
 				<tr>
-					<th></th>
+					<th>Procedural Costs</th>
 					<?php
 						// add visit rows
 						foreach ($arm['visits'] as $visit_i => $visit) {
@@ -114,6 +115,39 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 						echo "<td class='visit_total' data-visit='$i'>0</td>";
 					}
 					echo "</tr>";
+                
+                    // add effort rows
+                    foreach ($efforts as $effort_i => $effort) {
+                        $effort_name = $effort['name'];
+                        $effort_cost = $effort['cost'];
+                        //if ($procedure['routine_care_procedure_form']) {
+                        //    $proc_name .= ' <span title="Standard of Care">[SoC]</span>';
+                        //}
+                        echo "<tr>";
+                        
+                        // add procedure cell
+                        ?>
+                        <td class="procedure"><?= "$effort_name" ?></td>
+                        <?php
+                        
+                        // add effort count cells
+                        for ($i = 1; $i <= $columns; $i++) {
+                            echo "<td class='effort_cell' data-visit='$i'>
+                                <button type='button' class='btn btn-outline-primary effort_decrement'>-</button>
+                                <span data-cost='$effort_cost' class='effort_count mx-2'>0</span>
+                                <button type='button' class='btn btn-outline-primary effort_increment'>+</button>
+                                </td>";
+                        }
+                        echo "</tr>";
+                    }
+                    
+                    // add totals row
+                    echo "<tr>";
+                    echo "<td>Total Effort $$</td>";
+                    for ($i = 1; $i <= $columns; $i++) {
+                        echo "<td class='visit_effort_total' data-visit='$i'>0</td>";
+                    }
+                    echo "</tr>";
 				?>
 			</tbody>
 		</table>

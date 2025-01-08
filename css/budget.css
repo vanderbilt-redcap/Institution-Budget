@@ -38,7 +38,7 @@ div#arm_tables {
 	padding: 8px 8px;
 	text-align: center;
 }
-.arm_table .visit_total {
+.arm_table .visit_total, .arm_table .visit_effort_total {
 	padding-left: 8px;
 	text-align: center;
 }
@@ -57,16 +57,18 @@ div#arm_tables {
 .arm_table tbody tr:last-child td:first-child {
 	background-color: #FFFFFF;
 }
-.proc_cell {
+.proc_cell, .effort_cell {
 	text-align: center;
 }
-.proc_cell button {
+.proc_cell button, .effort_cell button {
 	display: none;
 }
-.proc_count, .visit_total {
+.proc_count, .effort_count, .visit_total, .visit_effort_total {
 	font-size: 1.25rem;
 }
-td.procedure, .proc_cell, .visit_total, .arm_table th:not(:first-child) {
+td.procedure, .proc_cell, .visit_total,
+td.effort, .effort_cell, .visit_effort_total,
+.arm_table th:not(:first-child) {
 	border: 1px solid gray;
 }
 

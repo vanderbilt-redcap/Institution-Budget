@@ -28,7 +28,7 @@ Budget.refreshSchedule = function() {
 		var visit_i = i + 1;
 		$(e).attr('data-visit', visit_i);
 	});
-	active_arm_table.find('.proc_cell, .visit_total').each(function(i, e) {
+	active_arm_table.find('.proc_cell, .visit_total, .effort_cell, .visit_effort_total').each(function(i, e) {
 		var visit_i = Number($(e).index());
 		$(e).attr('data-visit', visit_i);
 	});
@@ -117,9 +117,9 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		for (var proc_index in Budget.procedures) {
 			var procedure = Budget.procedures[proc_index];
 			var proc_name = procedure.name;
-			if (procedure.routine_care) {
-				proc_name = proc_name + ' <span title="Standard of Care"> [SoC]</span>';
-			}
+			// if (procedure.routine_care) {
+			// 	proc_name = proc_name + ' <span title="Standard of Care"> [SoC]</span>';
+			// }
 			var new_row = "<tr><td class='procedure'>" + proc_name + "</td>";
 			
 			// add proc_count cells to new row, preserving old procedure counts if applicable
@@ -154,9 +154,54 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		}
 		new_row += "</tr>";
 		arm_table.find('tbody').append(new_row);
+
+		var effort_row = "<tr><th>Effort Costs (hours)</th></tr>";
+		arm_table.find('tbody').append(effort_row);
+		for (var effort_index in Budget.efforts) {
+			var effort = Budget.efforts[effort_index];
+			var effort_name = effort.name;
+			// if (procedure.routine_care) {
+			// 	proc_name = proc_name + ' <span title="Standard of Care"> [SoC]</span>';
+			// }
+
+			effort_row = "<tr><td class='effort'>" + effort_name + "</td>";
+
+			// add proc_count cells to new row, preserving old procedure counts if applicable
+			for (visit_i = 1; visit_i <= visit_count; visit_i++) {
+				old_count = 0;
+
+				if (state) {
+					var arm = state.arms[Number(arm_i - 1)];
+					if (arm) {
+						for (var all_visit_efforts_index in arm.visits[visit_i].effort_counts) {
+							var visit_effort = arm.visits[visit_i].effort_counts[all_visit_efforts_index];
+							if (visit_effort.name == effort.name) {
+								old_count = visit_effort.count;
+							}
+						}
+					}
+				}
+				effort_row += "<td class='effort_cell' data-visit='" + visit_i + "'>\
+					<button type='button' class='btn btn-outline-primary effort_decrement'>-</button>\
+					<span data-cost='' class='effort_count mx-2'>" + Number(old_count) + "</span>\
+					<button type='button' class='btn btn-outline-primary effort_increment'>+</button>\
+				</td>"
+			}
+			effort_row += "</tr>";
+			arm_table.find('tbody').append(effort_row);
+		}
+		// make and append last row (Totals $$)
+		effort_row = "<tr><td class='no-border'>Total Effort $$</td>";
+
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			effort_row += "<td class='visit_effort_total' data-visit='" + visit_i + "'>0</td>";
+		}
+		effort_row += "</tr>";
+		arm_table.find('tbody').append(effort_row);
 	}
 	
 	Budget.refreshProcedureCosts();
+	Budget.refreshEffortCosts();
 	Budget.updateAllVisitCosts();
 }
 Budget.refreshProcedureCosts = function() {
@@ -173,6 +218,24 @@ Budget.refreshProcedureCosts = function() {
 		
 		$(td).closest('tr').find('.proc_count').each(function(i, span) {
 			$(span).attr('data-cost', proc_cost);
+		});
+	});
+}
+
+Budget.refreshEffortCosts = function() {
+	// update all .proc_cell data-cost attributes based on the row's procedure (name)
+	$('.effort').each(function(i, td) {
+		var effort_name = $(td).html().trim();
+		var effort_cost = 0;
+		for (var effort of Budget.efforts) {
+			if (effort.name == effort_name) {
+				effort_cost = effort.cost;
+				break;
+			}
+		}
+
+		$(td).closest('tr').find('.effort_count').each(function(i, span) {
+			$(span).attr('data-cost', effort_cost);
 		});
 	});
 }
@@ -250,6 +313,18 @@ Budget.createArm = function() {
 			<td>Total $$</td>\
 			<td class='visit_total'>0</td>\
 		</tr>\
+		\<tr>\
+			<td class='effort'>Effort Cost 1</td>\
+			<td class='effort_cell'>\
+				<button type='button' class='btn btn-outline-primary effort_decrement'>-</button>\
+				<span data-cost='120' class='effort_count mx-2'>0</span>\
+				<button type='button' class='btn btn-outline-primary effort_increment'>+</button>\
+			</td>\
+		</tr>\
+		<tr>\
+			<td>Total $$</td>\
+			<td class='visit_effort_total'>0</td>\
+		</tr>\
 		</tbody>\
 	</table>";
 	var new_arm_dropdown = "<div class='dropdown arm' data-arm='" + new_arm_i + "'>\
@@ -294,7 +369,7 @@ Budget.deleteArm = function(arm_index) {
 Budget.createVisit = function() {
 	var arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
 	var visit_count = arm_table.find('.visit').length;
-	if (visit_count > 9) { //TODO make this configurable at the module level
+	if (visit_count > 99) { //TODO make this configurable at the module level
 		alert("Can't create a new visit when more than 9 visits already exist");
 		return;
 	}
@@ -322,11 +397,22 @@ Budget.createVisit = function() {
 	</td>";
 	
 	var visit_total_cell = "<td class='visit_total' data-visit='" + visit_j + "'>0</td>";
+
+	var visit_effort_cell = "<td class='effort_cell' data-visit='" + visit_j + "'>\
+		<button type='button' class='btn btn-outline-primary effort_decrement'>-</button>\
+		<span data-cost='' class='effort_count mx-2'>0</span>\
+		<button type='button' class='btn btn-outline-primary effort_increment'>+</button>\
+	</td>";
+
+	var visit_effort_total_cell = "<td class='visit_effort_total' data-visit='" + visit_j + "'>0</td>";
 	
 	// insert visit_dd to DOM via arm_table
 	arm_table.find('thead tr').append(visit_dd);
 	arm_table.find('tbody tr:not(:last-child)').append(visit_proc_cell);
 	arm_table.find('tbody tr:last-child').append(visit_total_cell);
+
+	arm_table.find('tbody tr:not(:last-child):has(td.effort)').append(visit_proc_cell);
+	arm_table.find('tbody tr:last-child:has(td.visit_effort_total)').append(visit_total_cell);
 	
 	// add procedure_counts for new visit to this arm in schedule (if they don't already exist)
 	var state = Budget.states[Budget.stateIndex];
@@ -343,14 +429,25 @@ Budget.createVisit = function() {
 					cost: procedure.cost
 				});
 			});
+			var zero_effort_counts= [];
+			Budget.efforts.forEach(function(effort, effort_i) {
+				zero_effort_counts.push({
+					name: effort.name,
+					count: 0,
+					cost: effort.cost
+				});
+			});
 			
-			if (!arm.visits[visit_j] || !arm.visits[visit_j].procedure_counts) {
+			if (!arm.visits[visit_j] || !arm.visits[visit_j].procedure_counts || !arm.visits[visit_j].effort_counts) {
 				arm.visits[visit_j] = {
-					name: "New Visit",
+					name: "",
 					procedure_counts: zero_proc_counts,
-					total: 0
+					effort_counts: zero_effort_count,
+					proc_total: 0,
+					effort_total: 0
 				}
 			}
+
 		}
 	}
 }
@@ -404,7 +501,7 @@ Budget.deleteVisit = function(visit_index) {
 }
 
 // visit level helper functions
-Budget.updateVisitCost = function(arm, visit) {
+Budget.updateProcTotalCost = function(arm, visit) {
 	// sum costs across all procedures
 	var sum = 0
 	$(".arm_table[data-arm='" + arm + "'] .proc_cell[data-visit='" + visit +"'] .proc_count").each(function(i, e) {
@@ -425,11 +522,35 @@ Budget.updateVisitCost = function(arm, visit) {
 	// update visit total in Total $$ row
 	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text(sum);
 }
+
+Budget.updateEffortTotalCost = function(arm, visit) {
+	// sum costs across all efforts
+	var sum = 0
+	$(".arm_table[data-arm='" + arm + "'] .effort_cell[data-visit='" + visit +"'] .effort_count").each(function(i, e) {
+		var cost = Number($(e).attr('data-cost'));
+		var count = Number($(e).text());
+		if (cost && count) {
+			sum = sum + cost * count;
+		}
+
+		// update highlight
+		var cell = $(e).parent();
+		cell.removeClass('nonzero')
+		if (count > 0) {
+			cell.addClass('nonzero')
+		}
+	});
+
+	// update visit total in Total $$ row
+	$(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").text(sum);
+}
+
 Budget.updateAllVisitCosts = function() {
 	for (var arm_i = 1; arm_i <= $('.arm').length; arm_i++) {
 		var visit_count = $('.arm_table[data-arm="' + arm_i + '"] .visit').length;
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
-			Budget.updateVisitCost(arm_i, visit_i);
+			Budget.updateProcTotalCost(arm_i, visit_i);
+			Budget.updateEffortTotalCost(arm_i, visit_i);
 		}
 	};
 }
@@ -723,26 +844,46 @@ Budget.registerEvents = function() {
 		var to_add = btn.hasClass('proc_decrement') ? -1 : 1;
 		var proc_cell = btn.closest('.proc_cell');
 		var count_span = proc_cell.find('span')
-		
+
 		// update span counter
 		var current_count = Number(count_span.text());
 		var new_count = Math.max(current_count + to_add, 0);
 		count_span.text(new_count);
-		
+
 		// update sum
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = proc_cell.attr('data-visit');
-		Budget.updateVisitCost(arm_index, visit_index);
+		Budget.updateProcTotalCost(arm_index, visit_index);
+		Budget.pushState();
+	});
+
+	$('body').on('click', '.effort_cell button', function(event) {
+		var btn = $(event.target);
+		var to_add = btn.hasClass('effort_decrement') ? -1 : 1;
+		var effort_cell = btn.closest('.effort_cell');
+		var count_span = effort_cell.find('span')
+
+		// update span counter
+		var current_count = Number(count_span.text());
+		var new_count = Math.max(current_count + to_add, 0);
+		count_span.text(new_count);
+
+		// update sum
+		var arm_index = btn.closest('.arm_table').attr('data-arm');
+		var visit_index = effort_cell.attr('data-visit');
+		Budget.updateEffortTotalCost(arm_index, visit_index);
 		Budget.pushState();
 	});
 	
 	// hide/show buttons automatically
-	$('body').on('mouseenter', '.proc_cell', function(event) {
+	$('body').on('mouseenter', '.proc_cell, .effort_cell', function(event) {
 		$('.proc_cell button').hide();
+		$('.effort_cell button').hide();
 		$(event.target).find('button').show();
 	});
-	$('body').on('mouseleave', '.proc_cell', function(event) {
+	$('body').on('mouseleave', '.proc_cell, .effort_cell', function(event) {
 		$('.proc_cell button').hide();
+		$('.effort_cell button').hide();
 	});
 	
 	// allow undo/redo
@@ -801,7 +942,8 @@ Budget.getState = function() {
 	var schedule = {
 		active_arm_index: Number(Budget.active_arm_index),
 		arms: [],
-		procedures: Budget.procedures
+		procedures: Budget.procedures,
+		efforts: Budget.efforts
 	};
 	var arm_count = $('.arm_table').length;
 	for (var arm_i = 1; arm_i <= arm_count; arm_i++) {
@@ -846,11 +988,40 @@ Budget.getState = function() {
 					});
 				}
 			});
+
+			// collect procedure counts for this visit
+			var effort_counts = [];
+			var efforts_added = [];
+			var visit_sum = 0;
+			$('.arm_table[data-arm="' + arm_i + '"] .effort_cell[data-visit="' + visit_dropdown.attr('data-visit') + '"]').each(function(i, td) {
+				var effort_name = $(".effort:eq(" + Number(i) + ")").text().trim();
+				var effort_count = Number($(td).find('span').text());
+				var effort_cost = $(td).find('span').attr('data-cost');
+				effort_counts.push({
+					name: effort_name,
+					count: effort_count,
+					cost: effort_cost
+				});
+				efforts_added.push(effort_name);
+				visit_sum += effort_count * effort_cost;
+			});
+
+			// add 0 counts for any efforts that are still missing
+			Budget.efforts.forEach(function(effort, effort_i) {
+				if (!efforts_added.includes(effort.name)) {
+					effort_counts.push({
+						name: effort.name,
+						count: 0,
+						cost: effort.cost
+					});
+				}
+			});
 			
 			// add visit obj to arm.visits
 			arm.visits[visit_i] = {
 				name: visit_name,
 				procedure_counts: procedure_counts,
+				effort_counts: effort_counts,
 				total: visit_sum
 			}
 		}
@@ -906,6 +1077,9 @@ Budget.loadState = function(schedule) {
 			this_arm_table.find('.visit').last().find('button').text("Visit " + visit_i + ": " + visit.name);
 			visit.procedure_counts.forEach(function(count_obj, count_i) {
 				this_arm_table.find('tbody tr:eq(' + count_i + ') td:last-child span.proc_count').text(count_obj.count);
+			});
+			visit.effort_counts.forEach(function(count_obj, count_i) {
+				this_arm_table.find('tbody tr:eq(' + count_i + ') td:last-child span.effort_count').text(count_obj.count);
 			});
 		});
 	}
