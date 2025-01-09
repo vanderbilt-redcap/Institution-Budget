@@ -30,18 +30,6 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
         
         $this->getBudgetForm();
         $this->getSummaryForm();
-        global $Proj;
-        if (gettype($Proj) == 'object') {
-            $this->proj = $Proj;
-            
-            $this->event_ids = [];
-            foreach ($Proj->eventsForms as $eid => $formList) {
-                $this->event_ids[] = $eid;
-            }
-            
-            // cache list of 2nd event's forms
-            $this->event_2_forms = $Proj->eventsForms[$this->event_ids[1]];
-        }
     }
     
     public function getMetadataCache() {
@@ -425,9 +413,9 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
             if (array_key_exists($field_name, $metadata)) {
                 preg_match_all($this->label_pattern, $metadata[$field_name]["element_enum"], $matches);
                 $labels    = array_map("trim", $matches[2]);
-                $raw_value = intval($study_intake_data[$record][$this->proj->firstEventId][$field_name]) - 1;
+                $raw_value = intval($study_intake_data[$record][$this->getFirstEventId()][$field_name]) - 1;
                 // actually replace raw value
-                $study_intake_data[$record][$this->proj->firstEventId][$field_name] = $labels[$raw_value];
+                $study_intake_data[$record][$this->getFirstEventId()][$field_name] = $labels[$raw_value];
             }
 		}
 		
@@ -506,8 +494,7 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 			$fields[] = "zip$i";
 		}
 		$pid = $this->getProjectId();
-		$proj = new \Project($pid);
-		$eid = $proj->firstEventId;
+		$eid = $this->getFirstEventId();
 		$params = [
 			"project_id" => $pid,
 			"return_format" => "array",
@@ -705,8 +692,8 @@ HEREDOC;
 		
 		// get public survey url
 		// $new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
-		$public_survey_hash = \Survey::getSurveyHash($this->proj->firstFormSurveyId, $this->proj->firstEventId);
-		$public_survey_url = APP_PATH_SURVEY_FULL . "?s=$public_survey_hash";
+        
+        $public_survey_url = $this->getPublicSurveyUrl();
 		
 		$dropdown_i = 1;
 		?>
@@ -1111,16 +1098,11 @@ HEREDOC;
 	}
 	
 	private function changeSurveySubmitButton($record_id, $event_id, $current_survey_name) {
-		$event_ids = array_keys($this->proj->events[1]['events']);
-		$form_sequence = $this->proj->eventsForms[$event_id];
+        $form_sequence = $this->getFormsForEventId($event_id);
 		$current_survey_index = array_search($current_survey_name, $form_sequence);
 		$next_survey_name = $form_sequence[$current_survey_index + 1];
 		
-		if (	// For the last survey of the Coordinating Center event, convert "Submit" to "Generate & Send Budget Request" and return early
-			$event_id == $event_ids[0]
-			&&
-			$current_survey_name == end($form_sequence)
-		) {
+		if ($current_survey_name == end($form_sequence)) {
 			?>
 			<style>
 				button[name="submit-btn-saverecord"].tin-generate-requests {
@@ -1142,10 +1124,6 @@ HEREDOC;
 					$('body').on("click", "button[name='submit-btn-saverecord']", function(event) {
 						// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
 						var form_action = $('#form').attr('action');
-						var redirect_parameter = "&__gotodashboard=1";
-						if (!form_action.includes(redirect_parameter)) {
-							$('#form').attr('action', form_action + redirect_parameter);
-						}
 						
 						// add end survey param to prevent survey queue and autocomplete from preventing user from getting redirected
 						form_action = $('#form').attr('action');
@@ -1166,30 +1144,7 @@ HEREDOC;
 			</script>
 			<?php
 			return;
-		} else if (
-            $event_id == $event_ids[1]
-            &&
-            $current_survey_name == reset($form_sequence)
-        ) {
-            
-            ?>
-            <script>
-                if ($('input[name=\"consideration___radio\"]:checked').val() == '0') {
-                    $('button[name=\"submit-btn-saverecord\"').text('Submit');
-                } else {
-                    $('button[name=\"submit-btn-saverecord\"').text('Next');
-                }
-                $('input[name=\"consideration___radio\"]').on('change', function () {
-                    if ($('input[name=\"consideration___radio\"]:checked').val() == '0') {
-                        $('button[name=\"submit-btn-saverecord\"').text('Submit');
-                    } else {
-                        $('button[name=\"submit-btn-saverecord\"').text('Next');
-                    }
-                });
-            </script>
-            <?php
-            return;
-        }
+		}
 		?>
 		<script type="text/javascript">
 			$(document).ready(function() {
@@ -1292,10 +1247,6 @@ HEREDOC;
 				$('body').on("click", "button[name='submit-btn-savereturnlater']", function(event) {
 					// edit form action so redcap_survey_complete can know to do it's thing (redirect the user to summary review page)
 					var form_action = $('#form').attr('action');
-					var redirect_parameter = "&__gotodashboard=1";
-					if (!form_action.includes(redirect_parameter)) {
-						$('#form').attr('action', form_action + redirect_parameter);
-					}
 					
 					// add end survey param to prevent survey queue and autocomplete from preventing user from getting redirected
 					form_action = $('#form').attr('action');
@@ -1388,8 +1339,7 @@ HEREDOC;
 				"fields" => [$budget_field, $study_short_name_field]
 			];
 			$data = \REDCap::getData($params);
-			global $Proj;
-			$budget_data = json_decode($data[$record_id][$Proj->firstEventId][$budget_field], true);
+			$budget_data = json_decode($data[$record_id][$this->getFirstEventId()][$budget_field], true);
 			$procedures = $budget_data['procedures'];
 		} catch (\Exception $e) {
 			return;
@@ -1407,7 +1357,7 @@ HEREDOC;
 		$sheet = $workbook->getActiveSheet();
 		
 		// update study name in wb first cell
-		$study_name = $data[$record_id][$Proj->firstEventId][$study_short_name_field] ?? "<study name>";
+		$study_name = $data[$record_id][$this->getFirstEventId()][$study_short_name_field] ?? "<study name>";
 		$sheet->setCellValue("A1", "All Procedures for $study_name");
 		// update workbook cells
 		for ($i = 0; $i < 100; $i++) {
@@ -1427,13 +1377,8 @@ HEREDOC;
 	}
 	
 	public function getSiteInstances($record_id) {
-		// return an array of event 2 instances (only)
-		
 		// build list of form _complete field names for forms in event 2
 		$fields = [];
-		foreach ($this->event_2_forms as $formName) {
-			$fields[] = $formName . "_complete";
-		}
 		
 		// add record ID field (to get extra identifying fields like redcap_repeat_instance from getData
 		$fields[] = $this->getRecordIdField();
@@ -1494,12 +1439,12 @@ HEREDOC;
 		$data = \REDCap::getData($parameters);
 		$eoi_count = intval(reset($data[$record_id])['eoi']);
 		$log_message = "Attempting to create site instances upon submission of survey containing [sites_to_send] field:\n";
-		
+	
 		if ($eoi_count > 0) {
 			// get current instance data and site names
 			$instances = $this->getSiteInstances($record_id);
 			$site_names = $this->getInstitutionNames($record_id);
-			
+	
 			// if there are instances missing, add them
 			for ($site_index = 1; $site_index <= $eoi_count; $site_index++) {
 				$found = false;
@@ -1509,7 +1454,7 @@ HEREDOC;
 						break;
 					}
 				}
-				
+	
 				if (!$found) {
 					$missing_instance = [];
 					$primary_key_name = $this->getRecordIdField();
@@ -1520,20 +1465,14 @@ HEREDOC;
 					$instances[] = $missing_instance;
 				}
 			}
-			
+	
 			// set form complete status 0s for instances whose form complete field is empty
 			// if instance institution name is empty, try to fill that, too
 			foreach ($instances as $instance) {
-				foreach ($this->event_2_forms as $formName) {
-					$field = $formName . "_complete";
-					if ($instance[$field] == '')
-						$instance[$field] = '0';
-				}
-				
 				if (empty($instance['institution']))
 					$instance['institution'] = $site_names[$instance['redcap_repeat_instance']];
 			}
-			
+	
 			// save all instances
 			$payload = json_encode($instances);
 			$parameters = [
@@ -1542,7 +1481,7 @@ HEREDOC;
 				"data" => $payload
 			];
 			$result = \REDCap::saveData($parameters);
-			
+	
 			// determine log message
 			if (!empty($result['errors'])) {
 				$log_message .= "FAILURE\nThe [eoi] field for record '$record_id' is > 0 but there was an error saving the data:\n";
@@ -1551,7 +1490,7 @@ HEREDOC;
 			} else {
 				// refresh instances array from db so we can verify instance count
 				$instances = $this->getSiteInstances($record_id);
-				
+	
 				// count instances of second event
 				$sum = 0;
 				foreach ($instances as $instance) {
@@ -1567,7 +1506,7 @@ HEREDOC;
 		} else {
 			$log_message .= "FAILURE\nThe [eoi] field for record '$record_id' is not > 0.";
 		}
-		
+	
 		\REDCap::logEvent($this->moduleName, $log_message);
 	}
 	
@@ -1581,7 +1520,7 @@ HEREDOC;
 			return;
 		}
 		$rid_field = $this->getRecordIdField();
-		$eid1 = $this->proj->firstEventId;
+		$eid1 = $this->getFirstEventId();
 		$parameters = [
 			"project_id" => $this->getProjectId(),
 			"return_format" => 'json',
@@ -1636,7 +1575,7 @@ HEREDOC;
 			$page = $this->study_intake_form_name;
 			$edoc_id = $cc_data['protocol_synopsis'];
 			$edoc_id_hash = \Files::docIdHash($edoc_id);
-			$protocol_link = APP_PATH_WEBROOT . "DataEntry/file_download.php?pid=$project_id&field_name=protocol_synopsis&record={$cc_data['record_id']}&event_id={$this->proj->firstEventId}&doc_id_hash=$edoc_id_hash&instance=1&id=$edoc_id";
+			$protocol_link = APP_PATH_WEBROOT . "DataEntry/file_download.php?pid=$project_id&field_name=protocol_synopsis&record={$cc_data['record_id']}&event_id={$this->getFirstEventId()}&doc_id_hash=$edoc_id_hash&instance=1&id=$edoc_id";
 			$protocol_link = "<a href='$protocol_link'>Protocol Synopsis File</a>";
 		} else {
 			$protocol_link = "<small style='font-weight: bold; color: #777;'>(No protocol synopsis file attached)</small>";
@@ -1718,7 +1657,7 @@ HEREDOC;
 			$page = $this->study_intake_form_name;
 			$edoc_id = $cc_data['protocol_synopsis'];
 			$edoc_id_hash = \Files::docIdHash($edoc_id);
-			$protocol_link = APP_PATH_WEBROOT . "DataEntry/file_download.php?pid=$project_id&field_name=protocol_synopsis&record={$cc_data['record_id']}&event_id={$this->proj->firstEventId}&doc_id_hash=$edoc_id_hash&instance=1&id=$edoc_id";
+			$protocol_link = APP_PATH_WEBROOT . "DataEntry/file_download.php?pid=$project_id&field_name=protocol_synopsis&record={$cc_data['record_id']}&event_id={$this->getFirstEventId()}&doc_id_hash=$edoc_id_hash&instance=1&id=$edoc_id";
 			$protocol_link = "<a href='$protocol_link'>Protocol Synopsis File</a>";
 		} else {
 			$protocol_link = "<small style='font-weight: bold; color: #777;'>(No protocol synopsis file attached)</small>";
@@ -1791,42 +1730,16 @@ HEREDOC;
         $this->initialize();
         $event_id = $_GET['event_id'];
         $instrument = $_GET['page'];
-        if (in_array($instrument, $this->event_2_forms) && $_GET['__return'] == 1 && $_POST['submit-action'] == 'submit-btn-savereturnlater'){
-            ?>
-            <script type="text/javascript">
-                $(document).ready(function() {
-                    $('#return_instructions>div:nth-of-type(1)').each(function(item) {console.log($(this).html());})
-                    $('#return_instructions>div:nth-of-type(1)').html("You have chosen to stop the Budget Feasibility survey for now. All the information you have entered so far will be saved. " +
-                        "</br><strong>To return and complete the remainder of the survey, please use the link in your original budget feasibility email.</strong>" +
-                        "</br></br>" +
-                        "Thank you, and have a nice day!");
-                    
-                    $('#return_instructions>div:nth-of-type(2)').remove();
-                    
-                });
-            </script>
-            <?php
-        } else {
-            $request_uri = $_SERVER['REQUEST_URI'];
-            if ($instrument == 'study_coordinating_center_information' && $_GET['__endpublicsurvey']) {
-                $record   = $_GET['id'];
-                $event_id = $_GET['event_id'];
-                if (strpos($request_uri, '__gotosurvey=') !== false) {
-                    preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
-                    $next_survey_name = $matches[1];
-                    $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
-                    // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
-                    header("Location: $surveyLink");
-                }
-            }
-    
-            if (strpos($request_uri, '__gotodashboard=1') !== false) {
-                $dashboard_url = $this->getUrl('dashboard.php');
-                // this works but survey queue and survey auto-continue features will rewrite location headers if configured
-                header("Location: $dashboard_url");
-        
-                // this would work, except redirect exits after setting location headers, and exit is not allowed in module hooks
-                // redirect($surveyLink);
+        $request_uri = $_SERVER['REQUEST_URI'];
+        if ($instrument == 'study_coordinating_center_information' && $_GET['__endpublicsurvey']) {
+            $record   = $_GET['id'];
+            $event_id = $_GET['event_id'];
+            if (strpos($request_uri, '__gotosurvey=') !== false) {
+                preg_match("/__gotosurvey=(.*?)(?:&|$)/", $request_uri, $matches);
+                $next_survey_name = $matches[1];
+                $surveyLink       = \REDCap::getSurveyLink($record, $next_survey_name, $event_id);
+                // this works but survey queue and survey auto-continue features will rewrite location headers if configured to do so via the form's 'Survey Settings' page
+                header("Location: $surveyLink");
             }
         }
     }
@@ -1845,9 +1758,9 @@ HEREDOC;
 		//}
 		
 		// replace Summary Review field in survey page with interface
-		if ($instrument == $this->getSummaryForm()) {
-			$this->replaceSummaryReviewField($record, $repeat_instance);
-		}
+		//if ($instrument == $this->getSummaryForm()) {
+		//	$this->replaceSummaryReviewField($record, $repeat_instance);
+		//}
         
         //TODO Remove or update once we figure out if this feature is staying
 		//if ($instrument == 'enter_cost_to_run_procedure') {
