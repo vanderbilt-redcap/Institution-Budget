@@ -877,7 +877,7 @@ HEREDOC;
 			<tbody>
 			<?php
 			for ($i = 1; $i <= 5; $i++) {
-                if (trim($cc_data["fixedcost$i"]) !== '') {
+                if (trim($cc_data["fixedcost{$i}___1"]) !== '') {
                     echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>" . $cc_data["fixedcost$i"] . "</a></td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
                 }
 			}
