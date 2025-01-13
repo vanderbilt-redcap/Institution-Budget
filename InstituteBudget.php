@@ -1663,7 +1663,7 @@ HEREDOC;
 			$protocol_link = "<small style='font-weight: bold; color: #777;'>(No protocol synopsis file attached)</small>";
 		}
 		
-		$styles = new \stdClass();
+		$styles = [];
 		$styles['title'] = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
 		$styles['table'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
 		$styles['th'] = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
