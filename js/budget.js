@@ -442,7 +442,7 @@ Budget.createVisit = function() {
 				arm.visits[visit_j] = {
 					name: "",
 					procedure_counts: zero_proc_counts,
-					effort_counts: zero_effort_count,
+					effort_counts: zero_effort_counts,
 					proc_total: 0,
 					effort_total: 0
 				}
