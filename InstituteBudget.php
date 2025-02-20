@@ -12,13 +12,6 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
     
     // set label pattern (to convert raw values to label values)
     private $label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
-    
-    
-    //TODO Remove this constructor since external modules don't always play nice with them
-	public function __construct() {
-		parent::__construct();
-		
-	}
 	
     public function initialize() {
         
