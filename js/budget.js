@@ -114,6 +114,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		var arm_table = $('.arm_table[data-arm="' + arm_i + '"]');
 		visit_count = Number(arm_table.find('.visit').length);
 		arm_table.find('tbody').empty();
+		arm_table.find('thead th:first-child').text("Procedural Costs");
 		for (var proc_index in Budget.procedures) {
 			var procedure = Budget.procedures[proc_index];
 			var proc_name = procedure.name;
