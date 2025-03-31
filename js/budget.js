@@ -283,7 +283,7 @@ Budget.createArm = function() {
 	var visit_1_th = "<th>\
 	<div class='dropdown visit' data-visit='1'>\
 		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit1' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
-			Visit 1: New Visit\
+			Visit 1:\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit1'>\
 			<a class='dropdown-item create_visit' href='#'>Create another visit</a>\
@@ -378,7 +378,7 @@ Budget.createVisit = function() {
 	var visit_dd = "<th>\
 	<div class='dropdown visit' data-visit='" + visit_j + "'>\
 		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit" + visit_j + "' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
-			Visit " + visit_j + ": New Visit\
+			Visit " + visit_j + ":\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit" + visit_j + "'>\
 			<a class='dropdown-item create_visit' href='#'>Create another visit</a>\
@@ -859,7 +859,7 @@ Budget.registerEvents = function() {
 
 	$('body').on('click', '.effort_cell button', function(event) {
 		var btn = $(event.target);
-		var to_add = btn.hasClass('effort_decrement') ? -1 : 1;
+		var to_add = btn.hasClass('effort_decrement') ? -0.5 : 0.5;
 		var effort_cell = btn.closest('.effort_cell');
 		var count_span = effort_cell.find('span')
 

@@ -64,7 +64,7 @@ div#arm_tables {
 	display: none;
 }
 .proc_count, .effort_count, .visit_total, .visit_effort_total {
-	font-size: 1.25rem;
+	font-size: 1.1rem;
 }
 td.procedure, .proc_cell, .visit_total,
 td.effort, .effort_cell, .visit_effort_total,
