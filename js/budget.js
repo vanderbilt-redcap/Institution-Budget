@@ -165,7 +165,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			// 	proc_name = proc_name + ' <span title="Standard of Care"> [SoC]</span>';
 			// }
 
-			effort_row = "<tr><td class='effort'>" + effort_name + "</td>";
+			effort_row = "<tr><td class='effort'><span>" + effort_name + "</span> <div class='cost_label'>($"+effort.cost+"/hr)</div></td>";
 
 			// add proc_count cells to new row, preserving old procedure counts if applicable
 			for (visit_i = 1; visit_i <= visit_count; visit_i++) {
@@ -226,7 +226,7 @@ Budget.refreshProcedureCosts = function() {
 Budget.refreshEffortCosts = function() {
 	// update all .proc_cell data-cost attributes based on the row's procedure (name)
 	$('.effort').each(function(i, td) {
-		var effort_name = $(td).html().trim();
+		var effort_name = $(td).find('span').html().trim();
 		var effort_cost = 0;
 		for (var effort of Budget.efforts) {
 			if (effort.name == effort_name) {
@@ -862,7 +862,7 @@ Budget.registerEvents = function() {
 		var btn = $(event.target);
 		var to_add = btn.hasClass('effort_decrement') ? -0.5 : 0.5;
 		var effort_cell = btn.closest('.effort_cell');
-		var count_span = effort_cell.find('span')
+		var count_span = effort_cell.find('span');
 
 		// update span counter
 		var current_count = Number(count_span.text());

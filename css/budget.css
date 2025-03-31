@@ -72,6 +72,10 @@ td.effort, .effort_cell, .visit_effort_total,
 	border: 1px solid gray;
 }
 
+td.effort .cost_label {
+	float:right;
+}
+
 #budget_edit_procedures .modal-body {
 	display: flex;
 	flex-direction: column;
