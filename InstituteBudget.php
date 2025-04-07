@@ -8,7 +8,7 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
     
     private $moduleName = 'Budget Module';
     // determine name of study intake form instrument
-    private $study_intake_form_name = 'study_coordinating_center_information';
+    private $study_intake_form_name = 'trial_budget_information';
     
     // set label pattern (to convert raw values to label values)
     private $label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
@@ -1724,7 +1724,7 @@ HEREDOC;
         $event_id = $_GET['event_id'];
         $instrument = $_GET['page'];
         $request_uri = $_SERVER['REQUEST_URI'];
-        if ($instrument == 'study_coordinating_center_information' && $_GET['__endpublicsurvey']) {
+        if ($instrument == $this->study_intake_form_name && $_GET['__endpublicsurvey']) {
             $record   = $_GET['id'];
             $event_id = $_GET['event_id'];
             if (strpos($request_uri, '__gotosurvey=') !== false) {
