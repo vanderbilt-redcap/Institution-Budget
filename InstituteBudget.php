@@ -1317,57 +1317,57 @@ HEREDOC;
 		}
 	}
 	
-	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
-		$budget_field = $this->getProjectSetting('budget_table_field');
-		if (empty($budget_field)) {
-			return;
-		}
-		
-		$study_short_name_field = "short_name";
-		try {
-			$params = [
-				"project_id" => $this->getProjectId(),
-				"return_format" => "array",
-				"records" => $record_id,
-				"fields" => [$budget_field, $study_short_name_field]
-			];
-			$data = \REDCap::getData($params);
-			$budget_data = json_decode($data[$record_id][$this->getFirstEventId()][$budget_field], true);
-			$procedures = $budget_data['procedures'];
-		} catch (\Exception $e) {
-			return;
-		}
-		
-		if (empty($procedures)) {
-			return;
-		}
-		
-		// create workbook from template in module directory
-		$module_path = $this->getModulePath();
-		require "$module_path" . "vendor/autoload.php";
-		$reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader("Xlsx");
-		$workbook = $reader->load($module_path . "templates/procedures.xlsx");
-		$sheet = $workbook->getActiveSheet();
-		
-		// update study name in wb first cell
-		$study_name = $data[$record_id][$this->getFirstEventId()][$study_short_name_field] ?? "<study name>";
-		$sheet->setCellValue("A1", "All Procedures for $study_name");
-		// update workbook cells
-		for ($i = 0; $i < 100; $i++) {
-			$name = $procedures[$i-1]['name'];
-			$cpt = $procedures[$i-1]['cpt'];
-			
-			$sheet->setCellValue("B" . ($i + 3), $name);
-			$sheet->setCellValue("C" . ($i + 3), $cpt);
-		}
-		
-		// download workbook to user
-		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-		header('Content-Disposition: attachment;filename="Procedures.xlsx"');
-		header('Cache-Control: max-age=0');
-		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($workbook, 'Xlsx');
-		$writer->save('php://output');
-	}
+	//public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
+	//	$budget_field = $this->getProjectSetting('budget_table_field');
+	//	if (empty($budget_field)) {
+	//		return;
+	//	}
+	//
+	//	$study_short_name_field = "short_name";
+	//	try {
+	//		$params = [
+	//			"project_id" => $this->getProjectId(),
+	//			"return_format" => "array",
+	//			"records" => $record_id,
+	//			"fields" => [$budget_field, $study_short_name_field]
+	//		];
+	//		$data = \REDCap::getData($params);
+	//		$budget_data = json_decode($data[$record_id][$this->getFirstEventId()][$budget_field], true);
+	//		$procedures = $budget_data['procedures'];
+	//	} catch (\Exception $e) {
+	//		return;
+	//	}
+	//
+	//	if (empty($procedures)) {
+	//		return;
+	//	}
+	//
+	//	// create workbook from template in module directory
+	//	$module_path = $this->getModulePath();
+	//	require "$module_path" . "vendor/autoload.php";
+	//	$reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader("Xlsx");
+	//	$workbook = $reader->load($module_path . "templates/procedures.xlsx");
+	//	$sheet = $workbook->getActiveSheet();
+	//
+	//	// update study name in wb first cell
+	//	$study_name = $data[$record_id][$this->getFirstEventId()][$study_short_name_field] ?? "<study name>";
+	//	$sheet->setCellValue("A1", "All Procedures for $study_name");
+	//	// update workbook cells
+	//	for ($i = 0; $i < 100; $i++) {
+	//		$name = $procedures[$i-1]['name'];
+	//		$cpt = $procedures[$i-1]['cpt'];
+	//
+	//		$sheet->setCellValue("B" . ($i + 3), $name);
+	//		$sheet->setCellValue("C" . ($i + 3), $cpt);
+	//	}
+	//
+	//	// download workbook to user
+	//	header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+	//	header('Content-Disposition: attachment;filename="Procedures.xlsx"');
+	//	header('Cache-Control: max-age=0');
+	//	$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($workbook, 'Xlsx');
+	//	$writer->save('php://output');
+	//}
 	
 	public function getSiteInstances($record_id) {
 		// build list of form _complete field names for forms in event 2
