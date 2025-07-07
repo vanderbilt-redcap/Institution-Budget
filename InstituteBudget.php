@@ -976,7 +976,7 @@ HEREDOC;
 				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
 				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
 				efforts_json: '<?= json_encode($efforts, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
-                idc_rate: '<?= $idcRate ?>'
+                idc_rate: '<?= $idcRate ?? 0 ?>'
 			}
 			
 			BudgetSurvey = {
