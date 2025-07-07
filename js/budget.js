@@ -184,7 +184,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 				}
 				effort_row += "<td class='effort_cell' data-visit='" + visit_i + "'>\
 					<button type='button' class='btn btn-outline-primary effort_decrement'>-</button>\
-					<span data-cost='' class='effort_count mx-2'>" + Number(old_count) + "</span>\
+					<span data-cost='' class='effort_count'>" + Number(old_count).toFixed(1) + "</span>\
 					<button type='button' class='btn btn-outline-primary effort_increment'>+</button>\
 				</td>"
 			}
@@ -866,7 +866,7 @@ Budget.registerEvents = function() {
 
 		// update span counter
 		var current_count = Number(count_span.text());
-		var new_count = Math.max(current_count + to_add, 0);
+		var new_count = Math.max(current_count + to_add, 0).toFixed(1);
 		count_span.text(new_count);
 
 		// update sum
@@ -995,7 +995,7 @@ Budget.getState = function() {
 			var efforts_added = [];
 			var visit_sum = 0;
 			$('.arm_table[data-arm="' + arm_i + '"] .effort_cell[data-visit="' + visit_dropdown.attr('data-visit') + '"]').each(function(i, td) {
-				var effort_name = $(".effort:eq(" + Number(i) + ")").text().trim();
+				var effort_name = $(".effort:eq(" + Number(i) + ") span").text().trim();
 				var effort_count = Number($(td).find('span').text());
 				var effort_cost = $(td).find('span').attr('data-cost');
 				effort_counts.push({
@@ -1017,7 +1017,7 @@ Budget.getState = function() {
 					});
 				}
 			});
-			
+
 			// add visit obj to arm.visits
 			arm.visits[visit_i] = {
 				name: visit_name,
