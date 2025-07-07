@@ -209,7 +209,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			summary_row += "<td class='summary_cell visit_summary_total' data-visit='" + visit_i + "'>0</td>";
 		}
 		summary_row += "</tr>";
-		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC ("+Budget.idc_rate+"%) x Visit Total = IDC for Visit</td>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC ("+(Budget.idc_rate > 0 ? Budget.idc_rate : '0')+"%) x Visit Total = IDC for Visit</td>";
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			summary_row += "<td class='summary_cell visit_idc_percent' data-visit='" + visit_i + "'>0</td>";
 		}
@@ -571,7 +571,6 @@ Budget.updateEffortTotalCost = function(arm, visit) {
 Budget.updateSummaryCosts = function(arm, visit) {
 	let procTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").attr('data-value'));
 	let effortTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").attr('data-value'));
-	console.log(procTotal, effortTotal, Budget.idc_rate);
 	let idcRate = Budget.idc_rate;
 	if (idcRate > 0) {
 		idcRate = Number(idcRate / 100);
