@@ -951,11 +951,13 @@ HEREDOC;
 			"project_id" => $this->getProjectId(),
 			"return_format" => "array",
 			"records" => "$record",
-			"fields" => $schedule_field
+			"fields" => [$schedule_field, 'idc_rate']
 		];
 		$soe_data = \REDCap::getData($data_params)[$record];
+        $idcRate = 0;
         if (!empty($soe_data)) {
             $soe_data = reset($soe_data);
+            $idcRate = $soe_data['idc_rate'];
             if (!empty($soe_data[$schedule_field])) {
                 $soe_data = $soe_data[$schedule_field];
             } else {
@@ -973,7 +975,8 @@ HEREDOC;
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
 				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
 				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
-				efforts_json: '<?= json_encode($efforts, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
+				efforts_json: '<?= json_encode($efforts, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
+                idc_rate: <?= $idcRate ?>
 			}
 			
 			BudgetSurvey = {

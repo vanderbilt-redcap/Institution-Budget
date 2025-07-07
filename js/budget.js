@@ -148,7 +148,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			arm_table.find('tbody').append(new_row);
 		}
 		// make and append last row (Totals $$)
-		var new_row = "<tr><td class='no-border'>Total $$</td>";
+		var new_row = "<tr class='total_row'><td class='total_label no-border'>Total $$</td>";
 		
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			new_row += "<td class='visit_total' data-visit='" + visit_i + "'>0</td>";
@@ -156,7 +156,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		new_row += "</tr>";
 		arm_table.find('tbody').append(new_row);
 
-		var effort_row = "<tr><th>Effort Costs (hours)</th></tr>";
+		var effort_row = "<tr><th></th></tr><tr><th>Effort Costs (hours)</th></tr>";
 		arm_table.find('tbody').append(effort_row);
 		for (var effort_index in Budget.efforts) {
 			var effort = Budget.efforts[effort_index];
@@ -192,13 +192,35 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			arm_table.find('tbody').append(effort_row);
 		}
 		// make and append last row (Totals $$)
-		effort_row = "<tr><td class='no-border'>Total Effort $$</td>";
+		effort_row = "<tr class='total_row'><td class='total_label no-border'>Total Effort $$</td>";
 
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			effort_row += "<td class='visit_effort_total' data-visit='" + visit_i + "'>0</td>";
 		}
 		effort_row += "</tr>";
 		arm_table.find('tbody').append(effort_row);
+
+		var summary_row = "<tr><th></th></tr><tr><th>Costs Summary</th></tr>";
+		arm_table.find('tbody').append(summary_row);
+
+		summary_row = "<tr>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'>Procedural + Effort = Visit Total</td>";
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			summary_row += "<td class='summary_cell visit_summary_total' data-visit='" + visit_i + "'>0</td>";
+		}
+		summary_row += "</tr>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC ("+Budget.idc_rate+"%) x Visit Total = IDC for Visit</td>";
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			summary_row += "<td class='summary_cell visit_idc_percent' data-visit='" + visit_i + "'>0</td>";
+		}
+		summary_row += "</tr>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC for Visit + Visit Total = Total w/IDC</td>";
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			summary_row += "<td class='summary_cell visit_idc_total' data-visit='" + visit_i + "'>0</td>";
+		}
+		summary_row += "</tr>";
+
+		arm_table.find('tbody').append(summary_row);
 	}
 	
 	Budget.refreshProcedureCosts();
@@ -546,12 +568,30 @@ Budget.updateEffortTotalCost = function(arm, visit) {
 	$(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").text(sum);
 }
 
+Budget.updateSummaryCosts = function(arm, visit) {
+	let procTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text());
+	let effortTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").text());
+	console.log(procTotal, effortTotal, Budget.idc_rate);
+	let idcRate = Budget.idc_rate;
+	if (idcRate > 0) {
+		idcRate = Number(idcRate / 100);
+	}
+	let total = (procTotal + effortTotal);
+	let idc = total * idcRate;
+	let idcTotal = total + idc;
+	$(".arm_table[data-arm='" + arm + "'] .visit_summary_total[data-visit='" + visit + "']").text(formatCurrency(total));
+	$(".arm_table[data-arm='" + arm + "'] .visit_idc_percent[data-visit='" + visit + "']").text(formatCurrency(idc));
+	$(".arm_table[data-arm='" + arm + "'] .visit_idc_total[data-visit='" + visit + "']").text(formatCurrency(idcTotal));
+
+}
+
 Budget.updateAllVisitCosts = function() {
 	for (var arm_i = 1; arm_i <= $('.arm').length; arm_i++) {
 		var visit_count = $('.arm_table[data-arm="' + arm_i + '"] .visit').length;
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			Budget.updateProcTotalCost(arm_i, visit_i);
 			Budget.updateEffortTotalCost(arm_i, visit_i);
+			Budget.updateSummaryCosts(arm_i, visit_i);
 		}
 	};
 }
@@ -855,6 +895,7 @@ Budget.registerEvents = function() {
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = proc_cell.attr('data-visit');
 		Budget.updateProcTotalCost(arm_index, visit_index);
+		Budget.updateSummaryCosts(arm_index, visit_index);
 		Budget.pushState();
 	});
 
@@ -873,6 +914,7 @@ Budget.registerEvents = function() {
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = effort_cell.attr('data-visit');
 		Budget.updateEffortTotalCost(arm_index, visit_index);
+		Budget.updateSummaryCosts(arm_index, visit_index);
 		Budget.pushState();
 	});
 	
@@ -1141,4 +1183,12 @@ var getUrlParameter = function getUrlParameter(sParam) {
             return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
         }
     }
+};
+
+let formatCurrency = function (num) {
+	num = Number(num);
+	return (num).toLocaleString('en-US', {
+		style: 'currency',
+		currency: 'USD',
+	});
 };
