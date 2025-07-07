@@ -543,7 +543,7 @@ Budget.updateProcTotalCost = function(arm, visit) {
 	});
 	
 	// update visit total in Total $$ row
-	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text(sum);
+	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").attr('data-value', sum).text(formatCurrency(sum));
 }
 
 Budget.updateEffortTotalCost = function(arm, visit) {
@@ -565,12 +565,12 @@ Budget.updateEffortTotalCost = function(arm, visit) {
 	});
 
 	// update visit total in Total $$ row
-	$(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").text(sum);
+	$(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").attr('data-value', sum).text(formatCurrency(sum));
 }
 
 Budget.updateSummaryCosts = function(arm, visit) {
-	let procTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text());
-	let effortTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").text());
+	let procTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").attr('data-value'));
+	let effortTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").attr('data-value'));
 	console.log(procTotal, effortTotal, Budget.idc_rate);
 	let idcRate = Budget.idc_rate;
 	if (idcRate > 0) {
@@ -579,9 +579,9 @@ Budget.updateSummaryCosts = function(arm, visit) {
 	let total = (procTotal + effortTotal);
 	let idc = total * idcRate;
 	let idcTotal = total + idc;
-	$(".arm_table[data-arm='" + arm + "'] .visit_summary_total[data-visit='" + visit + "']").text(formatCurrency(total));
-	$(".arm_table[data-arm='" + arm + "'] .visit_idc_percent[data-visit='" + visit + "']").text(formatCurrency(idc));
-	$(".arm_table[data-arm='" + arm + "'] .visit_idc_total[data-visit='" + visit + "']").text(formatCurrency(idcTotal));
+	$(".arm_table[data-arm='" + arm + "'] .visit_summary_total[data-visit='" + visit + "']").attr('data-value', total).text(formatCurrency(total));
+	$(".arm_table[data-arm='" + arm + "'] .visit_idc_percent[data-visit='" + visit + "']").attr('data-value', idc).text(formatCurrency(idc));
+	$(".arm_table[data-arm='" + arm + "'] .visit_idc_total[data-visit='" + visit + "']").attr('data-value', idcTotal).text(formatCurrency(idcTotal));
 
 }
 
