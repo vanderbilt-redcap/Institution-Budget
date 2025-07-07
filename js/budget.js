@@ -204,17 +204,17 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		arm_table.find('tbody').append(summary_row);
 
 		summary_row = "<tr>";
-		summary_row += "<tr class='total_row'><td class='total_label no-border'>Procedural + Effort = Visit Total</td>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'><span>Procedural</span> + <span>Effort</span> = <span>Visit Total</span></td>";
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			summary_row += "<td class='summary_cell visit_summary_total' data-visit='" + visit_i + "'>0</td>";
 		}
 		summary_row += "</tr>";
-		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC ("+Budget.idc_rate+"%) x Visit Total = IDC for Visit</td>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'><span>IDC ("+Budget.idc_rate+"%)</span> x <span>Visit Total</span> = <span>IDC for Visit</span></td>";
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			summary_row += "<td class='summary_cell visit_idc_percent' data-visit='" + visit_i + "'>0</td>";
 		}
 		summary_row += "</tr>";
-		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC for Visit + Visit Total = Total w/IDC</td>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'><span>IDC for Visit</span> + <span>Visit Total</span> = <span>Total w/IDC</span></td>";
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			summary_row += "<td class='summary_cell visit_idc_total' data-visit='" + visit_i + "'>0</td>";
 		}
@@ -927,6 +927,38 @@ Budget.registerEvents = function() {
 	$('body').on('mouseleave', '.proc_cell, .effort_cell', function(event) {
 		$('.proc_cell button').hide();
 		$('.effort_cell button').hide();
+	});
+	$('body').on('mouseenter', '.summary_cell', function(event) {
+		var arm_index = $(this).closest('.arm_table').attr('data-arm');
+		var visit_index = $(this).attr('data-visit');
+		$(this).addClass('highlight_cell highlight_c');
+		if ($(this).hasClass('visit_summary_total')) {
+			$(".arm_table[data-arm='" + arm_index + "'] .visit_total[data-visit='" + visit_index + "']").addClass('highlight_cell highlight_a');
+			$(".arm_table[data-arm='" + arm_index + "'] .visit_effort_total[data-visit='" + visit_index + "']").addClass('highlight_cell highlight_b');
+		} else if ($(this).hasClass('visit_idc_percent')) {
+			$(".arm_table[data-arm='" + arm_index + "'] .visit_summary_total[data-visit='" + visit_index + "']").addClass('highlight_cell highlight_b');
+			$(this).closest('tr').find('td.no-border span:nth-child(1)').addClass('highlight_a');
+		} else if ($(this).hasClass('visit_idc_total')) {
+			$(".arm_table[data-arm='" + arm_index + "'] .visit_summary_total[data-visit='" + visit_index + "']").addClass('highlight_cell highlight_a');
+			$(".arm_table[data-arm='" + arm_index + "'] .visit_idc_percent[data-visit='" + visit_index + "']").addClass('highlight_cell highlight_b');
+		}
+		$('.proc_cell button').hide();
+		$('.effort_cell button').hide();
+		$(event.target).find('button').show();
+	});
+	$('body').on('mouseleave', '.summary_cell', function(event) {
+		var arm_index = $(this).closest('.arm_table').attr('data-arm');
+		var visit_index = $(this).attr('data-visit');
+		$(this).removeClass('highlight_cell');
+		$(".arm_table[data-arm='" + arm_index + "'] .visit_total[data-visit='" + visit_index + "']").removeClass('highlight_cell highlight_a highlight_b highlight_c');
+		$(".arm_table[data-arm='" + arm_index + "'] .visit_effort_total[data-visit='" + visit_index + "']").removeClass('highlight_cell highlight_a highlight_b highlight_c');
+		$(".arm_table[data-arm='" + arm_index + "'] .visit_summary_total[data-visit='" + visit_index + "']").removeClass('highlight_cell highlight_a highlight_b highlight_c');
+		$(".arm_table[data-arm='" + arm_index + "'] .visit_idc_percent[data-visit='" + visit_index + "']").removeClass('highlight_cell highlight_a highlight_b highlight_c');
+		$(".arm_table[data-arm='" + arm_index + "'] .visit_idc_total[data-visit='" + visit_index + "']").removeClass('highlight_cell highlight_a highlight_b highlight_c');
+
+		$(this).closest('tr').find('td.no-border span:nth-child(1)').removeClass('highlight_a highlight_b highlight_c');
+		$(this).closest('tr').find('td.no-border span:nth-child(2)').removeClass('highlight_a highlight_b highlight_c');
+		$(this).closest('tr').find('td.no-border span:nth-child(3)').removeClass('highlight_a highlight_b highlight_c');
 	});
 	
 	// allow undo/redo

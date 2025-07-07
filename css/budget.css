@@ -81,14 +81,19 @@ td.effort, .effort_cell, .visit_effort_total,
 
 .arm_table tbody tr td.highlight_cell {
 	border: 3px solid gray;
-	background-color: #e4ffe0;
 	/*font-size: 1.2em;*/
 }
-.arm_table tbody tr td.highlight_cell.highlight_a, .highlight_a {
+.arm_table tbody tr td.highlight_cell.highlight_a, span.highlight_a {
 	background-color: #fffae0;
 }
-.arm_table tbody tr td.highlight_cell.highlight_b, .highlight_b {
+span.highlight_a {
+	border: 2px solid gray;
+}
+.arm_table tbody tr td.highlight_cell.highlight_b{
 	background-color: #e0e6ff;
+}
+.arm_table tbody tr td.highlight_cell.highlight_c{
+	background-color: #e4ffe0;
 }
 td.effort .cost_label {
 	float:right;
