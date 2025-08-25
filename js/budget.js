@@ -1060,17 +1060,15 @@ Budget.getState = function() {
 			});
 
 			// collect summary counts for this visit
-			var summary_totals = [];
-			var summary_added = [];
 			let total = $(".arm_table[data-arm='" + arm_i + "'] .visit_summary_total[data-visit='" + visit_num + "']").attr('data-value');
 			let idc_percent = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_percent[data-visit='" + visit_num + "']").attr('data-value');
 			let idc_total = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_total[data-visit='" + visit_num + "']").attr('data-value');
 
-			summary_totals.push({
+			let summary_totals = {
 				total: total,
 				idc_percent: idc_percent,
 				idc_total: idc_total
-			});
+			};
 			// efforts_added.push(effort_name);
 
 
