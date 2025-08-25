@@ -1001,13 +1001,14 @@ Budget.getState = function() {
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			var visit_dropdown = $(".arm_table[data-arm=" + arm_i + "] .visit:eq(" + (visit_i - 1) + ")");
 			var visit_name = visit_dropdown.find('button').text();
+			let visit_num = visit_dropdown.attr('data-visit');
 			visit_name = visit_name.substring(visit_name.search(':') + 1).trim();
 			
 			// collect procedure counts for this visit
 			var procedure_counts = [];
 			var procedures_added = [];
 			var visit_sum = 0;
-			$('.arm_table[data-arm="' + arm_i + '"] .proc_cell[data-visit="' + visit_dropdown.attr('data-visit') + '"]').each(function(i, td) {
+			$('.arm_table[data-arm="' + arm_i + '"] .proc_cell[data-visit="' + visit_num + '"]').each(function(i, td) {
 				var proc_name = $(".procedure:eq(" + Number(i) + ")").text().trim();
 				var proc_count = Number($(td).find('span').text());
 				var proc_cost = $(td).find('span').attr('data-cost');
@@ -1031,11 +1032,10 @@ Budget.getState = function() {
 				}
 			});
 
-			// collect procedure counts for this visit
+			// collect effort counts for this visit
 			var effort_counts = [];
 			var efforts_added = [];
-			var visit_sum = 0;
-			$('.arm_table[data-arm="' + arm_i + '"] .effort_cell[data-visit="' + visit_dropdown.attr('data-visit') + '"]').each(function(i, td) {
+			$('.arm_table[data-arm="' + arm_i + '"] .effort_cell[data-visit="' + visit_num + '"]').each(function(i, td) {
 				var effort_name = $(".effort:eq(" + Number(i) + ") span").text().trim();
 				var effort_count = Number($(td).find('span').text());
 				var effort_cost = $(td).find('span').attr('data-cost');
@@ -1059,11 +1059,27 @@ Budget.getState = function() {
 				}
 			});
 
+			// collect summary counts for this visit
+			var summary_totals = [];
+			var summary_added = [];
+			let total = $(".arm_table[data-arm='" + arm_i + "'] .visit_summary_total[data-visit='" + visit_num + "']").attr('data-value');
+			let idc_percent = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_percent[data-visit='" + visit_num + "']").attr('data-value');
+			let idc_total = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_total[data-visit='" + visit_num + "']").attr('data-value');
+
+			summary_totals.push({
+				total: total,
+				idc_percent: idc_percent,
+				idc_total: idc_total
+			});
+			// efforts_added.push(effort_name);
+
+
 			// add visit obj to arm.visits
 			arm.visits[visit_i] = {
 				name: visit_name,
 				procedure_counts: procedure_counts,
 				effort_counts: effort_counts,
+				summary_totals: summary_totals,
 				total: visit_sum
 			}
 		}
