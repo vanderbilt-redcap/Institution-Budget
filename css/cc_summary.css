@@ -15,7 +15,7 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, table.sites_contact_info
 	border: 1px solid black;
 	font-size: 1rem;
 	padding: 8px;
-	text-align: center;
+	text-align: left;
 	border-collapse: collapse;
 }
 
@@ -89,6 +89,13 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, table.sites_contact_info
 	background-color: #EEEEEE;
 }
 
+tr.shaded {
+	background-color: #F2F6FB;
+}
+
+td.currency {
+	text-align: right;
+}
 @media print {
 	/* div { float: none !important; position: static !important; display: inline;  */
           /* box-sizing: content-box !important; */
