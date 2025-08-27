@@ -518,7 +518,7 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	}
     
     public static function round2Dec($number) {
-        return number_format(round($number,2), 2, '.', '');
+        return number_format(round((float)$number,2), 2, '.', '');
     }
 	
 	public function showSummarySiteTable($record) {
