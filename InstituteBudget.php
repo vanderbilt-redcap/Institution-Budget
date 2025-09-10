@@ -11,6 +11,7 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
     private $study_intake_form_name = 'trial_budget_information';
     private $summary_review_instrument;
     private $budget_table_instrument;
+    private $procedures_instrument;
     
     // set label pattern (to convert raw values to label values)
     private $label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
@@ -53,6 +54,14 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
         }
         
         return $this->budget_table_instrument;
+    }
+    
+    public function getProceduresForm() {
+        if (empty($this->procedures_instrument)){
+            $this->procedures_instrument = $this->getProjectSetting('procedures_instrument');
+        }
+        
+        return $this->procedures_instrument;
     }
     
     public function getSummaryForm() {
@@ -866,13 +875,11 @@ HEREDOC;
         if (empty($soe_data)) {
             $soe_data = '{}';
         }
-		$cpt_endpoint_url = $this->getProjectSetting('cpt_endpoint_url');
 		
 		?>
 		<script type="text/javascript">
 			Budget = {
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
-				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
 				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
 				efforts_json: '<?= json_encode($efforts, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
                 idc_rate: '<?= $idcRate ?? 0 ?>'
@@ -1640,22 +1647,18 @@ HEREDOC;
 		if ($instrument == $this->getBudgetForm()) {
 			$this->replaceScheduleFields($record);
 		}
-		
-        //TODO Remove or update once we figure out if this feature is staying
-		// replace Go/No-Go field in survey page with generated table
-		//if ($instrument == $this->gonogo_table_instrument) {
-		//	$this->replaceGoNoGoFields($record, $repeat_instance);
-		//}
-		
-		// replace Summary Review field in survey page with interface
-		if ($instrument == $this->getSummaryForm()) {
-			$this->replaceSummaryReviewField($record);
-		}
         
-        //TODO Remove or update once we figure out if this feature is staying
-		//if ($instrument == 'enter_cost_to_run_procedure') {
-		//	$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
-		//}
+        if ($instrument == $this->getProceduresForm()) {
+            ?>
+                <style>
+                    .ui-autocomplete-loading {
+                        background: white url("<?= $this->getUrl("icons/progress_circle.gif"); ?>") right center no-repeat;
+                    }
+                </style>
+                <script type="application/javascript"> let ajax_url = '<?= $this->getUrl('ajax.php'); ?>';</script>
+                <script type='text/javascript' src='<?= $this->getUrl('js/priceChecker.js'); ?>'></script>
+            <?php
+        }
 		
 		if ($event_id == $this->getFirstEventId()) {
             if ($instrument != $this->getSummaryForm()) {
