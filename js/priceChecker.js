@@ -36,10 +36,9 @@ $(document).ready(function() {
                 fillcptFields(ui.item);
                 event.preventDefault();
             },
-            // focus: function( event, ui ) {
-            //     fillcptFields(ui.item);
-            //     event.preventDefault();
-            // }
+            focus: function( event, ui ) {
+                event.preventDefault();
+            }
         });
     });
 
