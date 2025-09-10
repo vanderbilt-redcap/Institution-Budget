@@ -1,18 +1,5 @@
 
 Budget.MAX_STATES = 100;
-// Budget.autocompSettings = {
-// 	source: function(request, response) {
-// 		$.ajax(Budget.cpt_endpoint_url, {
-// 			data: {"query": request.term},
-// 			method: "POST",
-// 			dataType: "json"
-// 		}).done(function(data) {
-// 			response(data);
-// 		});
-// 	},
-// 	minLength: 0
-// }
-
 Budget.refreshSchedule = function() {
 	// highlight dropdown for active arm
 	$('.arm button').removeClass('active-arm')
