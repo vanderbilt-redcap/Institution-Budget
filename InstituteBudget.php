@@ -255,9 +255,12 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		return $data;
 	}
     
-    
+    /**
+     * @param $data | This is a single record from REDCap::getData's array format
+     * @return array ['label' => string, 'detail' => string]
+     */
     public function getAdminFeesFromFieldData($data) {
-        $effortPlacement = [1 => 15, 2 => 45, 3 => 63, 4 => 71];
+        $effortPlacement = [1 => 15, 2 => 45, 3 => 63, 4 => 71];//This is just for ordering where the effort fields fit in
         $fixedCosts = [];
         $fixedCostsToInclude = [];
         $effortAdminsToInclude = [];
@@ -305,7 +308,11 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
         
         return $fixedCosts;
     }
-	
+    
+    /**
+     * @param $data | This is a single record from REDCap::getData's array format
+     * @return array ['label' => string, 'detail' => string]
+     */
     public function getPersonnelCostsFromFieldData($data) {
         $personnelCosts = [];
         foreach ($data as $field_name => $field_data) {
