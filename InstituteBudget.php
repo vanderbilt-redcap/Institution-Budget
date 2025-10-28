@@ -12,6 +12,8 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
     private $summary_review_instrument;
     private $budget_table_instrument;
     private $procedures_instrument;
+
+    private $priceCheckerApi;
     
     // set label pattern (to convert raw values to label values)
     private $label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
@@ -1629,7 +1631,19 @@ HEREDOC;
 		</div>
 HEREDOC;
 	}
-	
+
+
+    public function getPriceCheckerApi() {
+        if (!$this->priceCheckerApi) {
+            $this->priceCheckerApi = new PriceCheckerAPI(
+                    $this->getProjectSetting('pricechecker_endpoint_url'),
+                    $this->getProjectSetting('pricechecker_user'),
+                    $this->getProjectSetting('pricechecker_pass'));
+        }
+
+        return $this->priceCheckerApi;
+    }
+
 	public function redcap_every_page_top($project_id) {
         $this->initialize();
         $event_id = $_GET['event_id'];

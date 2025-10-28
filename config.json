@@ -67,7 +67,8 @@
 		{
 			"key": "pricechecker_pass",
 			"name": "PriceChecker Password",
-			"type": "password"
+			"type": "password",
+			"super-users-only": true
 		}
 	],
 
