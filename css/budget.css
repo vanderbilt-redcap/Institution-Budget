@@ -38,38 +38,60 @@ div#arm_tables {
 	padding: 8px 8px;
 	text-align: center;
 }
+.arm_table tbody tr td.total_label {
+	background-color: #FFFFFF;
+}
 .arm_table .visit_total, .arm_table .visit_effort_total {
 	padding-left: 8px;
 	text-align: center;
 }
-.arm_table tbody tr:nth-child(odd) td {
+.arm_table tr:nth-child(odd) td {
 	background-color: #F2F6FB;
 }
-.arm_table tbody tr:nth-child(even) td {
+.arm_table tr:nth-child(even) td {
 	background-color: #E9ECF6;
 }
-.arm_table tbody tr:nth-child(odd) td.nonzero {
+.arm_table tr:nth-child(odd) td.nonzero {
 	background-color: #c2edff;
 }
-.arm_table tbody tr:nth-child(even) td.nonzero {
+.arm_table tr:nth-child(even) td.nonzero {
 	background-color: #A6E0FF;
 }
-.arm_table tbody tr:last-child td:first-child {
+.arm_table tr:last-child td:first-child {
 	background-color: #FFFFFF;
 }
-.proc_cell, .effort_cell {
+.proc_cell, .effort_cell, .summary_cell{
 	text-align: center;
 }
 .proc_cell button, .effort_cell button {
 	display: none;
 }
-.proc_count, .effort_count, .visit_total, .visit_effort_total {
-	font-size: 1.25rem;
+.proc_count, .effort_count, .visit_total, .visit_effort_total, .summary_cell {
+	font-size: 1.1rem;
 }
 td.procedure, .proc_cell, .visit_total,
 td.effort, .effort_cell, .visit_effort_total,
+.summary_cell,
 .arm_table th:not(:first-child) {
 	border: 1px solid gray;
+}
+.arm_table tr.total_row {
+	border: 2px solid gray;
+}
+
+.arm_table tbody tr td.highlight_cell {
+	border: 3px solid gray;
+	background-color: #e4ffe0;
+	/*font-size: 1.2em;*/
+}
+.arm_table tbody tr td.highlight_cell.highlight_a, .highlight_a {
+	background-color: #fffae0;
+}
+.arm_table tbody tr td.highlight_cell.highlight_b, .highlight_b {
+	background-color: #e0e6ff;
+}
+td.effort .cost_label {
+	float:right;
 }
 
 #budget_edit_procedures .modal-body {

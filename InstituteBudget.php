@@ -8,17 +8,15 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
     
     private $moduleName = 'Budget Module';
     // determine name of study intake form instrument
-    private $study_intake_form_name = 'study_coordinating_center_information';
+    private $study_intake_form_name = 'trial_budget_information';
+    private $summary_review_instrument;
+    private $budget_table_instrument;
+    private $procedures_instrument;
+
+    private $priceCheckerApi;
     
     // set label pattern (to convert raw values to label values)
     private $label_pattern = "/(\d+),?\s?(.+?)(?=\x{005c}\x{006E}|$)/";
-    
-    
-    //TODO Remove this constructor since external modules don't always play nice with them
-	public function __construct() {
-		parent::__construct();
-		
-	}
 	
     public function initialize() {
         
@@ -60,11 +58,18 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
         return $this->budget_table_instrument;
     }
     
+    public function getProceduresForm() {
+        if (empty($this->procedures_instrument)){
+            $this->procedures_instrument = $this->getProjectSetting('procedures_instrument');
+        }
+        
+        return $this->procedures_instrument;
+    }
+    
     public function getSummaryForm() {
         if (empty($this->summary_review_instrument)){
             $this->summary_review_instrument = $this->getSettingFieldForm('summary_review_field');
         }
-        
         return $this->summary_review_instrument;
     }
     
@@ -235,60 +240,94 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	//	}
 	//}
 	
-	public function getSummaryReviewData($record, $instance) {
-		if (empty($instance))
-			$instance = 1;
+	public function getSummaryReviewData($record) {
 		$data = [];
-		$field_list = ['institution'];
-		for ($i = 1; $i <= 5; $i++) {
-			$field_list[] = "fixedcost$i";
-			$field_list[] = "fixedcost$i" . "_detail";
-			$field_list[] = "fixedcost$i" . "_decision";
-			$field_list[] = "fixedcost$i" . "_comments";
-			$field_list[] = "arm$i" . "_decision";
-			$field_list[] = "arm$i" . "_comments";
-		}
-		
-        $field_list = array_merge($field_list, [
-            "costs_4",
-            "personnelcost_pi_decision",
-            "personnelcost_pi_comment",
-            "costs_5",
-            "personlcost_nonpi_decision",
-            "personlcost_nonpi_comment",
-            "costs_6",
-            "personlcost_partic_decision",
-            "personlcost_partic_comment"
-        ]);
-		$rc_data = \REDCap::getData('array', $record, $field_list);
-		
+		$rc_data = \REDCap::getData('array', $record);
 		// collate field data, prioritizing target instance data set
 		$event_id = array_key_first($rc_data[$record]);
 		$base_data = $rc_data[$record][$event_id];
-		$instance_data = $rc_data[$record]['repeat_instances'];
-		$instance_data = reset($instance_data);
-		$instance_data = reset($instance_data);
-		$instance_data = $instance_data[$instance];
-		foreach ($field_list as $i => $field_name) {
-			if (!empty($base_data[$field_name])) {
-				$data[$field_name] = $base_data[$field_name];
-			}
-			if (!empty($instance_data[$field_name])) {
-				$data[$field_name] = $instance_data[$field_name];
-			}
-		}
-		
-		// convert raw->label for ..._decision fields
-		foreach ($data as $name => $value) {
-			if (strpos($name, '_decision') !== false) {
-				$labels = $this->getChoiceLabels($name);
-				$data[$name] = $labels[$value];
-			}
+        $data['fixed_costs'] = $this->getAdminFeesFromFieldData($base_data);
+        $data['personnel_costs'] = $this->getPersonnelCostsFromFieldData($base_data);
+		foreach ($base_data as $field_name => $field_data) {
+            if (!empty($field_data)) {
+                $data[$field_name] = $field_data;
+            }
 		}
 		
 		return $data;
 	}
-	
+    
+    /**
+     * @param $data | This is a single record from REDCap::getData's array format
+     * @return array ['label' => string, 'detail' => string]
+     */
+    public function getAdminFeesFromFieldData($data) {
+        $effortPlacement = [1 => 15, 2 => 45, 3 => 63, 4 => 71];//This is just for ordering where the effort fields fit in
+        $fixedCosts = [];
+        $fixedCostsToInclude = [];
+        $effortAdminsToInclude = [];
+        foreach ($data as $field_name => $field_data) {
+            if (str_contains($field_name, 'fixedcost') && !str_contains($field_name, '_detail')) {
+                if ($field_data[1] == 1) {
+                    $fixedCostsToInclude[] = str_replace('fixedcost', '', $field_name);
+                }
+            } elseif (str_contains($field_name, 'effort_admin_fees') && !empty($field_data)) {
+                $effortNum = (int)str_replace('effort_admin_fees_', '', $field_name);
+                $effortAdminsToInclude[$effortNum]['field'] = $field_name;
+                $effortAdminsToInclude[$effortNum]['after'] = $effortPlacement[$effortNum];
+            } elseif (!empty($field_data)) {
+                $data[$field_name] = $field_data;
+            }
+        }
+        
+        foreach ($fixedCostsToInclude as $i) {
+            foreach ($effortAdminsToInclude as $effortNum => $effortAdmin) {
+                if ($i > $effortAdmin['after']) {
+                    $fixedCosts['eaf_'.$effortNum] = [
+                        'label' => $this->getFieldLabel($effortAdmin['field']),
+                        'detail' => $data[$effortAdmin['field']]
+                    ];
+                    unset($effortAdminsToInclude[$effortNum]);
+                    break;
+                }
+            }
+            $field1 = 'fixedcost'.$i;
+            $field2 = 'fixedcost'.$i.'_detail';
+            $fixedCosts[$i] = [
+                'label' => $this->getFieldLabel($field1),
+                'detail' => $data[$field2]
+            ];
+        }
+        //Catch any leftover effort admin fees
+        if (!empty($effortAdminsToInclude) && count($effortAdminsToInclude) == 1) {
+            $effortNum = array_key_first($effortAdminsToInclude);
+            $effortAdmin = $effortAdminsToInclude[$effortNum];
+            $fixedCosts['eaf_'.$effortNum] = [
+                'label' => $this->getFieldLabel($effortAdmin['field']),
+                'detail' => $data[$effortAdmin['field']]
+            ];
+        }
+        
+        return $fixedCosts;
+    }
+    
+    /**
+     * @param $data | This is a single record from REDCap::getData's array format
+     * @return array ['label' => string, 'detail' => string]
+     */
+    public function getPersonnelCostsFromFieldData($data) {
+        $personnelCosts = [];
+        foreach ($data as $field_name => $field_data) {
+            if (str_starts_with($field_name, 'cost_pc_')) {
+                $personnelCosts[] = [
+                        'label' => $this->getFieldLabel($field_name),
+                        'detail' => $field_data
+                ];
+            }
+        }
+        return $personnelCosts;
+    }
+    
 	public function getReconciliationData() {
 		// get event ID
 		$event_ids = \REDCap::getEventNames();
@@ -425,28 +464,38 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	}
 	
 	public function showStaticScheduleArms($budget_data, $arms_and_visits_survey_link) {
+        ?>
+        <div>
+            <table class="cc_rev_table blue_table_headers">
+                <thead>
+                    <tr>
+                        <th>ARM</th>
+                        <th>VISIT</th>
+                        <th>TOTAL ($)</th>
+                        <th>IDC ($)</th>
+                        <th>TOTAL w/IDC ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php
+        $shaded = true;
 		foreach($budget_data['arms'] as $arm_i => $arm) {
-		$link_arm_index = $arm_i + 1;
-		?>
-		<div class="budget_container">
-		<a href="<?= $arms_and_visits_survey_link . "&arm=$link_arm_index" ?>"><h6><?= "Arm " . ($arm_i + 1) . ": " . ($arm['name'] ?? "") ?></h6></a>
-		<table>
-			<thead>
-				<tr>
-				<?php
-				foreach ($arm['visits'] as $visit_i => $visit) {
-					if (empty($visit)) {
-						echo "<th></th>";
-					} else {
-						echo "<th>Visit " . ($visit_i) . ": " . $visit['name'] . "</th>";
-					}
-				}
-				?>
-				</tr>
-			</thead>
-			<tbody>
-			<?php
-			$visit1 = $arm['visits'][1];
+            $arm_num = $arm_i+1;
+            $shaded = !$shaded;
+            foreach ($arm['visits'] as $visit_i => $visit) {
+                if (empty($visit)) {continue;}
+                
+                ?>
+                <tr <?= ($shaded ? 'class="shaded"':''); ?>>
+                    <td><?= $arm_num ?></td>
+                    <td><?= $visit_i ?></td>
+                    <td class='currency'><?= self::round2Dec($visit['summary_totals']['total']) ?></td>
+                    <td class='currency'><?= self::round2Dec($visit['summary_totals']['idc_percent']) ?></td>
+                    <td class='currency'><?= self::round2Dec($visit['summary_totals']['idc_total']) ?></td>
+                </tr>
+                <?php
+            }
+            /*
 			$row_count = count($budget_data['procedures']);
 			for ($row_i = 1; $row_i <= $row_count; $row_i++) {
 				$row_i_0 = $row_i - 1;
@@ -467,23 +516,28 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 					?>
 				</tr>
 				<?php
-			}
+			}*/
 			
 			// add Total $$ row
-			echo "<tr><td class='no-border'>Total $$</td>";
-			foreach ($arm['visits'] as $visit_i => $visit) {
-				if (!empty($visit)) {
-					echo "<td>" . $visit['total'] . "</td>";
-				}
-			}
-			echo "</tr>";
-			?>
-			</tbody>
-		</table>
-		</div>
-		<?php
+			//echo "<tr><td class='no-border'>Total $$</td>";
+			//foreach ($arm['visits'] as $visit_i => $visit) {
+			//	if (!empty($visit)) {
+			//		echo "<td>" . $visit['total'] . "</td>";
+			//	}
+			//}
+			//echo "</tr>";
+			
 		}
+        ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
 	}
+    
+    public static function round2Dec($number) {
+        return number_format(round((float)$number,2), 2, '.', '');
+    }
 	
 	public function showSummarySiteTable($record) {
 		$fields = [];
@@ -677,163 +731,9 @@ HEREDOC;
 		
 		return $data;
 	}
-    
-    
-    //TODO Remove or update once we figure out if this feature is staying
-	public function renderDashboard() {
-        $this->initialize();
-        $user = $this->getUser()->getUsername();
-        $userInfo = ExternalModules::getUserInfo($user);
-        $user_name = $userInfo['user_firstname']. ' ' . $userInfo['user_lastname'];
-		$data = $this->getDashboardData();
-		$plus_icon_url = $this->getUrl("icons/plus-solid.svg");
-		$minus_icon_url = $this->getUrl("icons/minus-solid.svg");
-		$reconciliiation_page_url = $this->getUrl("reconciliation.php");
-		
-		// get public survey url
-		// $new_record_url = APP_PATH_WEBROOT . 'DataEntry/record_home.php?pid=' . $this->getProjectId() . '&arm=1';
-        
-        $public_survey_url = $this->getPublicSurveyUrl();
-		
-		$dropdown_i = 1;
-		?>
-		<!DOCTYPE html>
-		<style>body {display: none;}</style>
-		<div id="solid_header">
-			<h1>VUMC Budget Tool</h1>
-		</div>
-		<div id="user_controls">
-			<span>Welcome <?= $user_name ?> - <a href="/redcap/index.php?logout=1">Logout</a></span>
-			<button type="button" class="btn btn-primary" id="new_budget_feasibility_request" onclick="window.location.href=BudgetDashboard.public_survey_url">Generate New Budget Feasibility Request</button>
-		</div>
-		<div id="study_tables">
-			<div class="blue_bar"></div>
-<!--            <table id='budgetDashboard'>-->
-<!--                <thead>-->
-<!--                <tr>-->
-<!--                    <th>Record ID</th>-->
-<!--                    <th>Study Name</th>-->
-<!--                    <th>Link</th>-->
-<!--                </tr>-->
-<!--                </thead>-->
-<!--                <tbody>-->
-		<?php
-		// Actions column dropdown
-//		$action_dropdown = "<div class='dropdown'>
-//			<button class='btn btn-primary dropdown-toggle site-action-dd' type='button' id='_id' data-toggle='dropdown' aria-expanded='false'>
-//				View
-//			</button>
-//			<ul class='dropdown-menu' aria-labelledby='_id'>
-//				<li><a class='action-item dropdown-item' href='#'>Contact Site</a></li>
-//				<li><a class='action-item dropdown-item' href='#'>Accept Decision</a></li>
-//				<li><a class='action-item dropdown-item' href='#'>Provide Information</a></li>
-//				<li><a class='action-item dropdown-item' href='#'>Create Note</a></li>
-//				<li><a class='action-item dropdown-item' href='#'>Send Reminder</a></li>
-//			</ul>
-//		</div>";
-
-		// create study rows and tables
-		foreach ($data as $study_i => $study) {
-//            $debug->compare([$study], []);
-            $intake_url = \REDCap::getSurveyLink($study_i, $this->study_intake_form_name, $this->event_ids[0]);
-//            $debug->compare([$link], []);
-//			$detailed_recon_view_link = "<a class='detailed_recon_view' href='$reconciliiation_page_url'>See detailed reconciliation view</a>";
-            $survey_link = "<a class='detailed_recon_view' href='$intake_url'>Continue working on budget feasibility request</a>";
-			echo "<div class='study_row' data-study-i='$study_i'>
-                      <span class='study_short_name'>Study Name: {$study['name']}{$study['pending']}</span>
-                      $survey_link
-                  </div>";
-//            echo "
-//                    <tr>
-//                        <td>$study_i</td>
-//                        <td>{$study['name']}{$study['pending']}</td>
-//                        <td>$survey_link</td>
-//                    </tr>";
-		}
-		?>
-<!--                </tbody>-->
-<!--            </table>-->
-		</div>
-		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-		<script src="//cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
-		<script type="text/javascript">
-			BudgetDashboard = {
-				plus_icon_url: "<?= $plus_icon_url ?>",
-				minus_icon_url: "<?= $minus_icon_url ?>",
-				public_survey_url: "<?= $public_survey_url ?>"
-			};
-			// BudgetDashboard.collapseStudyRows = function() {
-				// $("div.study_row").each(function(i, study_row) {
-				// 	$(study_row).find('img.study_toggle').attr('src', BudgetDashboard.plus_icon_url);
-					// $(study_row).find('a.detailed_recon_view').hide();
-				// });
-				// $("div.study_table_container").hide();
-			// };
-			$(document).ready(function() {
-				$('head').append("<link rel='stylesheet' href='<?php echo $this->getUrl('css/dashboard.css'); ?>'>")
-				// add bootstrap css
-				$('head').append("<link rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css' integrity='sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T' crossorigin='anonymous'>")
-				$('head').append("<link rel='stylesheet' href='//cdn.datatables.net/1.11.3/css/jquery.dataTables.min.css' crossorigin='anonymous'>")
-
-                // $('#budgetDashboard').DataTable({
-                //     order: [
-                //         [0, 'asc']
-                //     ],
-                //     columnDefs: [
-                //         {
-                //             target: 0,
-                //             visible: false
-                //         }
-                //     ]
-                // });
-				// make each recon table a DataTables table
-				// BudgetDashboard.recon_tables = [];
-				// var options = {
-				// 	order: [
-				// 		[0, 'desc']
-				// 	],
-				// 	columns: [
-				// 		{orderable: true, searchable: true},
-				// 		{orderable: true, searchable: true},
-				// 		{orderable: true, searchable: true},
-				// 		{orderable: true, searchable: true},
-				// 		{orderable: false, searchable: false},
-				// 		{orderable: false, searchable: false}
-				// 	]
-				// };
-				// $('.reconciliation').each(function(i, recon_table) {
-				// 	BudgetDashboard.recon_tables.push($(recon_table).DataTable(options));
-				// });
-				
-				// BudgetDashboard.collapseStudyRows();
-			});
-			
-			// $('body').on('click', 'img.study_toggle', function(event) {
-			// 	var toggle = $(event.target);
-			// 	var study_row = toggle.closest('div.study_row');
-			// 	if (toggle.attr('src') == BudgetDashboard.plus_icon_url) {
-			// 		toggle.attr('src', BudgetDashboard.minus_icon_url);
-			// 		study_row.find('a.detailed_recon_view').show();
-			// 		var study_index = study_row.attr('data-study-i');
-			// 		$("div.study_table_container[data-study-i='" + Number(study_index) + "']").show();
-			// 	} else {
-			// 		toggle.attr('src', BudgetDashboard.plus_icon_url);
-			// 		study_row.find('a.detailed_recon_view').hide();
-			// 		var study_index = study_row.attr('data-study-i');
-			// 		$("div.study_table_container[data-study-i='" + Number(study_index) + "']").hide();
-			// 	}
-			// });
-		</script>
-		<?php
-	}
 	
 	public function getCCSummaryHTML($cc_data) {
-		global $record;
-		global $event_id;
-		$cc_data['record_id'] = $record;
-		$cc_data['event_id'] = $event_id;
+        
 		
 		// if (empty($cc_data)) {
 			// throw new \Exception("Tried to output CC Summary Review page, but argument \$cc_data is empty.");
@@ -853,9 +753,11 @@ HEREDOC;
 		
 		// this version of the study intake table should have hyperlinks in the first column
 		$study_intake_form = $this->makeStudyIntakeForm($cc_data);
-		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "fixed_costs_information", $event_id);
-		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "schedule_of_event", $event_id);
-		$identify_sites_survey_link = \REDCap::getSurveyLink($record, "identify_sites", $event_id);
+        $event_id = $this->getFirstEventId();
+		$fixed_costs_survey_link = \REDCap::getSurveyLink($record, "administrative_fees", $event_id);
+		$personnel_costs_survey_link = \REDCap::getSurveyLink($record, "personnel_costs", $event_id);
+		$procedures_survey_link = \REDCap::getSurveyLink($record, "procedures", $event_id);
+		$arms_and_visits_survey_link = \REDCap::getSurveyLink($record, "schedule_of_events", $event_id);
 		
 		?>
 		<button type="button" class="btn btn-primary" style="margin: 8px;" onclick="window.print()">Print</button>
@@ -866,39 +768,53 @@ HEREDOC;
 		
 		<!--FIXED COSTS SUMMARY REVIEW-->
 		<div class='pba'>
-		<h5 class="table_title"><u>FIXED COSTS SUMMARY REVIEW</u></h5>
+		<h5 class="table_title"><u><a href='<?=$fixed_costs_survey_link?>'>ADMINISTRATIVE FEES REVIEW</a></u></h5>
 		<table class="cc_rev_table blue_table_headers">
 			<thead>
 				<tr>
 					<th>FIXED COST</th>
-					<th>FIXED COST DETAIL</th>
+					<th>FIXED COST DETAIL ($)</th>
 				</tr>
 			</thead>
 			<tbody>
 			<?php
-			for ($i = 1; $i <= 5; $i++) {
-                if (trim($cc_data["fixedcost{$i}___1"]) !== '') {
-                    echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>" . $cc_data["fixedcost$i"] . "</a></td><td>" . $cc_data["fixedcost$i" . "_detail"] . "</td></tr>";
-                }
-			}
-			// add Personnel Costs, non-Personnel Costs, Participant Reimbursement rows
-			echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>Personnel Costs</a></td><td>" . $cc_data["costs_4"] . "</td></tr>";
-			echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>non-Personnel Costs</a></td><td>" . $cc_data["costs_5"] . "</td></tr>";
-			echo "<tr><td><a href='$fixed_costs_survey_link' style='font-size: 1rem;'>Participant Reimbursement</a></td><td>" . $cc_data["costs_6"] . "</td></tr>";
+            foreach ($cc_data['fixed_costs'] as $i => $fixedCost) {
+                echo "<tr><td>" . $fixedCost['label'] . "</td>
+                        <td class='currency'>" . self::round2Dec($fixedCost['detail']) . "</td></tr>";
+            }
 			?>
 			</tbody>
 		</table>
 		</div>
+
+        <div class='pba'>
+            <h5 class="table_title"><u><a href='<?=$personnel_costs_survey_link?>'>PERSONNEL COSTS</a></u></h5>
+            <table class="cc_rev_table blue_table_headers">
+                <thead>
+                <tr>
+                    <th>STUDY PERSONNEL</th>
+                    <th>COST ($)</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php
+                foreach ($cc_data['personnel_costs'] as $i => $personnelCost) {
+                    echo "<tr><td>" . $personnelCost['label'] . "</td>
+                        <td class='currency'>" . self::round2Dec($personnelCost['detail']) . "</td></tr>";
+                }
+                ?>
+                </tbody>
+            </table>
+        </div>
 		
 		<!--PROCEDURE COSTS SUMMARY REVIEW-->
 		<div class='pbb pba'>
-		<h5 class="table_title"><u>PROCEDURE COSTS SUMMARY REVIEW</u></h5>
+            <h5 class="table_title"><u><a href='<?=$procedures_survey_link?>'>PROCEDURE COSTS SUMMARY REVIEW</a></u></h5>
 		<table class="cc_rev_table green_table_headers">
 			<thead>
 				<tr>
 					<th>Procedure Name</th>
-					<th>Associated CPT Code</th>
-					<th>Reimbursement Amount</th>
+					<th>Reimbursement Amount ($)</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -907,7 +823,7 @@ HEREDOC;
 				if ($info['routine_care'] === true) {
 					$info['cost'] = "Routine Care";
 				}
-				echo "<tr><td>" . $info['name'] . "</td><td>" . $info['cpt'] . "</td><td>" . $info['cost'] . "</td></tr>";
+				echo "<tr><td>" . $info['name'] . "</td><td class='currency'>" . self::round2Dec($info['cost']) . "</td></tr>";
 			}
 			?>
 			</tbody>
@@ -918,12 +834,6 @@ HEREDOC;
 		<div class='pbb pba'>
 		<h5 class="table_title"><u>SCHEDULE OF EVENTS REVIEW</u></h5>
 		<?php $this->showStaticScheduleArms($budget_data, $arms_and_visits_survey_link); ?>
-		</div>
-		
-		<!--IDENTIFIED SITES REVIEW-->
-		<div class='pbb pba extra-top-space'>
-		<h5 class="table_title"><u><a href="<?=$identify_sites_survey_link?>">IDENTIFIED SITES REVIEW</a></u></h5>
-		<?php $this->showSummarySiteTable($record); ?>
 		</div>
 		
 		</div>
@@ -958,11 +868,13 @@ HEREDOC;
 			"project_id" => $this->getProjectId(),
 			"return_format" => "array",
 			"records" => "$record",
-			"fields" => $schedule_field
+			"fields" => [$schedule_field, 'idc_rate']
 		];
 		$soe_data = \REDCap::getData($data_params)[$record];
+        $idcRate = 0;
         if (!empty($soe_data)) {
             $soe_data = reset($soe_data);
+            $idcRate = $soe_data['idc_rate'];
             if (!empty($soe_data[$schedule_field])) {
                 $soe_data = $soe_data[$schedule_field];
             } else {
@@ -972,15 +884,14 @@ HEREDOC;
         if (empty($soe_data)) {
             $soe_data = '{}';
         }
-		$cpt_endpoint_url = $this->getProjectSetting('cpt_endpoint_url');
 		
 		?>
 		<script type="text/javascript">
 			Budget = {
 				budget_css_url: '<?= $this->getUrl('css/budget.css'); ?>',
-				cpt_endpoint_url: '<?= $cpt_endpoint_url; ?>',
 				procedures_json: '<?= json_encode($procedures, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
-				efforts_json: '<?= json_encode($efforts, JSON_HEX_APOS|JSON_HEX_QUOT) ?>'
+				efforts_json: '<?= json_encode($efforts, JSON_HEX_APOS|JSON_HEX_QUOT) ?>',
+                idc_rate: '<?= $idcRate ?? 0 ?>'
 			}
 			
 			BudgetSurvey = {
@@ -1036,32 +947,27 @@ HEREDOC;
 		<?php
 	}
 	
-	public function replaceSummaryReviewField($record, $instance) {
+	public function replaceSummaryReviewField($record) {
 		// get budget table data
 		$budget_table = $this->getBudgetTableData($record);
         //If there's no data then create an empty JS object so it doesn't error out and display nothing.
         if (empty($budget_table)){
             $budget_table = json_encode([]);
         }
-		// get Go/No-Go table data and field name
-		$gonogo_table_data = json_encode($this->getGoNoGoTableData($record, $instance));
 		
 		$summary_review_field = $this->getProjectSetting('summary_review_field');
 		
-		$summary_review_data = $this->getSummaryReviewData($record, $instance);
+		$summary_review_data = $this->getSummaryReviewData($record);
 		$summary_review_data = json_encode($summary_review_data, JSON_HEX_APOS);
-		
 //		$gonogo_table_field = json_encode($this->getProjectSetting('gonogo_table_field'));
 //		$save_arm_fields_url = $this->getUrl('php/saveArmFields.php');
 		?>
 		<script type="text/javascript">
 			BudgetSummary = {
 				record_id: '<?= $record; ?>',
-				instance: '<?= $instance; ?>',
 				summary_review_field: '<?= $summary_review_field; ?>',
 				summary_data:<?= $summary_review_data; ?>,
 				schedule: <?= $budget_table; ?>,
-				gng_data: <?= $gonogo_table_data; ?>,
 				css_url: "<?= $this->getUrl('css/summary.css'); ?>"
 			}
 		</script>
@@ -1324,57 +1230,57 @@ HEREDOC;
 		}
 	}
 	
-	public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
-		$budget_field = $this->getProjectSetting('budget_table_field');
-		if (empty($budget_field)) {
-			return;
-		}
-		
-		$study_short_name_field = "short_name";
-		try {
-			$params = [
-				"project_id" => $this->getProjectId(),
-				"return_format" => "array",
-				"records" => $record_id,
-				"fields" => [$budget_field, $study_short_name_field]
-			];
-			$data = \REDCap::getData($params);
-			$budget_data = json_decode($data[$record_id][$this->getFirstEventId()][$budget_field], true);
-			$procedures = $budget_data['procedures'];
-		} catch (\Exception $e) {
-			return;
-		}
-		
-		if (empty($procedures)) {
-			return;
-		}
-		
-		// create workbook from template in module directory
-		$module_path = $this->getModulePath();
-		require "$module_path" . "vendor/autoload.php";
-		$reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader("Xlsx");
-		$workbook = $reader->load($module_path . "templates/procedures.xlsx");
-		$sheet = $workbook->getActiveSheet();
-		
-		// update study name in wb first cell
-		$study_name = $data[$record_id][$this->getFirstEventId()][$study_short_name_field] ?? "<study name>";
-		$sheet->setCellValue("A1", "All Procedures for $study_name");
-		// update workbook cells
-		for ($i = 0; $i < 100; $i++) {
-			$name = $procedures[$i-1]['name'];
-			$cpt = $procedures[$i-1]['cpt'];
-			
-			$sheet->setCellValue("B" . ($i + 3), $name);
-			$sheet->setCellValue("C" . ($i + 3), $cpt);
-		}
-		
-		// download workbook to user
-		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-		header('Content-Disposition: attachment;filename="Procedures.xlsx"');
-		header('Cache-Control: max-age=0');
-		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($workbook, 'Xlsx');
-		$writer->save('php://output');
-	}
+	//public function downloadProceduresWorkbook($record_id, $event_id, $instance) {
+	//	$budget_field = $this->getProjectSetting('budget_table_field');
+	//	if (empty($budget_field)) {
+	//		return;
+	//	}
+	//
+	//	$study_short_name_field = "short_name";
+	//	try {
+	//		$params = [
+	//			"project_id" => $this->getProjectId(),
+	//			"return_format" => "array",
+	//			"records" => $record_id,
+	//			"fields" => [$budget_field, $study_short_name_field]
+	//		];
+	//		$data = \REDCap::getData($params);
+	//		$budget_data = json_decode($data[$record_id][$this->getFirstEventId()][$budget_field], true);
+	//		$procedures = $budget_data['procedures'];
+	//	} catch (\Exception $e) {
+	//		return;
+	//	}
+	//
+	//	if (empty($procedures)) {
+	//		return;
+	//	}
+	//
+	//	// create workbook from template in module directory
+	//	$module_path = $this->getModulePath();
+	//	require "$module_path" . "vendor/autoload.php";
+	//	$reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader("Xlsx");
+	//	$workbook = $reader->load($module_path . "templates/procedures.xlsx");
+	//	$sheet = $workbook->getActiveSheet();
+	//
+	//	// update study name in wb first cell
+	//	$study_name = $data[$record_id][$this->getFirstEventId()][$study_short_name_field] ?? "<study name>";
+	//	$sheet->setCellValue("A1", "All Procedures for $study_name");
+	//	// update workbook cells
+	//	for ($i = 0; $i < 100; $i++) {
+	//		$name = $procedures[$i-1]['name'];
+	//		$cpt = $procedures[$i-1]['cpt'];
+	//
+	//		$sheet->setCellValue("B" . ($i + 3), $name);
+	//		$sheet->setCellValue("C" . ($i + 3), $cpt);
+	//	}
+	//
+	//	// download workbook to user
+	//	header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+	//	header('Content-Disposition: attachment;filename="Procedures.xlsx"');
+	//	header('Cache-Control: max-age=0');
+	//	$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($workbook, 'Xlsx');
+	//	$writer->save('php://output');
+	//}
 	
 	public function getSiteInstances($record_id) {
 		// build list of form _complete field names for forms in event 2
@@ -1590,7 +1496,7 @@ HEREDOC;
 		return <<<HEREDOC
 		<!--STUDY INTAKE FORM-->
 		<div>
-		<h5 class="table_title" {$styles['title']}><u>STUDY INTAKE FORM</u></h5>
+		<h5 class="table_title" {$styles['title']}><u><a href="$survey_link" >TRIAL BUDGET INFORMATION</a></u></h5>
 		<table class="cc_rev_table blue_table_headers" {$styles['table']}>
 			<thead>
 				<tr>
@@ -1600,27 +1506,27 @@ HEREDOC;
 			</thead>
 			<tbody>
 				<tr>
-					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Coordinating Center Contact Information</a></td>
+					<td {$styles['td']}>Coordinating Center Contact Information</td>
 					<td {$styles['td']}>$td1</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Short Study Name</a></td>
+					<td {$styles['td']}>Short Study Name</td>
 					<td {$styles['td']}>{$cc_data['short_name']}</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Protocol Synopsis</a></td>
+					<td {$styles['td']}>Protocol Synopsis</td>
 					<td {$styles['td']}>$protocol_link</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Brief Study Description</a></td>
+					<td {$styles['td']}>Brief Study Description</td>
 					<td {$styles['td']}>{$cc_data['brief_stud_description']}</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Description of Study Intervention</a></td>
+					<td {$styles['td']}>Description of Study Intervention</td>
 					<td {$styles['td']}>{$cc_data['prop_summary_describe2_5f5']}</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Enrollment Goals</a></td>
+					<td {$styles['td']}>Enrollment Goals</td>
 					<td {$styles['td']}>
 						Estimated number of subjects: {$cc_data['number_subjects']}<br>
 						Study Population: {$cc_data['study_population']}<br>
@@ -1628,7 +1534,7 @@ HEREDOC;
 					</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}><a href="$survey_link" style="font-size: 1rem;">Funding/Support for the Proposal</a></td>
+					<td {$styles['td']}>Funding/Support for the Proposal</td>
 					<td {$styles['td']}>Current funding source: {$cc_data['funding_source']}<br>
 						Funding mechanism: $funding_mechanism<br>
 						Identified I/C: {$cc_data['institute_center']}<br>
@@ -1725,13 +1631,25 @@ HEREDOC;
 		</div>
 HEREDOC;
 	}
-	
+
+
+    public function getPriceCheckerApi() {
+        if (!$this->priceCheckerApi) {
+            $this->priceCheckerApi = new PriceCheckerAPI(
+                    $this->getProjectSetting('pricechecker_endpoint_url'),
+                    $this->getProjectSetting('pricechecker_user'),
+                    $this->getProjectSetting('pricechecker_pass'));
+        }
+
+        return $this->priceCheckerApi;
+    }
+
 	public function redcap_every_page_top($project_id) {
         $this->initialize();
         $event_id = $_GET['event_id'];
         $instrument = $_GET['page'];
         $request_uri = $_SERVER['REQUEST_URI'];
-        if ($instrument == 'study_coordinating_center_information' && $_GET['__endpublicsurvey']) {
+        if ($instrument == $this->study_intake_form_name && $_GET['__endpublicsurvey']) {
             $record   = $_GET['id'];
             $event_id = $_GET['event_id'];
             if (strpos($request_uri, '__gotosurvey=') !== false) {
@@ -1750,27 +1668,24 @@ HEREDOC;
 		if ($instrument == $this->getBudgetForm()) {
 			$this->replaceScheduleFields($record);
 		}
-		
-        //TODO Remove or update once we figure out if this feature is staying
-		// replace Go/No-Go field in survey page with generated table
-		//if ($instrument == $this->gonogo_table_instrument) {
-		//	$this->replaceGoNoGoFields($record, $repeat_instance);
-		//}
-		
-		// replace Summary Review field in survey page with interface
-		//if ($instrument == $this->getSummaryForm()) {
-		//	$this->replaceSummaryReviewField($record, $repeat_instance);
-		//}
         
-        //TODO Remove or update once we figure out if this feature is staying
-		//if ($instrument == 'enter_cost_to_run_procedure') {
-		//	$this->addDownloadProcedureResourceButton($record, $event_id, $repeat_instance);
-		//}
+        if ($instrument == $this->getProceduresForm()) {
+            ?>
+                <style>
+                    .ui-autocomplete-loading {
+                        background: white url("<?= $this->getUrl("icons/progress_circle.gif"); ?>") right center no-repeat;
+                    }
+                </style>
+                <script type="application/javascript"> let ajax_url = '<?= $this->getUrl('ajax.php'); ?>';</script>
+                <script type='text/javascript' src='<?= $this->getUrl('js/priceChecker.js'); ?>'></script>
+            <?php
+        }
 		
 		if ($event_id == $this->getFirstEventId()) {
             if ($instrument != $this->getSummaryForm()) {
                 $this->addSummaryReviewLinkToSurvey($record, $instrument, $event_id);
-            } else {
+            }
+            else {
                 $this->replaceCCSummaryReviewField($record, $repeat_instance, $event_id);
             }
 			//$this->convertSaveAndReturnLaterButton();

@@ -38,6 +38,12 @@
 			"type": "field-list"
 		},
 		{
+			"key": "procedures_instrument",
+			"name": "Procedures Form",
+			"required": true,
+			"type": "form-list"
+		},
+		{
 			"key": "summary_review_field",
 			"name": "Field to be replaced with Summary Review report",
 			"required": true,
@@ -47,16 +53,29 @@
 			"key": "enable_email_logging",
 			"name": "Log extra email handling information to the Project Logging page.",
 			"type": "checkbox"
+		},
+		{
+			"key": "pricechecker_endpoint_url",
+			"name": "PriceChecker API code lookup endpoint",
+			"type": "text"
+		},
+		{
+			"key": "pricechecker_user",
+			"name": "PriceChecker User",
+			"type": "text"
+		},
+		{
+			"key": "pricechecker_pass",
+			"name": "PriceChecker Password",
+			"type": "password",
+			"super-users-only": true
 		}
 	],
 
 	"crons": [],
 
 	"compatibility": {
-		"php-version-min": "",
-		"php-version-max": "",
-		"redcap-version-min": "",
-		"redcap-version-max": ""
+		"php-version-min": "8.2"
 	},
 	
 	"framework-version": 14

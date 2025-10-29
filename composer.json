@@ -1,6 +1,16 @@
 {
     "require": {
-        "phpoffice/phpspreadsheet": "^1.29.10",
+        "phpoffice/phpspreadsheet": "~5.1",
         "dompdf/dompdf": "^1.2.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Vanderbilt\\InstituteBudget\\": ["/","lib/"]
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.2"
+        }
     }
 }

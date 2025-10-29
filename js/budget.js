@@ -1,18 +1,5 @@
 
 Budget.MAX_STATES = 100;
-// Budget.autocompSettings = {
-// 	source: function(request, response) {
-// 		$.ajax(Budget.cpt_endpoint_url, {
-// 			data: {"query": request.term},
-// 			method: "POST",
-// 			dataType: "json"
-// 		}).done(function(data) {
-// 			response(data);
-// 		});
-// 	},
-// 	minLength: 0
-// }
-
 Budget.refreshSchedule = function() {
 	// highlight dropdown for active arm
 	$('.arm button').removeClass('active-arm')
@@ -114,6 +101,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		var arm_table = $('.arm_table[data-arm="' + arm_i + '"]');
 		visit_count = Number(arm_table.find('.visit').length);
 		arm_table.find('tbody').empty();
+		arm_table.find('thead th:first-child').text("Procedural Costs");
 		for (var proc_index in Budget.procedures) {
 			var procedure = Budget.procedures[proc_index];
 			var proc_name = procedure.name;
@@ -147,7 +135,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			arm_table.find('tbody').append(new_row);
 		}
 		// make and append last row (Totals $$)
-		var new_row = "<tr><td class='no-border'>Total $$</td>";
+		var new_row = "<tr class='total_row'><td class='total_label no-border'>Total $$</td>";
 		
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			new_row += "<td class='visit_total' data-visit='" + visit_i + "'>0</td>";
@@ -155,7 +143,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		new_row += "</tr>";
 		arm_table.find('tbody').append(new_row);
 
-		var effort_row = "<tr><th>Effort Costs (hours)</th></tr>";
+		var effort_row = "<tr><th></th></tr><tr><th>Effort Costs (hours)</th></tr>";
 		arm_table.find('tbody').append(effort_row);
 		for (var effort_index in Budget.efforts) {
 			var effort = Budget.efforts[effort_index];
@@ -164,7 +152,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			// 	proc_name = proc_name + ' <span title="Standard of Care"> [SoC]</span>';
 			// }
 
-			effort_row = "<tr><td class='effort'>" + effort_name + "</td>";
+			effort_row = "<tr><td class='effort'><span>" + effort_name + "</span> <div class='cost_label'>($"+effort.cost+"/hr)</div></td>";
 
 			// add proc_count cells to new row, preserving old procedure counts if applicable
 			for (visit_i = 1; visit_i <= visit_count; visit_i++) {
@@ -183,7 +171,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 				}
 				effort_row += "<td class='effort_cell' data-visit='" + visit_i + "'>\
 					<button type='button' class='btn btn-outline-primary effort_decrement'>-</button>\
-					<span data-cost='' class='effort_count mx-2'>" + Number(old_count) + "</span>\
+					<span data-cost='' class='effort_count'>" + Number(old_count).toFixed(1) + "</span>\
 					<button type='button' class='btn btn-outline-primary effort_increment'>+</button>\
 				</td>"
 			}
@@ -191,13 +179,35 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			arm_table.find('tbody').append(effort_row);
 		}
 		// make and append last row (Totals $$)
-		effort_row = "<tr><td class='no-border'>Total Effort $$</td>";
+		effort_row = "<tr class='total_row'><td class='total_label no-border'>Total Effort $$</td>";
 
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			effort_row += "<td class='visit_effort_total' data-visit='" + visit_i + "'>0</td>";
 		}
 		effort_row += "</tr>";
 		arm_table.find('tbody').append(effort_row);
+
+		var summary_row = "<tr><th></th></tr><tr><th>Costs Summary</th></tr>";
+		arm_table.find('tbody').append(summary_row);
+
+		summary_row = "<tr>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'>Procedural + Effort = Visit Total</td>";
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			summary_row += "<td class='summary_cell visit_summary_total' data-visit='" + visit_i + "'>0</td>";
+		}
+		summary_row += "</tr>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC ("+(Budget.idc_rate > 0 ? Budget.idc_rate : '0')+"%) x Visit Total = IDC for Visit</td>";
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			summary_row += "<td class='summary_cell visit_idc_percent' data-visit='" + visit_i + "'>0</td>";
+		}
+		summary_row += "</tr>";
+		summary_row += "<tr class='total_row'><td class='total_label no-border'>IDC for Visit + Visit Total = Total w/IDC</td>";
+		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
+			summary_row += "<td class='summary_cell visit_idc_total' data-visit='" + visit_i + "'>0</td>";
+		}
+		summary_row += "</tr>";
+
+		arm_table.find('tbody').append(summary_row);
 	}
 	
 	Budget.refreshProcedureCosts();
@@ -225,7 +235,7 @@ Budget.refreshProcedureCosts = function() {
 Budget.refreshEffortCosts = function() {
 	// update all .proc_cell data-cost attributes based on the row's procedure (name)
 	$('.effort').each(function(i, td) {
-		var effort_name = $(td).html().trim();
+		var effort_name = $(td).find('span').html().trim();
 		var effort_cost = 0;
 		for (var effort of Budget.efforts) {
 			if (effort.name == effort_name) {
@@ -283,7 +293,7 @@ Budget.createArm = function() {
 	var visit_1_th = "<th>\
 	<div class='dropdown visit' data-visit='1'>\
 		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit1' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
-			Visit 1: New Visit\
+			Visit 1:\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit1'>\
 			<a class='dropdown-item create_visit' href='#'>Create another visit</a>\
@@ -378,7 +388,7 @@ Budget.createVisit = function() {
 	var visit_dd = "<th>\
 	<div class='dropdown visit' data-visit='" + visit_j + "'>\
 		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit" + visit_j + "' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
-			Visit " + visit_j + ": New Visit\
+			Visit " + visit_j + ":\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit" + visit_j + "'>\
 			<a class='dropdown-item create_visit' href='#'>Create another visit</a>\
@@ -520,7 +530,7 @@ Budget.updateProcTotalCost = function(arm, visit) {
 	});
 	
 	// update visit total in Total $$ row
-	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").text(sum);
+	$(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").attr('data-value', sum).text(formatCurrency(sum));
 }
 
 Budget.updateEffortTotalCost = function(arm, visit) {
@@ -542,7 +552,23 @@ Budget.updateEffortTotalCost = function(arm, visit) {
 	});
 
 	// update visit total in Total $$ row
-	$(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").text(sum);
+	$(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").attr('data-value', sum).text(formatCurrency(sum));
+}
+
+Budget.updateSummaryCosts = function(arm, visit) {
+	let procTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").attr('data-value'));
+	let effortTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").attr('data-value'));
+	let idcRate = Budget.idc_rate;
+	if (idcRate > 0) {
+		idcRate = Number(idcRate / 100);
+	}
+	let total = (procTotal + effortTotal);
+	let idc = total * idcRate;
+	let idcTotal = total + idc;
+	$(".arm_table[data-arm='" + arm + "'] .visit_summary_total[data-visit='" + visit + "']").attr('data-value', total).text(formatCurrency(total));
+	$(".arm_table[data-arm='" + arm + "'] .visit_idc_percent[data-visit='" + visit + "']").attr('data-value', idc).text(formatCurrency(idc));
+	$(".arm_table[data-arm='" + arm + "'] .visit_idc_total[data-visit='" + visit + "']").attr('data-value', idcTotal).text(formatCurrency(idcTotal));
+
 }
 
 Budget.updateAllVisitCosts = function() {
@@ -551,6 +577,7 @@ Budget.updateAllVisitCosts = function() {
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			Budget.updateProcTotalCost(arm_i, visit_i);
 			Budget.updateEffortTotalCost(arm_i, visit_i);
+			Budget.updateSummaryCosts(arm_i, visit_i);
 		}
 	};
 }
@@ -854,24 +881,26 @@ Budget.registerEvents = function() {
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = proc_cell.attr('data-visit');
 		Budget.updateProcTotalCost(arm_index, visit_index);
+		Budget.updateSummaryCosts(arm_index, visit_index);
 		Budget.pushState();
 	});
 
 	$('body').on('click', '.effort_cell button', function(event) {
 		var btn = $(event.target);
-		var to_add = btn.hasClass('effort_decrement') ? -1 : 1;
+		var to_add = btn.hasClass('effort_decrement') ? -0.5 : 0.5;
 		var effort_cell = btn.closest('.effort_cell');
-		var count_span = effort_cell.find('span')
+		var count_span = effort_cell.find('span');
 
 		// update span counter
 		var current_count = Number(count_span.text());
-		var new_count = Math.max(current_count + to_add, 0);
+		var new_count = Math.max(current_count + to_add, 0).toFixed(1);
 		count_span.text(new_count);
 
 		// update sum
 		var arm_index = btn.closest('.arm_table').attr('data-arm');
 		var visit_index = effort_cell.attr('data-visit');
 		Budget.updateEffortTotalCost(arm_index, visit_index);
+		Budget.updateSummaryCosts(arm_index, visit_index);
 		Budget.pushState();
 	});
 	
@@ -959,13 +988,14 @@ Budget.getState = function() {
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			var visit_dropdown = $(".arm_table[data-arm=" + arm_i + "] .visit:eq(" + (visit_i - 1) + ")");
 			var visit_name = visit_dropdown.find('button').text();
+			let visit_num = visit_dropdown.attr('data-visit');
 			visit_name = visit_name.substring(visit_name.search(':') + 1).trim();
 			
 			// collect procedure counts for this visit
 			var procedure_counts = [];
 			var procedures_added = [];
 			var visit_sum = 0;
-			$('.arm_table[data-arm="' + arm_i + '"] .proc_cell[data-visit="' + visit_dropdown.attr('data-visit') + '"]').each(function(i, td) {
+			$('.arm_table[data-arm="' + arm_i + '"] .proc_cell[data-visit="' + visit_num + '"]').each(function(i, td) {
 				var proc_name = $(".procedure:eq(" + Number(i) + ")").text().trim();
 				var proc_count = Number($(td).find('span').text());
 				var proc_cost = $(td).find('span').attr('data-cost');
@@ -989,12 +1019,11 @@ Budget.getState = function() {
 				}
 			});
 
-			// collect procedure counts for this visit
+			// collect effort counts for this visit
 			var effort_counts = [];
 			var efforts_added = [];
-			var visit_sum = 0;
-			$('.arm_table[data-arm="' + arm_i + '"] .effort_cell[data-visit="' + visit_dropdown.attr('data-visit') + '"]').each(function(i, td) {
-				var effort_name = $(".effort:eq(" + Number(i) + ")").text().trim();
+			$('.arm_table[data-arm="' + arm_i + '"] .effort_cell[data-visit="' + visit_num + '"]').each(function(i, td) {
+				var effort_name = $(".effort:eq(" + Number(i) + ") span").text().trim();
 				var effort_count = Number($(td).find('span').text());
 				var effort_cost = $(td).find('span').attr('data-cost');
 				effort_counts.push({
@@ -1016,12 +1045,26 @@ Budget.getState = function() {
 					});
 				}
 			});
-			
+
+			// collect summary counts for this visit
+			let total = $(".arm_table[data-arm='" + arm_i + "'] .visit_summary_total[data-visit='" + visit_num + "']").attr('data-value');
+			let idc_percent = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_percent[data-visit='" + visit_num + "']").attr('data-value');
+			let idc_total = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_total[data-visit='" + visit_num + "']").attr('data-value');
+
+			let summary_totals = {
+				total: total,
+				idc_percent: idc_percent,
+				idc_total: idc_total
+			};
+			// efforts_added.push(effort_name);
+
+
 			// add visit obj to arm.visits
 			arm.visits[visit_i] = {
 				name: visit_name,
 				procedure_counts: procedure_counts,
 				effort_counts: effort_counts,
+				summary_totals: summary_totals,
 				total: visit_sum
 			}
 		}
@@ -1140,4 +1183,12 @@ var getUrlParameter = function getUrlParameter(sParam) {
             return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
         }
     }
+};
+
+let formatCurrency = function (num) {
+	num = Number(num);
+	return (num).toLocaleString('en-US', {
+		style: 'currency',
+		currency: 'USD',
+	});
 };
