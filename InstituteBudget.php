@@ -464,75 +464,47 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	}
 	
 	public function showStaticScheduleArms($budget_data, $arms_and_visits_survey_link) {
-        ?>
-        <div>
-            <table class="cc_rev_table blue_table_headers">
-                <thead>
-                    <tr>
-                        <th>ARM</th>
-                        <th>VISIT</th>
-                        <th>TOTAL ($)</th>
-                        <th>IDC ($)</th>
-                        <th>TOTAL w/IDC ($)</th>
-                    </tr>
-                </thead>
-                <tbody>
-        <?php
         $shaded = true;
 		foreach($budget_data['arms'] as $arm_i => $arm) {
             $arm_num = $arm_i+1;
-            $shaded = !$shaded;
+            ?>
+            <div>
+            <h5 style="margin-left:10px; "><u>ARM <?=$arm_num?></u></h5>
+            <table class="cc_rev_table blue_table_headers">
+            <thead>
+            <tr>
+                <th>VISIT</th>
+                <th title="TOTAL PROCEDURE COST">TPC</th>
+                <th title="TOTAL EFFORT COST">TEC</th>
+                <th title="TPC + TEC">TOTAL</th>
+                <th title="INDIRECT COST = INDIRECT RATE(%) x TOTAL">IDC (<?= $budget_data['idc_rate']; ?>%)</th>
+                <th title="IDC + TOTAL">TOTAL w/IDC</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php
             foreach ($arm['visits'] as $visit_i => $visit) {
                 if (empty($visit)) {continue;}
                 
                 ?>
                 <tr <?= ($shaded ? 'class="shaded"':''); ?>>
-                    <td><?= $arm_num ?></td>
                     <td><?= $visit_i ?></td>
+                    <td class='currency'><?= self::round2Dec($visit['summary_totals']['procedure_total']) ?></td>
+                    <td class='currency'><?= self::round2Dec($visit['summary_totals']['effort_total']) ?></td>
                     <td class='currency'><?= self::round2Dec($visit['summary_totals']['total']) ?></td>
                     <td class='currency'><?= self::round2Dec($visit['summary_totals']['idc_percent']) ?></td>
                     <td class='currency'><?= self::round2Dec($visit['summary_totals']['idc_total']) ?></td>
                 </tr>
                 <?php
             }
-            /*
-			$row_count = count($budget_data['procedures']);
-			for ($row_i = 1; $row_i <= $row_count; $row_i++) {
-				$row_i_0 = $row_i - 1;
-				?>
-				<tr>
-					<td><?= $budget_data['procedures'][$row_i_0]['name'] ?></td>
-					<?php
-					foreach ($arm['visits'] as $visit_i => $visit) {
-						if (!empty($visit)) {
-							if ($visit['procedure_counts'][$row_i_0]['count'] != 0) {
-								$class = " class='nonzero'";
-							} else {
-								$class = "";
-							}
-							echo "<td$class>" . $visit['procedure_counts'][$row_i_0]['count'] . "</td>";
-						}
-					}
-					?>
-				</tr>
-				<?php
-			}*/
-			
-			// add Total $$ row
-			//echo "<tr><td class='no-border'>Total $$</td>";
-			//foreach ($arm['visits'] as $visit_i => $visit) {
-			//	if (!empty($visit)) {
-			//		echo "<td>" . $visit['total'] . "</td>";
-			//	}
-			//}
-			//echo "</tr>";
-			
-		}
-        ?>
-                </tbody>
+            ?>
+            </tbody>
             </table>
-        </div>
-        <?php
+            </div>
+            <br/>
+            <?php
+		}
+
 	}
     
     public static function round2Dec($number) {
@@ -746,6 +718,7 @@ HEREDOC;
 		} else {
 			$budget_data = json_decode($budget_data, true);
 		}
+        $budget_data['idc_rate'] = $cc_data['idc_rate'];
 		
 		// the study intake form that gets attached to email should not have hyperlinks in first column
 		$study_intake_form_no_links = $this->makeStudyIntakeFormForAttachment($cc_data);
@@ -772,21 +745,30 @@ HEREDOC;
 		<table class="cc_rev_table blue_table_headers">
 			<thead>
 				<tr>
-					<th>FIXED COST</th>
-					<th>FIXED COST DETAIL ($)</th>
+					<th>FEE</th>
+					<th>$</th>
 				</tr>
 			</thead>
 			<tbody>
 			<?php
+            $fixedCostTotal = 0;
             foreach ($cc_data['fixed_costs'] as $i => $fixedCost) {
+                $fixedCostTotal+= (float)$fixedCost['detail'];
+                $formattedFee = self::round2Dec($fixedCost['detail']);
                 echo "<tr><td>" . $fixedCost['label'] . "</td>
-                        <td class='currency'>" . self::round2Dec($fixedCost['detail']) . "</td></tr>";
+                        <td class='currency'>" . $formattedFee . "</td></tr>";
             }
+            $fixedCostTotal = self::round2Dec($fixedCostTotal);
 			?>
+            <tr>
+                <td>Total</td>
+                <td class='currency'><?=$fixedCostTotal?></td>
+            </tr>
 			</tbody>
 		</table>
 		</div>
 
+            <?php /*
         <div class='pba'>
             <h5 class="table_title"><u><a href='<?=$personnel_costs_survey_link?>'>PERSONNEL COSTS</a></u></h5>
             <table class="cc_rev_table blue_table_headers">
@@ -806,6 +788,7 @@ HEREDOC;
                 </tbody>
             </table>
         </div>
+
 		
 		<!--PROCEDURE COSTS SUMMARY REVIEW-->
 		<div class='pbb pba'>
@@ -829,10 +812,21 @@ HEREDOC;
 			</tbody>
 		</table>
 		</div>
-		
+		*/?>
+
 		<!--SCHEDULE OF EVENTS REVIEW-->
 		<div class='pbb pba'>
+            <div class="soe_legend">
+                <table>
+                    <tr><td>TPC</td><td>TOTAL PROCEDURE COST</td></tr>
+                    <tr><td>TEC</td><td>TOTAL EFFORT COST</td></tr>
+                    <tr><td>TOTAL</td><td>TPC + TEC</td></tr>
+                    <tr><td>IDC</td><td>INDIRECT COST = INDIRECT RATE(%) x TOTAL</td></tr>
+                    <tr><td>TOTAL w/IDC</td><td>IDC + TOTAL</td></tr>
+                </table>
+            </div>
 		<h5 class="table_title"><u>SCHEDULE OF EVENTS REVIEW</u></h5>
+
 		<?php $this->showStaticScheduleArms($budget_data, $arms_and_visits_survey_link); ?>
 		</div>
 		
@@ -1471,7 +1465,7 @@ HEREDOC;
 	}
 	
 	public function makeStudyIntakeForm($cc_data) {
-		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '; ' . $cc_data['cc_email'] . '; ' . $cc_data['cc_phone_number'];
+		$td1 = $cc_data['cc_contact_person_fn'] . ' ' . $cc_data['cc_contact_person_ln'] . '<br/>' . $cc_data['cc_email'] . '<br/>' . $cc_data['cc_phone_number'];
 		$funding_mechanism = $cc_data['funding_mechanism'] ?? $cc_data['funding_other'];
 		
 		$survey_link = \REDCap::getSurveyLink($cc_data['record_id'], $this->study_intake_form_name, $cc_data['event_id']);
@@ -1518,31 +1512,24 @@ HEREDOC;
 					<td {$styles['td']}>$protocol_link</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}>Brief Study Description</td>
-					<td {$styles['td']}>{$cc_data['brief_stud_description']}</td>
+					<td {$styles['td']}>Sponsor/Funding Source</td>
+					<td {$styles['td']}>{$cc_data['cc_name']}</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}>Description of Study Intervention</td>
-					<td {$styles['td']}>{$cc_data['prop_summary_describe2_5f5']}</td>
+					<td {$styles['td']}>Accrual Goal</td>
+					<td {$styles['td']}>{$cc_data['accrual_goal']}</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}>Enrollment Goals</td>
-					<td {$styles['td']}>
-						Estimated number of subjects: {$cc_data['number_subjects']}<br>
-						Study Population: {$cc_data['study_population']}<br>
-						Estimated number of sites: {$cc_data['number_sites']}
-					</td>
+					<td {$styles['td']}>IDC %</td>
+					<td {$styles['td']}>{$cc_data['idc_rate']}</td>
 				</tr>
 				<tr>
-					<td {$styles['td']}>Funding/Support for the Proposal</td>
-					<td {$styles['td']}>Current funding source: {$cc_data['funding_source']}<br>
-						Funding mechanism: $funding_mechanism<br>
-						Identified I/C: {$cc_data['institute_center']}<br>
-						Grant/application number: {$cc_data['grant_app_no']}<br>
-						FOA (if applicable): {$cc_data['funding_opp_announcement']}<br>
-						Anticipated total budget (direct and indirect): {$cc_data['anticipated_budget']}<br>
-						Total duration of funding period: {$cc_data['funding_duration']}
-					</td>
+					<td {$styles['td']}>IRB Number</td>
+					<td {$styles['td']}>{$cc_data['irb_number']}</td>
+				</tr>
+				<tr>
+					<td {$styles['td']}>eSMART Number</td>
+					<td {$styles['td']}>{$cc_data['esmart_number']}</td>
 				</tr>
 			</tbody>
 		</table>

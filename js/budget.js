@@ -558,10 +558,7 @@ Budget.updateEffortTotalCost = function(arm, visit) {
 Budget.updateSummaryCosts = function(arm, visit) {
 	let procTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_total[data-visit='" + visit + "']").attr('data-value'));
 	let effortTotal = Number($(".arm_table[data-arm='" + arm + "'] .visit_effort_total[data-visit='" + visit + "']").attr('data-value'));
-	let idcRate = Budget.idc_rate;
-	if (idcRate > 0) {
-		idcRate = Number(idcRate / 100);
-	}
+	let idcRate = Budget.getIDCRate();
 	let total = (procTotal + effortTotal);
 	let idc = total * idcRate;
 	let idcTotal = total + idc;
@@ -1048,11 +1045,15 @@ Budget.getState = function() {
 
 			// collect summary counts for this visit
 			let total = $(".arm_table[data-arm='" + arm_i + "'] .visit_summary_total[data-visit='" + visit_num + "']").attr('data-value');
+            let procTotal = Number($(".arm_table[data-arm='" + arm_i + "'] .visit_total[data-visit='" + visit_num + "']").attr('data-value'));
+            let effortTotal = Number($(".arm_table[data-arm='" + arm_i + "'] .visit_effort_total[data-visit='" + visit_num + "']").attr('data-value'));
 			let idc_percent = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_percent[data-visit='" + visit_num + "']").attr('data-value');
 			let idc_total = $(".arm_table[data-arm='" + arm_i + "'] .visit_idc_total[data-visit='" + visit_num + "']").attr('data-value');
 
 			let summary_totals = {
 				total: total,
+                procedure_total: procTotal,
+                effort_total: effortTotal,
 				idc_percent: idc_percent,
 				idc_total: idc_total
 			};
@@ -1167,6 +1168,14 @@ Budget.refreshStateButtons = function() {
 	} else {
 		undo.attr('disabled', 'disabled');
 	}
+}
+
+Budget.getIDCRate = function() {
+    let idcRate = Budget.idc_rate;
+    if (idcRate > 0) {
+        idcRate = Number(idcRate / 100);
+    }
+    return idcRate
 }
 
 // thanks: https://stackoverflow.com/questions/19491336/get-url-parameter-jquery-or-how-to-get-query-string-values-in-js

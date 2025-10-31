@@ -43,6 +43,27 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, table.sites_contact_info
 	align-self: start;
 }
 
+#cc_summary .soe_legend table  {
+    border: 1px solid #32344F;
+    background-color: #bccdff;
+    float: right;
+    max-width: 200px;
+}
+
+#cc_summary .soe_legend table tr  {
+    border-bottom: 1px solid #32344F;
+}
+
+#cc_summary .soe_legend table td  {
+    padding: 5px;
+}
+
+#cc_summary .soe_legend table td:first-child  {
+    font-weight: bold;
+    text-align: center;
+    border-right: 1px solid #32344F;
+}
+
 .blue_table_headers th {
 	background-color: #32344F;
 }
