@@ -591,146 +591,146 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 		<?php
 	}
 	
-	public function packageStudyIntakeFormAndConvertToPDF($intake_form_html) {
-		// create the intake form html document (by adding html tag, metadata, css, etc.)
-		$html = <<<HEREDOC
-<!DOCTYPE HTML>
-<html>
-	<head>
-		<meta name="googlebot" content="noindex, noarchive, nofollow, nosnippet">
-		<meta name="robots" content="noindex, noarchive, nofollow">
-		<meta name="slurp" content="noindex, noarchive, nofollow, noodp, noydir">
-		<meta name="msnbot" content="noindex, noarchive, nofollow, noodp">
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-		<meta http-equiv="Cache-Control" content="no-cache">
-		<meta http-equiv="Pragma" content="no-cache">
-		<meta http-equiv="expires" content="0">
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title>Budget - Study Intake Form</title>
-		<style>
-HEREDOC;
-		$html .= file_get_contents($this->getUrl("css/cc_summary.css"));
-		$html .= <<<HEREDOC
-		</style>
-	</head>
-	<body>
-		$intake_form_html
-	</body>
-</html>
-HEREDOC;
-		// return $html; - instead of returning html, convert to PDF before sending back
-		$options = new \Dompdf\Options();
-		$options->setIsHtml5ParserEnabled(true);
-		$dompdf = new \Dompdf\Dompdf($options);
-		$dompdf->loadHtml($html);
-
-		// set the paper size and orientation
-		$dompdf->setPaper('A4', 'landscape');
-
-		// Render the HTML as PDF
-		$dompdf->render();
-		
-		return $dompdf;
-	}
-	
-	public function getDashboardData() {
-		// get event ID
-		$event_ids = \REDCap::getEventNames();
-		$event_id_0 = array_search('Coordinating Center GNG', $event_ids);
-		$event_id_1 = array_search('Event 1', $event_ids);
-		$generate_request_form_complete_field = $this->send_to_sites_instrument . "_complete";
-		$fields = [
-			"institution",
-			"institution_ctsa_name",
-			"institution_non_ctsa_name",
-			"affiliate_ctsa_institution",
-			"budget_request_date",
-			"consideration",
-			"final_gonogo",
-			"final_gonogo_comments",
-			"short_name",
-			"send_to_sites",
-			"request_date",
-			"response_date",
-			$generate_request_form_complete_field
-		];
-		
-		for ($i = 1; $i <= 100; $i++) {
-			$fields[] = "institution$i";
-		}
-		
-		$params = [
-			"project_id" => $this->getProjectId(),
-			"return_format" => "array",
-			"fields" => $fields,
-			"exportAsLabels" => true
-		];
-		$records = \REDCap::getData($params);
-		if (!$records) {
-			return "REDCap couldn't get institution data at this time.";
-		}
-		
-		// get tables
-		$data = [];
-		
-		foreach ($records as $record_id => $record) {
-			$site_array = $record['repeat_instances'][$event_id_1][''];
-			$table_rows = [];
-			foreach($site_array as $site_i => $site) {
-				$row = [];
-				
-				// determine site name
-				if ($site['institution'] == 500) {
-					$row['name'] = $site['affiliate_ctsa_institution'] . " Affiliate: " . $site['institution_ctsa_name'];
-				} elseif ($site['institution'] == 999) {
-					$row['name'] = "Non-CTSA Site: " . $site['institution_non_ctsa_name'];
-				} else {
-					// $row['name'] = "N/A";
-					$row['name'] = $record[$event_id_0]["institution$site_i"];
-				}
-				
-				// $row['date_of_request'] = $site['budget_request_date'];
-				$row['date_of_request'] = $record[$event_id_0]['request_date'];
-				
-				if ($site['consideration'] == '0') {
-					$row['date_of_response'] = 'Talk to Clint';
-				} elseif ($site['consideration'] == '1') {
-					$row['date_of_response'] = 'Talk to Clint or use Go/No-Go pending field';
-				} else {
-					// $row['date_of_response'] = "N/A";
-					$row['date_of_response'] = $site["response_date"];
-				}
-				
-				
-				$row['decision'] = 'N/A';
-				if ($site['final_gonogo'] == '1') {
-					$row['decision'] = 'Go';
-				} elseif ($site['final_gonogo'] == '2') {
-					$row['decision'] = 'No-Go';
-				} elseif ($site['final_gonogo'] == '3') {
-					$row['decision'] = 'Need More Info';
-				}
-				$row['decision_comments'] = $site['final_gonogo_comments'];
-				
-				$table_rows[] = $row;
-			}
-			
-			$pending_text = "";
-			if ($record[$event_id_0]['send_to_sites'] !== '1' || $record[$event_id_0][$generate_request_form_complete_field] !== '2') {
-				$pending_text = " (PENDING)";
-			}
-			
-			$data[$record_id] = [
-				"name" => $record[$event_id_0]['short_name'],
-				"pending" => $pending_text,
-				"table" => $table_rows,
-			];
-		}
-		
-		return $data;
-	}
+//	public function packageStudyIntakeFormAndConvertToPDF($intake_form_html) {
+//		// create the intake form html document (by adding html tag, metadata, css, etc.)
+//		$html = <<<HEREDOC
+//<!DOCTYPE HTML>
+//<html>
+//	<head>
+//		<meta name="googlebot" content="noindex, noarchive, nofollow, nosnippet">
+//		<meta name="robots" content="noindex, noarchive, nofollow">
+//		<meta name="slurp" content="noindex, noarchive, nofollow, noodp, noydir">
+//		<meta name="msnbot" content="noindex, noarchive, nofollow, noodp">
+//		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+//		<meta http-equiv="Cache-Control" content="no-cache">
+//		<meta http-equiv="Pragma" content="no-cache">
+//		<meta http-equiv="expires" content="0">
+//		<meta charset="utf-8">
+//		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+//		<meta name="viewport" content="width=device-width, initial-scale=1">
+//		<title>Budget - Study Intake Form</title>
+//		<style>
+//HEREDOC;
+//		$html .= file_get_contents($this->getUrl("css/cc_summary.css"));
+//		$html .= <<<HEREDOC
+//		</style>
+//	</head>
+//	<body>
+//		$intake_form_html
+//	</body>
+//</html>
+//HEREDOC;
+//		// return $html; - instead of returning html, convert to PDF before sending back
+//		$options = new \Dompdf\Options();
+//		$options->setIsHtml5ParserEnabled(true);
+//		$dompdf = new \Dompdf\Dompdf($options);
+//		$dompdf->loadHtml($html);
+//
+//		// set the paper size and orientation
+//		$dompdf->setPaper('A4', 'landscape');
+//
+//		// Render the HTML as PDF
+//		$dompdf->render();
+//
+//		return $dompdf;
+//	}
+//
+//	public function getDashboardData() {
+//		// get event ID
+//		$event_ids = \REDCap::getEventNames();
+//		$event_id_0 = array_search('Coordinating Center GNG', $event_ids);
+//		$event_id_1 = array_search('Event 1', $event_ids);
+//		$generate_request_form_complete_field = $this->send_to_sites_instrument . "_complete";
+//		$fields = [
+//			"institution",
+//			"institution_ctsa_name",
+//			"institution_non_ctsa_name",
+//			"affiliate_ctsa_institution",
+//			"budget_request_date",
+//			"consideration",
+//			"final_gonogo",
+//			"final_gonogo_comments",
+//			"short_name",
+//			"send_to_sites",
+//			"request_date",
+//			"response_date",
+//			$generate_request_form_complete_field
+//		];
+//
+//		for ($i = 1; $i <= 100; $i++) {
+//			$fields[] = "institution$i";
+//		}
+//
+//		$params = [
+//			"project_id" => $this->getProjectId(),
+//			"return_format" => "array",
+//			"fields" => $fields,
+//			"exportAsLabels" => true
+//		];
+//		$records = \REDCap::getData($params);
+//		if (!$records) {
+//			return "REDCap couldn't get institution data at this time.";
+//		}
+//
+//		// get tables
+//		$data = [];
+//
+//		foreach ($records as $record_id => $record) {
+//			$site_array = $record['repeat_instances'][$event_id_1][''];
+//			$table_rows = [];
+//			foreach($site_array as $site_i => $site) {
+//				$row = [];
+//
+//				// determine site name
+//				if ($site['institution'] == 500) {
+//					$row['name'] = $site['affiliate_ctsa_institution'] . " Affiliate: " . $site['institution_ctsa_name'];
+//				} elseif ($site['institution'] == 999) {
+//					$row['name'] = "Non-CTSA Site: " . $site['institution_non_ctsa_name'];
+//				} else {
+//					// $row['name'] = "N/A";
+//					$row['name'] = $record[$event_id_0]["institution$site_i"];
+//				}
+//
+//				// $row['date_of_request'] = $site['budget_request_date'];
+//				$row['date_of_request'] = $record[$event_id_0]['request_date'];
+//
+//				if ($site['consideration'] == '0') {
+//					$row['date_of_response'] = 'Talk to Clint';
+//				} elseif ($site['consideration'] == '1') {
+//					$row['date_of_response'] = 'Talk to Clint or use Go/No-Go pending field';
+//				} else {
+//					// $row['date_of_response'] = "N/A";
+//					$row['date_of_response'] = $site["response_date"];
+//				}
+//
+//
+//				$row['decision'] = 'N/A';
+//				if ($site['final_gonogo'] == '1') {
+//					$row['decision'] = 'Go';
+//				} elseif ($site['final_gonogo'] == '2') {
+//					$row['decision'] = 'No-Go';
+//				} elseif ($site['final_gonogo'] == '3') {
+//					$row['decision'] = 'Need More Info';
+//				}
+//				$row['decision_comments'] = $site['final_gonogo_comments'];
+//
+//				$table_rows[] = $row;
+//			}
+//
+//			$pending_text = "";
+//			if ($record[$event_id_0]['send_to_sites'] !== '1' || $record[$event_id_0][$generate_request_form_complete_field] !== '2') {
+//				$pending_text = " (PENDING)";
+//			}
+//
+//			$data[$record_id] = [
+//				"name" => $record[$event_id_0]['short_name'],
+//				"pending" => $pending_text,
+//				"table" => $table_rows,
+//			];
+//		}
+//
+//		return $data;
+//	}
 	
 	public function getCCSummaryHTML($cc_data) {
         
@@ -1741,60 +1741,60 @@ HEREDOC;
         }
     }
 	
-	public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
-		$magic_text = 'LDVj89w3j4v9SJG43w4gsdkgjg4J';
-		
-		// return (null) early if we don't find the magic text in the email message
-		if (strpos($message, $magic_text) === false) {
-			return;
-		}
-		// if email already has study intake form attachment, throw exception because that should never happen
-		if (isset($attachments["Study_Intake_Form.html"])) {
-			$err_msg = "redcap_email is called with a message that includes the alert marker text ($magic_text) AND an attached 'Study_Intake_Form.html'. It's likely this email was improperly generated/handled.";
-			$this->log_email_event($to, $from, $subject, $err_msg);
-			throw new \Exception("redcap_email is called with a message that includes the alert marker text ($magic_text) AND an attached 'Study_Intake_Form.html'. It's likely this email was improperly generated/handled.");
-		}
-		
-		// determine the record this email is associated with (always log failure to determine record ID)
-		$rid = $this->determineRecordIdFromMessage($message);
-		if (empty($rid)) {
-			$log_msg = "The ".$this->moduleName." will not send this email -- can't determine record ID to fetch Study Intake Form!";
-			$this->log_email_event($to, $from, $subject, $log_msg);
-			return false;
-		}
-		
-		
-		// add Study Intake Form to new email and send (via ::email)
-		$new_attachments = $attachments;
-		$intake_form = $this->getStudyIntakeForm($rid);
-		
-		// add stylesheet, metadata, html element and head/body wrappers and then convert to PDF
-		$dompdf = $this->packageStudyIntakeFormAndConvertToPDF($intake_form);
-		$pdf_output_string = $dompdf->output();
-		
-		$temp_file_name = tempnam(APP_PATH_TEMP, 'INSTITUTEBUDGET_ATTACHMENT');
-		$temp_file = fopen($temp_file_name, "w");
-		fwrite($temp_file, $pdf_output_string);
-		fclose($temp_file);
-		$new_attachments["Proposal Information.pdf"] = $temp_file_name;
-		
-		// remove $magic_text from message to prevent infinite loop
-		$message = str_replace($magic_text, "", $message);
-		$email_sent = \REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
-		
-		// determine whether we should log successful attachment/resends or not
-		$log_successful_sends = $this->getProjectSetting('enable_email_logging');
-		if ($email_sent && $log_successful_sends) {
-			$log_msg = "The ".$this->moduleName." is capturing this email, attaching a Study Intake Form, and re-sending the email.";
-			$this->log_email_event($to, $from, $subject, $log_msg);
-		} else {
-			$log_msg = "The ".$this->moduleName." attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
-			$this->log_email_event($to, $from, $subject, $log_msg);
-		}
-		
-		// prevent intercepted email from sending (it doesn't have the Study Intake Form attached)
-		return false;
-	}
+	//public function redcap_email($to, $from, $subject, $message, $cc, $bcc, $fromName, $attachments) {
+	//	$magic_text = 'LDVj89w3j4v9SJG43w4gsdkgjg4J';
+	//
+	//	// return (null) early if we don't find the magic text in the email message
+	//	if (strpos($message, $magic_text) === false) {
+	//		return;
+	//	}
+	//	// if email already has study intake form attachment, throw exception because that should never happen
+	//	if (isset($attachments["Study_Intake_Form.html"])) {
+	//		$err_msg = "redcap_email is called with a message that includes the alert marker text ($magic_text) AND an attached 'Study_Intake_Form.html'. It's likely this email was improperly generated/handled.";
+	//		$this->log_email_event($to, $from, $subject, $err_msg);
+	//		throw new \Exception("redcap_email is called with a message that includes the alert marker text ($magic_text) AND an attached 'Study_Intake_Form.html'. It's likely this email was improperly generated/handled.");
+	//	}
+	//
+	//	// determine the record this email is associated with (always log failure to determine record ID)
+	//	$rid = $this->determineRecordIdFromMessage($message);
+	//	if (empty($rid)) {
+	//		$log_msg = "The ".$this->moduleName." will not send this email -- can't determine record ID to fetch Study Intake Form!";
+	//		$this->log_email_event($to, $from, $subject, $log_msg);
+	//		return false;
+	//	}
+	//
+	//
+	//	// add Study Intake Form to new email and send (via ::email)
+	//	$new_attachments = $attachments;
+	//	$intake_form = $this->getStudyIntakeForm($rid);
+	//
+	//	// add stylesheet, metadata, html element and head/body wrappers and then convert to PDF
+	//	$dompdf = $this->packageStudyIntakeFormAndConvertToPDF($intake_form);
+	//	$pdf_output_string = $dompdf->output();
+	//
+	//	$temp_file_name = tempnam(APP_PATH_TEMP, 'INSTITUTEBUDGET_ATTACHMENT');
+	//	$temp_file = fopen($temp_file_name, "w");
+	//	fwrite($temp_file, $pdf_output_string);
+	//	fclose($temp_file);
+	//	$new_attachments["Proposal Information.pdf"] = $temp_file_name;
+	//
+	//	// remove $magic_text from message to prevent infinite loop
+	//	$message = str_replace($magic_text, "", $message);
+	//	$email_sent = \REDCap::email($to, $from, $subject, $message, $cc, $bcc, $fromName, $new_attachments);
+	//
+	//	// determine whether we should log successful attachment/resends or not
+	//	$log_successful_sends = $this->getProjectSetting('enable_email_logging');
+	//	if ($email_sent && $log_successful_sends) {
+	//		$log_msg = "The ".$this->moduleName." is capturing this email, attaching a Study Intake Form, and re-sending the email.";
+	//		$this->log_email_event($to, $from, $subject, $log_msg);
+	//	} else {
+	//		$log_msg = "The ".$this->moduleName." attached a Study Intake Form but failed to send this email (\REDCap::email failure)";
+	//		$this->log_email_event($to, $from, $subject, $log_msg);
+	//	}
+	//
+	//	// prevent intercepted email from sending (it doesn't have the Study Intake Form attached)
+	//	return false;
+	//}
     
     public function redcap_module_link_check_display($project_id, $link) {
         if(!empty($project_id)) {
