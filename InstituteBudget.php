@@ -1328,88 +1328,6 @@ HEREDOC;
 		return $names;
 	}
 	
-	public function createSiteInstances($record_id) {
-		// this function is called upon completing the survey containing [send_to_sites] (if [send_to_sites] === '1' for the associated record)
-		$parameters = [
-			"project_id" => $this->getProjectId(),
-			"return_format" => 'array',
-			"records" => $record_id,
-			"fields" => 'eoi'
-		];
-		$data = \REDCap::getData($parameters);
-		$eoi_count = intval(reset($data[$record_id])['eoi']);
-		$log_message = "Attempting to create site instances upon submission of survey containing [sites_to_send] field:\n";
-	
-		if ($eoi_count > 0) {
-			// get current instance data and site names
-			$instances = $this->getSiteInstances($record_id);
-			$site_names = $this->getInstitutionNames($record_id);
-	
-			// if there are instances missing, add them
-			for ($site_index = 1; $site_index <= $eoi_count; $site_index++) {
-				$found = false;
-				foreach($instances as $instance) {
-					if ($instance['redcap_repeat_instance'] == $site_index) {
-						$found = true;
-						break;
-					}
-				}
-	
-				if (!$found) {
-					$missing_instance = [];
-					$primary_key_name = $this->getRecordIdField();
-					$missing_instance[$primary_key_name] = "$record_id";
-					$missing_instance['redcap_repeat_instance'] = $site_index;
-					$missing_instance['redcap_event_name'] = "event_1_arm_1";
-					$missing_instance['institution'] = $site_names[$site_index];
-					$instances[] = $missing_instance;
-				}
-			}
-	
-			// set form complete status 0s for instances whose form complete field is empty
-			// if instance institution name is empty, try to fill that, too
-			foreach ($instances as $instance) {
-				if (empty($instance['institution']))
-					$instance['institution'] = $site_names[$instance['redcap_repeat_instance']];
-			}
-	
-			// save all instances
-			$payload = json_encode($instances);
-			$parameters = [
-				"project_id" => $this->getProjectId(),
-				"dataFormat" => 'json',
-				"data" => $payload
-			];
-			$result = \REDCap::saveData($parameters);
-	
-			// determine log message
-			if (!empty($result['errors'])) {
-				$log_message .= "FAILURE\nThe [eoi] field for record '$record_id' is > 0 but there was an error saving the data:\n";
-				$log_message .= "\\REDCap::saveData return array ['errors']:\n" . print_r($result['errors'], true) . "\n";
-				// $log_message .= "\\REDCap::saveData data argument given:\n" . print_r($payload, true);
-			} else {
-				// refresh instances array from db so we can verify instance count
-				$instances = $this->getSiteInstances($record_id);
-	
-				// count instances of second event
-				$sum = 0;
-				foreach ($instances as $instance) {
-					if ($instance['redcap_event_name'] == 'event_1_arm_1')
-						$sum++;
-				}
-				if ($sum >= $eoi_count) {
-					$log_message .= "SUCCESS\nRecord '$record_id' has at least $eoi_count instances of event 'Event 1'";
-				} else {
-					$log_message .= "FAILURE\n\\REDCap::saveData returned no errors, but the module failed to verify the creation of $eoi_count new 'Event 1' instances. Count: $sum.";
-				}
-			}
-		} else {
-			$log_message .= "FAILURE\nThe [eoi] field for record '$record_id' is not > 0.";
-		}
-	
-		\REDCap::logEvent($this->moduleName, $log_message);
-	}
-	
 	public function determineRecordIdFromMessage($email_message) {
 		// $pattern = "/You have been identified as a possible site for (.*?)\./";
 		$pattern = "/with their proposal titled: (.*?)\./";
@@ -1692,19 +1610,6 @@ HEREDOC;
     
     public function redcap_survey_complete($project_id, $record, $instrument, $event_id, $group_id, $survey_hash, $response_id, $repeat_instance) {
         $this->initialize();
-        if ($instrument == $this->send_to_sites_instrument) {
-            $parameters = [
-                "project_id"    => $project_id,
-                "return_format" => 'json',
-                "records"       => $record,
-                "fields"        => 'send_to_sites'
-            ];
-        
-            $data = json_decode(\REDCap::getData($parameters), true);
-            if ($data[0]['send_to_sites'] === '1') {
-                $this->createSiteInstances($record);
-            }
-        }
     
         $request_uri = $_SERVER['REQUEST_URI'];
         if (strpos($request_uri, '__gotosurvey=') !== false) {
