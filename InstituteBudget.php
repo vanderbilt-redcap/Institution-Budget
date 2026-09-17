@@ -299,9 +299,7 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
             ];
         }
         //Catch any leftover effort admin fees
-        if (!empty($effortAdminsToInclude) && count($effortAdminsToInclude) == 1) {
-            $effortNum = array_key_first($effortAdminsToInclude);
-            $effortAdmin = $effortAdminsToInclude[$effortNum];
+        foreach ($effortAdminsToInclude as $effortNum => $effortAdmin) {
             $fixedCosts['eaf_'.$effortNum] = [
                 'label' => $this->getFieldLabel($effortAdmin['field']),
                 'detail' => $data[$effortAdmin['field']]
@@ -465,8 +463,10 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 	
 	public function showStaticScheduleArms($budget_data, $arms_and_visits_survey_link) {
         $shaded = true;
+        $armTotals = [];
 		foreach($budget_data['arms'] as $arm_i => $arm) {
             $arm_num = $arm_i+1;
+            $totals = ['procedure_total' => 0, 'effort_total' => 0, 'total' => 0, 'idc_percent' => 0, 'idc_total' => 0];
             ?>
             <div>
             <h5 style="margin-left:10px; "><u>ARM <?=$arm_num?></u></h5>
@@ -476,9 +476,9 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
                 <th>VISIT</th>
                 <th title="TOTAL PROCEDURE COST">TPC</th>
                 <th title="TOTAL EFFORT COST">TEC</th>
-                <th title="TPC + TEC">TOTAL</th>
-                <th title="INDIRECT COST = INDIRECT RATE(%) x TOTAL">IDC (<?= $budget_data['idc_rate']; ?>%)</th>
-                <th title="IDC + TOTAL">TOTAL w/IDC</th>
+                <th title="TOTAL PROCEDURE COST + TOTAL EFFORT COST">TOTAL</th>
+                <th title="INDIRECT COST = INDIRECT RATE(%) x (TOTAL PROCEDURE COST + TOTAL EFFORT COST)">IDC (<?= $budget_data['idc_rate']; ?>%)</th>
+                <th title="INDIRECT COST + TOTAL PROCEDURE COST + TOTAL EFFORT COST">TOTAL w/IDC</th>
             </tr>
             </thead>
             <tbody>
@@ -486,6 +486,9 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
             foreach ($arm['visits'] as $visit_i => $visit) {
                 if (empty($visit)) {continue;}
                 
+                foreach ($totals as $key => $value) {
+                    $totals[$key] = $value + (float)$visit['summary_totals'][$key];
+                }
                 ?>
                 <tr <?= ($shaded ? 'class="shaded"':''); ?>>
                     <td><?= $visit_i ?></td>
@@ -498,13 +501,23 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
                 <?php
             }
             ?>
+                <tr class="arm_total_row">
+                    <td>TOTAL</td>
+                    <td class='currency'><?= self::round2Dec($totals['procedure_total']) ?></td>
+                    <td class='currency'><?= self::round2Dec($totals['effort_total']) ?></td>
+                    <td class='currency'><?= self::round2Dec($totals['total']) ?></td>
+                    <td class='currency'><?= self::round2Dec($totals['idc_percent']) ?></td>
+                    <td class='currency'><?= self::round2Dec($totals['idc_total']) ?></td>
+                </tr>
             </tbody>
             </table>
             </div>
             <br/>
             <?php
+            $armTotals[$arm_num] = $totals;
 		}
-
+        
+        return $armTotals;
 	}
     
     public static function round2Dec($number) {
@@ -816,18 +829,41 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 
 		<!--SCHEDULE OF EVENTS REVIEW-->
 		<div class='pbb pba'>
-            <div class="soe_legend">
-                <table>
-                    <tr><td>TPC</td><td>TOTAL PROCEDURE COST</td></tr>
-                    <tr><td>TEC</td><td>TOTAL EFFORT COST</td></tr>
-                    <tr><td>TOTAL</td><td>TPC + TEC</td></tr>
-                    <tr><td>IDC</td><td>INDIRECT COST = INDIRECT RATE(%) x TOTAL</td></tr>
-                    <tr><td>TOTAL w/IDC</td><td>IDC + TOTAL</td></tr>
-                </table>
-            </div>
 		<h5 class="table_title"><u>SCHEDULE OF EVENTS REVIEW</u></h5>
 
-		<?php $this->showStaticScheduleArms($budget_data, $arms_and_visits_survey_link); ?>
+		<?php $armTotals = $this->showStaticScheduleArms($budget_data, $arms_and_visits_survey_link); ?>
+		</div>
+
+		<!--FINAL EVALUATION-->
+		<div class='pba'>
+		<h5 class="table_title"><u>FINAL EVALUATION</u></h5>
+		<table class="cc_rev_table blue_table_headers">
+			<thead>
+				<tr>
+					<th>DESCRIPTION</th>
+					<th>$</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+            $totalProjectCost = (float)$fixedCostTotal;
+            foreach ($armTotals as $armNum => $armTotal) {
+                $accrualGoal = (float)($cc_data["arm_{$armNum}_accrual_goal"] ?? 0);
+                $totalProjectCost+= $armTotal['idc_total'] * $accrualGoal;
+                echo "<tr><td>Per patient cost per arm $armNum<br/>(arm $armNum effort + procedural cost for all visits)</td>
+                        <td class='currency'>" . self::round2Dec($armTotal['idc_total']) . "</td></tr>";
+            }
+			?>
+			<tr>
+				<td>Administration Fee</td>
+				<td class='currency'><?=$fixedCostTotal?></td>
+			</tr>
+			<tr>
+				<td>Total Project Cost</td>
+				<td class='currency'><?=self::round2Dec($totalProjectCost)?></td>
+			</tr>
+			</tbody>
+		</table>
 		</div>
 		
 		</div>
@@ -1402,8 +1438,8 @@ HEREDOC;
 		$styles = [];
 		$styles['title'] = "style=\"font-weight: 200; font-size: 1.5rem; align-self: start; margin-left: 12%; margin-top: 24px;\"";
 		$styles['table'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
-		$styles['th'] = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: center;\"";
-		$styles['td'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: center;\"";
+		$styles['th'] = "style=\"border: 1px solid black; font-size: 1rem; color: white; padding: 6px 18px 24px 18px; text-align: left;\"";
+		$styles['td'] = "style=\"border: 1px solid black; font-size: 1rem; padding: 8px; text-align: left;\"";
 		
 		return <<<HEREDOC
 		<!--STUDY INTAKE FORM-->
