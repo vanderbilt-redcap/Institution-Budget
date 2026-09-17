@@ -849,6 +849,10 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
             $totalProjectCost = (float)$fixedCostTotal;
             foreach ($armTotals as $armNum => $armTotal) {
                 $accrualGoal = (float)($cc_data["arm_{$armNum}_accrual_goal"] ?? 0);
+                if ($accrualGoal <= 0) {
+                    //No accrual goal entered for this arm, so count its cost once rather than zeroing it out
+                    $accrualGoal = 1;
+                }
                 $totalProjectCost+= $armTotal['idc_total'] * $accrualGoal;
                 echo "<tr><td>Per patient cost per arm $armNum<br/>(arm $armNum effort + procedural cost for all visits)</td>
                         <td class='currency'>" . self::round2Dec($armTotal['idc_total']) . "</td></tr>";
