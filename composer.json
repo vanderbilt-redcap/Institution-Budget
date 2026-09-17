@@ -1,6 +1,6 @@
 {
     "require": {
-        "phpoffice/phpspreadsheet": "~5.7"
+        "phpoffice/phpspreadsheet": "^5.8.1"
     },
     "autoload": {
         "psr-4": {
