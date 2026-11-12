@@ -957,8 +957,11 @@ Budget.registerEvents = function() {
 
 // initialization/registration
 $('head').append('<link rel="stylesheet" type="text/css" href="' + Budget.budget_css_url + '">');
-$('body').append($('#budget_modal').remove());
 $(document).ready(function() {
+	// move the modal to body so it renders above the backdrop. This has to run after
+	// the survey page's ready handler inserts the budget table, which contains the modal
+	$('body').append($('#budget_modal').remove());
+
 	// initialization
 	Budget.registerEvents();
 	Budget.states = [];
