@@ -143,7 +143,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		new_row += "</tr>";
 		arm_table.find('tbody').append(new_row);
 
-		var effort_row = "<tr><th></th></tr><tr><th>Effort Costs (hours)</th></tr>";
+		var effort_row = "<tr><th></th></tr><tr><th class='section_header' colspan='" + (visit_count + 1) + "'><span>Effort Costs (hours)</span></th></tr>";
 		arm_table.find('tbody').append(effort_row);
 		for (var effort_index in Budget.efforts) {
 			var effort = Budget.efforts[effort_index];
@@ -187,7 +187,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 		effort_row += "</tr>";
 		arm_table.find('tbody').append(effort_row);
 
-		var summary_row = "<tr><th></th></tr><tr><th>Costs Summary</th></tr>";
+		var summary_row = "<tr><th></th></tr><tr><th class='section_header' colspan='" + (visit_count + 1) + "'><span>Costs Summary</span></th></tr>";
 		arm_table.find('tbody').append(summary_row);
 
 		summary_row = "<tr>";
@@ -265,6 +265,7 @@ Budget.copyArm = function(arm_index) {
 	
 	// reset visit options based on which visit we're copying from
 	$("#select_arms").empty();
+	$("#copy_arm_visit_warning").hide();
 	var arm_count = $('.arm_table').length;
 	for (var arm_i = 1; arm_i <= arm_count; arm_i++) {
 		var arm_name = $(".arm[data-arm=" + arm_i + "] button.dropdown-toggle").text();
@@ -365,8 +366,15 @@ Budget.renameArm = function(arm_index) {
 }
 Budget.clearArm = function(arm_index) {
 	var table = $('.arm_table[data-arm="' + arm_index + '"]')
-	table.find('span.proc_count, td.visit_total').each(function(i, element) {
-		$(element).text(0)
+	table.find('span.proc_count').text(0);
+	table.find('span.effort_count').text('0.0');
+
+	// recalculate totals and highlighting for each visit
+	table.find('.visit').each(function(i, visit) {
+		var visit_index = $(visit).attr('data-visit');
+		Budget.updateProcTotalCost(arm_index, visit_index);
+		Budget.updateEffortTotalCost(arm_index, visit_index);
+		Budget.updateSummaryCosts(arm_index, visit_index);
 	});
 }
 Budget.deleteArm = function(arm_index) {
@@ -659,6 +667,13 @@ Budget.registerEvents = function() {
 			btn.removeClass('btn-primary');
 			btn.addClass('btn-outline-primary');
 		}
+
+		// warn if any selected arm has a different visit count than the source arm
+		var source_visit_count = $(".arm_table[data-arm='" + Budget.copy_source_arm_index + "'] .visit").length;
+		var mismatched_arms = $("#select_arms button.btn-primary").filter(function() {
+			return $(".arm_table[data-arm='" + $(this).attr('data-arm-index') + "'] .visit").length != source_visit_count;
+		});
+		$("#copy_arm_visit_warning").toggle(mismatched_arms.length > 0);
 	});
 	$('body').on('click', '.modal .overwrite_arms', function(event) {
 		var visible_table_index = $('.arm_table:visible').attr('data-arm');

@@ -28,11 +28,36 @@
 
 div#arm_tables {
 	margin: auto;
+	/* bound the height so the horizontal scrollbar stays on screen */
+	max-width: 100%;
+	max-height: 75vh;
+	overflow: auto;
 }
 .arm_table {
 	display: none;
 	font-size: 1rem;
 	margin: auto;
+}
+/* freeze the first column */
+.arm_table thead th:first-child, .arm_table tbody td:first-child {
+	position: sticky;
+	left: 0;
+	z-index: 1;
+	box-shadow: inset -1px 0 0 gray;
+}
+.arm_table thead th:first-child {
+	background-color: #FFFFFF;
+}
+.arm_table tbody th.section_header {
+	background-color: #32344F;
+	color: #FFFFFF;
+	text-align: left;
+}
+/* keep the section label on screen while scrolling sideways */
+.arm_table tbody th.section_header span {
+	display: inline-block;
+	position: sticky;
+	left: 8px;
 }
 .arm_table th, .arm_table td:nth-child(1) {
 	padding: 8px 8px;

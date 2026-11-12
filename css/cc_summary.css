@@ -29,6 +29,10 @@ table.cc_rev_table, .cc_rev_table td, .cc_rev_table th, table.sites_contact_info
 	padding: 6px 18px 24px 18px;
 }
 
+.cc_rev_table th[title] {
+	cursor: help;
+}
+
 .table_title {
 	font-weight: 200;
 	font-size: 1.5rem;
@@ -108,5 +112,8 @@ td.currency {
 	/* } */
 	.extra-top-space {
 		margin-top: 20px;
+	}
+	.header_info {
+		display: none;
 	}
 }

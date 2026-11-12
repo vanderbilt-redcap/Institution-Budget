@@ -196,6 +196,9 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 				<div id="select_arms">
 					
 				</div>
+				<div id="copy_arm_visit_warning" class="alert alert-warning mt-3" style="display: none;">
+					One or more selected arms have a different number of visits than this arm. Overwriting will replace their visits with this arm's visits.
+				</div>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-primary overwrite_arms" data-bs-dismiss="modal">Overwrite Arm(s)</button>

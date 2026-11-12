@@ -474,11 +474,11 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
             <thead>
             <tr>
                 <th>VISIT</th>
-                <th title="TOTAL PROCEDURE COST">TPC</th>
-                <th title="TOTAL EFFORT COST">TEC</th>
-                <th title="TOTAL PROCEDURE COST + TOTAL EFFORT COST">TOTAL</th>
-                <th title="INDIRECT COST = INDIRECT RATE(%) x (TOTAL PROCEDURE COST + TOTAL EFFORT COST)">IDC (<?= $budget_data['idc_rate']; ?>%)</th>
-                <th title="INDIRECT COST + TOTAL PROCEDURE COST + TOTAL EFFORT COST">TOTAL w/IDC</th>
+                <th title="TOTAL PROCEDURE COST">TPC <i class="fas fa-info-circle header_info"></i></th>
+                <th title="TOTAL EFFORT COST">TEC <i class="fas fa-info-circle header_info"></i></th>
+                <th title="TOTAL PROCEDURE COST + TOTAL EFFORT COST">TOTAL <i class="fas fa-info-circle header_info"></i></th>
+                <th title="INDIRECT COST = INDIRECT RATE(%) x (TOTAL PROCEDURE COST + TOTAL EFFORT COST)">IDC (<?= $budget_data['idc_rate']; ?>%) <i class="fas fa-info-circle header_info"></i></th>
+                <th title="INDIRECT COST + TOTAL PROCEDURE COST + TOTAL EFFORT COST">TOTAL w/IDC <i class="fas fa-info-circle header_info"></i></th>
             </tr>
             </thead>
             <tbody>
@@ -849,12 +849,14 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
             $totalProjectCost = (float)$fixedCostTotal;
             foreach ($armTotals as $armNum => $armTotal) {
                 $accrualGoal = (float)($cc_data["arm_{$armNum}_accrual_goal"] ?? 0);
+                $accrualLabel = $accrualGoal;
                 if ($accrualGoal <= 0) {
                     //No accrual goal entered for this arm, so count its cost once rather than zeroing it out
                     $accrualGoal = 1;
+                    $accrualLabel = 'none, counted as 1';
                 }
                 $totalProjectCost+= $armTotal['idc_total'] * $accrualGoal;
-                echo "<tr><td>Per patient cost per arm $armNum<br/>(arm $armNum effort + procedural cost for all visits)</td>
+                echo "<tr><td>Per patient cost per arm $armNum<br/>(arm $armNum effort + procedural cost for all visits)<br/>Accrual goal: $accrualLabel</td>
                         <td class='currency'>" . self::round2Dec($armTotal['idc_total']) . "</td></tr>";
             }
 			?>
