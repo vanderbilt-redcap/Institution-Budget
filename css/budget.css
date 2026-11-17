@@ -28,36 +28,81 @@
 
 div#arm_tables {
 	margin: auto;
-	/* bound the height so the horizontal scrollbar stays on screen */
-	max-width: 100%;
-	max-height: 75vh;
-	overflow: auto;
 }
 .arm_table {
 	display: none;
 	font-size: 1rem;
 	margin: auto;
+	--soe-label-width: 280px;
+	--soe-visit-width: 160px;
+}
+/* each section is its own table, so fixed column widths keep the visit columns lined up */
+.soe_table {
+	table-layout: fixed;
+}
+.soe_table th, .soe_table td {
+	width: var(--soe-visit-width);
 }
 /* freeze the first column */
-.arm_table thead th:first-child, .arm_table tbody td:first-child {
+.soe_table tr > :first-child {
+	width: var(--soe-label-width);
 	position: sticky;
 	left: 0;
 	z-index: 1;
 	box-shadow: inset -1px 0 0 gray;
 }
-.arm_table thead th:first-child {
+.soe_table thead th:first-child {
 	background-color: #FFFFFF;
 }
-.arm_table tbody th.section_header {
+.soe_scroll {
+	overflow: auto;
+	/* reserve the vertical scrollbar space on every section so they all scroll sideways the same distance */
+	scrollbar-gutter: stable;
+}
+/* the visit header row is scrolled sideways by budget.js to follow the sections below it */
+.soe_header .soe_scroll {
+	overflow: hidden;
+}
+.soe_rows .soe_scroll {
+	max-height: 40vh;
+}
+.soe_section_title {
 	background-color: #32344F;
 	color: #FFFFFF;
-	text-align: left;
+	padding: 8px;
+	margin-top: 16px;
 }
-/* keep the section label on screen while scrolling sideways */
-.arm_table tbody th.section_header span {
-	display: inline-block;
-	position: sticky;
-	left: 8px;
+/* edge shadows on each side that has more to scroll to, budget.js sets the more_ classes */
+.soe_section {
+	position: relative;
+	--shadow-top: transparent;
+	--shadow-bottom: transparent;
+	--shadow-left: transparent;
+	--shadow-right: transparent;
+}
+.soe_section.more_up {
+	--shadow-top: rgba(0, 0, 0, 0.25);
+}
+.soe_section.more_down {
+	--shadow-bottom: rgba(0, 0, 0, 0.25);
+}
+.soe_section.more_left {
+	--shadow-left: rgba(0, 0, 0, 0.25);
+}
+.soe_section.more_right {
+	--shadow-right: rgba(0, 0, 0, 0.25);
+}
+.soe_section::after {
+	content: '';
+	position: absolute;
+	inset: 0 var(--scrollbar-width, 0px) var(--scrollbar-height, 0px) 0;
+	pointer-events: none;
+	z-index: 2;
+	background:
+		linear-gradient(to bottom, var(--shadow-top), transparent) top / 100% 12px no-repeat,
+		linear-gradient(to top, var(--shadow-bottom), transparent) bottom / 100% 12px no-repeat,
+		linear-gradient(to right, var(--shadow-left), transparent) var(--soe-label-width) 0 / 12px 100% no-repeat,
+		linear-gradient(to left, var(--shadow-right), transparent) right / 12px 100% no-repeat;
 }
 .arm_table th, .arm_table td:nth-child(1) {
 	padding: 8px 8px;

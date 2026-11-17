@@ -937,6 +937,12 @@ class InstituteBudget extends \ExternalModules\AbstractExternalModule {
 				updateScheduleField: function(scheduleString) {
 					var field_name = BudgetSurvey.schedule_field;
 					$("textarea[name='" + field_name + "']").val(scheduleString);
+
+					// setting the value from script doesn't fire a change event, so flag the change
+					// for REDCap's own "leave page?" prompt. Its save buttons turn that prompt off
+					if (Budget.initialized && typeof setDataEntryFormValuesChanged === 'function') {
+						setDataEntryFormValuesChanged(field_name);
+					}
 				}
 			}
 			

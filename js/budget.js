@@ -100,8 +100,12 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 	for (var arm_i = 1; arm_i <= arm_count; arm_i++) {
 		var arm_table = $('.arm_table[data-arm="' + arm_i + '"]');
 		visit_count = Number(arm_table.find('.visit').length);
-		arm_table.find('tbody').empty();
+		// rebuild every section below the visit header row
+		arm_table.children(':not(.soe_header)').remove();
 		arm_table.find('thead th:first-child').text("Procedural Costs");
+		var proc_body = $("<tbody></tbody>");
+		var effort_body = $("<tbody></tbody>");
+		var summary_body = $("<tbody></tbody>");
 		for (var proc_index in Budget.procedures) {
 			var procedure = Budget.procedures[proc_index];
 			var proc_name = procedure.name;
@@ -132,7 +136,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 				</td>"
 			}
 			new_row += "</tr>";
-			arm_table.find('tbody').append(new_row);
+			proc_body.append(new_row);
 		}
 		// make and append last row (Totals $$)
 		var new_row = "<tr class='total_row'><td class='total_label no-border'>Total $$</td>";
@@ -141,10 +145,9 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			new_row += "<td class='visit_total' data-visit='" + visit_i + "'>0</td>";
 		}
 		new_row += "</tr>";
-		arm_table.find('tbody').append(new_row);
+		proc_body.append(new_row);
 
-		var effort_row = "<tr><th></th></tr><tr><th class='section_header' colspan='" + (visit_count + 1) + "'><span>Effort Costs (hours)</span></th></tr>";
-		arm_table.find('tbody').append(effort_row);
+		var effort_row;
 		for (var effort_index in Budget.efforts) {
 			var effort = Budget.efforts[effort_index];
 			var effort_name = effort.name;
@@ -176,7 +179,7 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 				</td>"
 			}
 			effort_row += "</tr>";
-			arm_table.find('tbody').append(effort_row);
+			effort_body.append(effort_row);
 		}
 		// make and append last row (Totals $$)
 		effort_row = "<tr class='total_row'><td class='total_label no-border'>Total Effort $$</td>";
@@ -185,13 +188,9 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			effort_row += "<td class='visit_effort_total' data-visit='" + visit_i + "'>0</td>";
 		}
 		effort_row += "</tr>";
-		arm_table.find('tbody').append(effort_row);
+		effort_body.append(effort_row);
 
-		var summary_row = "<tr><th></th></tr><tr><th class='section_header' colspan='" + (visit_count + 1) + "'><span>Costs Summary</span></th></tr>";
-		arm_table.find('tbody').append(summary_row);
-
-		summary_row = "<tr>";
-		summary_row += "<tr class='total_row'><td class='total_label no-border'>Procedural + Effort = Visit Total</td>";
+		var summary_row = "<tr class='total_row'><td class='total_label no-border'>Procedural + Effort = Visit Total</td>";
 		for (var visit_i = 1; visit_i <= visit_count; visit_i++) {
 			summary_row += "<td class='summary_cell visit_summary_total' data-visit='" + visit_i + "'>0</td>";
 		}
@@ -206,13 +205,44 @@ Budget.refreshProcedureRows = function(schedule) {	// also refreshes proc costs 
 			summary_row += "<td class='summary_cell visit_idc_total' data-visit='" + visit_i + "'>0</td>";
 		}
 		summary_row += "</tr>";
+		summary_body.append(summary_row);
 
-		arm_table.find('tbody').append(summary_row);
+		// procedure and effort sections scroll on their own, the summary always shows in full
+		arm_table.append(
+			Budget.makeSection(proc_body, 'soe_rows'),
+			"<div class='soe_section_title'>Effort Costs (hours)</div>",
+			Budget.makeSection(effort_body, 'soe_rows'),
+			"<div class='soe_section_title'>Costs Summary</div>",
+			Budget.makeSection(summary_body, '')
+		);
+
+		// fixed widths keep the visit columns lined up across the separate tables
+		arm_table.find('table.soe_table').css('width', 'calc(var(--soe-label-width) + ' + visit_count + ' * var(--soe-visit-width))');
 	}
 	
 	Budget.refreshProcedureCosts();
 	Budget.refreshEffortCosts();
 	Budget.updateAllVisitCosts();
+	Budget.updateScrollShadows($('.arm_table:visible'));
+}
+Budget.makeSection = function(tbody, extra_class) {
+	var section = $("<div class='soe_section'><div class='soe_scroll'><table class='soe_table'></table></div></div>");
+	section.addClass(extra_class);
+	section.find('table').append(tbody);
+	return section;
+}
+// show an edge shadow on each side of a section that has more to scroll to
+Budget.updateScrollShadows = function(arm_table) {
+	$(arm_table).find('.soe_scroll').each(function(i, box) {
+		var section = $(box).parent();
+		section.toggleClass('more_up', box.scrollTop > 0);
+		section.toggleClass('more_down', box.scrollTop + box.clientHeight < box.scrollHeight - 1);
+		section.toggleClass('more_left', box.scrollLeft > 0);
+		section.toggleClass('more_right', box.scrollLeft + box.clientWidth < box.scrollWidth - 1);
+		// keep the shadows off the scrollbars
+		section.css('--scrollbar-width', (box.offsetWidth - box.clientWidth) + 'px');
+		section.css('--scrollbar-height', (box.offsetHeight - box.clientHeight) + 'px');
+	});
 }
 Budget.refreshProcedureCosts = function() {
 	// update all .proc_cell data-cost attributes based on the row's procedure (name)
@@ -253,7 +283,8 @@ Budget.refreshEffortCosts = function() {
 // arm dropdown button functions
 Budget.showArm = function(arm_index) {
 	$('.arm_table').hide();
-	$('.arm_table[data-arm="' + arm_index + '"]').css('display', 'table');
+	$('.arm_table[data-arm="' + arm_index + '"]').css('display', 'block');
+	Budget.updateScrollShadows($('.arm_table[data-arm="' + arm_index + '"]'));
 	
 	// set active_arm_index and highlight active arm dd button
 	Budget.active_arm_index = arm_index;
@@ -273,7 +304,7 @@ Budget.copyArm = function(arm_index) {
 		
 		var arm_select_button = "<button type='button' data-arm-index='" + arm_i + "' class='btn btn-outline-primary arm_select'>" + arm_name + "</button>";
 		if (arm_i == Budget.copy_source_arm_index) {
-			arm_select_button = "<button type='button' data-arm-index='" + arm_i + "' class='btn btn-outline-secondary arm_select' disabled'>" + arm_name + "</button>"
+			arm_select_button = "<button type='button' data-arm-index='" + arm_i + "' class='btn btn-outline-secondary arm_select' disabled>" + arm_name + "</button>"
 		}
 		$("#select_arms").append(arm_select_button);
 	}
@@ -293,7 +324,7 @@ Budget.createArm = function() {
 	
 	var visit_1_th = "<th>\
 	<div class='dropdown visit' data-visit='1'>\
-		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit1' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit1' data-bs-toggle='dropdown' data-bs-popper-config='{\"strategy\":\"fixed\"}' aria-haspopup='true' aria-expanded='false'>\
 			Visit 1:\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit1'>\
@@ -306,38 +337,19 @@ Budget.createArm = function() {
 	</div>\
 	</th>";
 	
-	var new_arm_table = "<table class='arm_table' data-arm='" + new_arm_i + "'>\
+	// only the visit header row; refreshProcedureRows builds the sections below it
+	var new_arm_table = "<div class='arm_table' data-arm='" + new_arm_i + "'>\
+		<div class='soe_section soe_header'>\
+		<div class='soe_scroll'>\
+		<table class='soe_table'>\
 		<thead>\
 			<th></th>\
 			" + visit_1_th + "\
 		</thead>\
-		<tbody>\
-		<tr>\
-			<td class='procedure'>Procedure 1</td>\
-			<td class='proc_cell'>\
-				<button type='button' class='btn btn-outline-primary proc_decrement'>-</button>\
-				<span data-cost='120' class='proc_count mx-2'>0</span>\
-				<button type='button' class='btn btn-outline-primary proc_increment'>+</button>\
-			</td>\
-		</tr>\
-		<tr>\
-			<td>Total $$</td>\
-			<td class='visit_total'>0</td>\
-		</tr>\
-		\<tr>\
-			<td class='effort'>Effort Cost 1</td>\
-			<td class='effort_cell'>\
-				<button type='button' class='btn btn-outline-primary effort_decrement'>-</button>\
-				<span data-cost='120' class='effort_count mx-2'>0</span>\
-				<button type='button' class='btn btn-outline-primary effort_increment'>+</button>\
-			</td>\
-		</tr>\
-		<tr>\
-			<td>Total $$</td>\
-			<td class='visit_effort_total'>0</td>\
-		</tr>\
-		</tbody>\
-	</table>";
+		</table>\
+		</div>\
+		</div>\
+	</div>";
 	var new_arm_dropdown = "<div class='dropdown arm' data-arm='" + new_arm_i + "'>\
 		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownMenuButton" + new_arm_i + "' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
 			Arm " + new_arm_i + ": New Arm\
@@ -395,7 +407,7 @@ Budget.createVisit = function() {
 	var visit_j = visit_count + 1;
 	var visit_dd = "<th>\
 	<div class='dropdown visit' data-visit='" + visit_j + "'>\
-		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit" + visit_j + "' data-bs-toggle='dropdown' aria-haspopup='true' aria-expanded='false'>\
+		<button type='button' class='btn btn-outline-secondary dropdown-toggle' id='dropdownVisit" + visit_j + "' data-bs-toggle='dropdown' data-bs-popper-config='{\"strategy\":\"fixed\"}' aria-haspopup='true' aria-expanded='false'>\
 			Visit " + visit_j + ":\
 		</button>\
 		<div class='dropdown-menu' aria-labelledby='dropdownVisit" + visit_j + "'>\
@@ -497,8 +509,13 @@ Budget.copyVisit = function(visit_index) {
 	$("#budget_modal").modal('show');
 }
 Budget.clearVisit = function(visit_index) {
-	var arm_table = $(".arm_table[data-arm='" + Budget.active_arm_index + "']");
-	arm_table.find('.proc_cell:nth-child(' + (visit_index + 1) + ') span, .visit_total:nth-child(' + (visit_index + 1) + ')').text(0)
+	var arm_index = Budget.active_arm_index;
+	var arm_table = $(".arm_table[data-arm='" + arm_index + "']");
+	arm_table.find('.proc_cell:nth-child(' + (visit_index + 1) + ') span').text(0);
+
+	// recalculate totals and highlighting for this visit
+	Budget.updateProcTotalCost(arm_index, visit_index);
+	Budget.updateSummaryCosts(arm_index, visit_index);
 }
 Budget.deleteVisit = function(visit_index) {
 	var arm_index = Budget.active_arm_index;
@@ -935,6 +952,26 @@ Budget.registerEvents = function() {
 			Budget.redo();
 		}
 	});
+	// scroll events don't bubble, so listen in the capture phase. Keeps every section of an arm
+	// at the same sideways position so the visit columns stay lined up
+	document.addEventListener('scroll', function(event) {
+		var box = event.target;
+		if (!box.classList || !box.classList.contains('soe_scroll')) {
+			return;
+		}
+		var arm_table = $(box).closest('.arm_table');
+		arm_table.find('.soe_scroll').each(function(i, other) {
+			if (other.scrollLeft != box.scrollLeft) {
+				other.scrollLeft = box.scrollLeft;
+			}
+		});
+		Budget.updateScrollShadows(arm_table);
+	}, true);
+	// load as well as resize, since budget.css is added from script and may not apply by document ready
+	$(window).on('load resize', function() {
+		Budget.updateScrollShadows($('.arm_table:visible'));
+	});
+
 	// register undo/redo button click events
 	$('body').on('click', '#budget_undo', Budget.undo);
 	$('body').on('click', '#budget_redo', Budget.redo);
@@ -979,6 +1016,9 @@ $(document).ready(function() {
 		Budget.showArm(1);
 	}
 	Budget.pushState();
+
+	// changes from here on count as unsaved (see BudgetSurvey.updateScheduleField)
+	Budget.initialized = true;
 });
 
 // saving/loading

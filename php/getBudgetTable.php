@@ -52,7 +52,11 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 	// add arm tables
 	?><div id="arm_tables"><?php
 	foreach ($arms as $i => $arm) {
-		?><table class="arm_table" data-arm="<?= $i + 1 ?>">
+		?><div class="arm_table" data-arm="<?= $i + 1 ?>">
+			<?php // only the visit header row; budget.js builds the sections below it ?>
+			<div class="soe_section soe_header">
+			<div class="soe_scroll">
+			<table class="soe_table">
 			<thead>
 				<tr>
 					<th>Procedural Costs</th>
@@ -63,7 +67,7 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 							?>
 							<th>
 							<div class="dropdown visit" data-visit="<?= $visit_i+1 ?>">
-								<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownVisit<?= $visit_i+1 ?>" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<button type="button" class="btn btn-outline-secondary dropdown-toggle" id="dropdownVisit<?= $visit_i+1 ?>" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}' aria-haspopup="true" aria-expanded="false">
 									<?= "Visit " . ($visit_i+1) . ": $visit_name" ?>
 								</button>
 								<div class="dropdown-menu" aria-labelledby="dropdownVisit<?= $visit_i+1 ?>">
@@ -80,77 +84,10 @@ if (!empty($rid) and (empty($arms) or empty($procedures))) {
 					?>
 				</tr>
 			</thead>
-			<tbody>
-				<?php
-					// add procedure rows
-					$columns = count($arm['visits']);
-					foreach ($procedures as $proc_i => $procedure) {
-						$proc_name = $procedure['name'];
-						$proc_cost = $procedure['cost'];
-                        //if ($procedure['routine_care_procedure_form']) {
-                        //    $proc_name .= ' <span title="Standard of Care">[SoC]</span>';
-                        //}
-						echo "<tr>";
-						
-						// add procedure cell
-						?>
-						<td class="procedure"><?= "$proc_name" ?></td>
-						<?php
-						
-						// add procedure count cells
-						for ($i = 1; $i <= $columns; $i++) {
-							echo "<td class='proc_cell' data-visit='$i'>
-							<button type='button' class='btn btn-outline-primary proc_decrement'>-</button>
-							<span data-cost='$proc_cost' class='proc_count mx-2'>0</span>
-							<button type='button' class='btn btn-outline-primary proc_increment'>+</button>
-							</td>";
-						}
-						echo "</tr>";
-					}
-					
-					// add totals row
-					echo "<tr>";
-					echo "<td>Total $$</td>";
-					for ($i = 1; $i <= $columns; $i++) {
-						echo "<td class='visit_total' data-visit='$i'>0</td>";
-					}
-					echo "</tr>";
-                
-                    // add effort rows
-                    foreach ($efforts as $effort_i => $effort) {
-                        $effort_name = $effort['name'];
-                        $effort_cost = $effort['cost'];
-                        //if ($procedure['routine_care_procedure_form']) {
-                        //    $proc_name .= ' <span title="Standard of Care">[SoC]</span>';
-                        //}
-                        echo "<tr>";
-                        
-                        // add procedure cell
-                        ?>
-                        <td class="procedure"><?= "$effort_name" ?></td>
-                        <?php
-                        
-                        // add effort count cells
-                        for ($i = 1; $i <= $columns; $i++) {
-                            echo "<td class='effort_cell' data-visit='$i'>
-                                <button type='button' class='btn btn-outline-primary effort_decrement'>-</button>
-                                <span data-cost='$effort_cost' class='effort_count mx-2'>0</span>
-                                <button type='button' class='btn btn-outline-primary effort_increment'>+</button>
-                                </td>";
-                        }
-                        echo "</tr>";
-                    }
-                    
-                    // add totals row
-                    echo "<tr>";
-                    echo "<td>Total Effort $$</td>";
-                    for ($i = 1; $i <= $columns; $i++) {
-                        echo "<td class='visit_effort_total' data-visit='$i'>0</td>";
-                    }
-                    echo "</tr>";
-				?>
-			</tbody>
-		</table>
+			</table>
+			</div>
+			</div>
+		</div>
 	<?php
 	}
 	?>
